@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coupon & Voucher List</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link href="https://unpkg.com/cropperjs/dist/cropper.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/adminCoupon.css">
+    <script defer src="script.js"></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-black">
+        <div class="container bg-black">
+            <a href="/" class="navbar-brand"><i class="fas fa-code me-2"></i>ADMIN-HOME</a>
+            <button class="navbar-toggler" data-bs-target="#my-nav" data-bs-toggle="collapse" aria-controls="my-nav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div id="my-nav" class="collapse navbar-collapse">
+                <u1 class="navbar-nav ms-auto">
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/adminHome">Home</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/users">Users</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/products">Products</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/orders">Orders</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/category">Category</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/offers">Offers</a>
+                    </li>
+                    <li class="nav-item active">
+                        <li> <a href="/adminLogout">
+                            <button class="btn btn-light" style="width: 100px; height:35px; font-size:15px; font-weight:600" type="submit"> Log out</button>
+                        </a></li>
+                    </li>
+                </u1>
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-3">
+        <h1>Coupon & Voucher List</h1>
+        <button class="add-coupon-btn" onclick="openAddForm()">Add new Coupon</button>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Value</th>
+                    <th>Expire At</th>
+                    <th>Min_purchase</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="coupon-list">
+                <% coupons.forEach(coupon => { %>
+                <tr>
+                    <td><%= coupon.code %></td>
+                    <td><%= coupon.value %>%</td>
+                    <td><%= coupon.expiresAt %></td>
+                    <td><%= coupon.min_purchase %></td>
+                    <td>
+                        <a href="/editCoupon/<%=coupon._id %>"><i class="fa fa-pencil"></i></a>
+                        <a href="/deleteCoupon/<%= coupon._id %>" onclick="return deleteCoupon(this)">
+                            <i class="fa fa-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                <% }) %>
+            </tbody>
+        </table>
+
+        <!-- Add Coupon Form -->
+        <div class="form-popup" id="addCouponForm">
+            <form class="coupon-form" id="add-coupon-form" action="/addCoupon" method="POST">
+                <h2>Add Coupon</h2>
+                <label for="add-code">Coupon Code</label>
+                <input type="text" id="add-code" name="code" required>
+
+                <label for="add-value">Value</label>
+                <input type="number" id="add-value" name="value" required>
+
+                <label for="add-expireAt">Expire At</label>
+                <input type="date" id="add-expireAt" name="expireAt" required>
+
+                <label for="min-purchase">Min_Purchase</label>
+                <input type="number" id="min-purchase" name="min_purchase" required>
+
+                <!-- <select id="add-category" name="category">
+                    < category.forEach(cat => { %>
+                    <option value="<= cat._id %>"><= cat.cname %></option>
+                    < }) %>
+                </select> -->
+
+                <button type="submit">Save</button>
+                <button type="button" class="cancel-btn" onclick="closeAddForm()">Cancel</button>
+            </form>
+        </div>
+
+        <!-- Edit Coupon Form -->
+        <div class="form-popup" id="editCouponForm" style="display:none;">
+            <form class="coupon-form" id="edit-coupon-form" action="/editCoupon/:id" method="POST">
+                <h2>Edit Coupon</h2>
+                <label for="edit-code">Coupon Code</label>
+                <input type="text" id="edit-code" value="" name="code" required>
+
+                <label for="edit-value">Value</label>
+                <input type="number" id="edit-value" name="value" required>
+
+                <label for="edit-expireAt">Expire At</label>
+                <input type="date" id="edit-expireAt" name="expireAt" required>
+
+                <label for="edit-category">Eligible Category</label>
+                <select id="edit-category" name="category">
+                    <% category.forEach(cat => { %>
+                    <option value="<%= cat._id %>"><%= cat.cname %></option>
+                    <% }) %>
+                </select>
+
+                <button type="submit">Update</button>
+                <button type="button" class="cancel-btn" onclick="closeEditForm()">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+    function openAddForm() {
+        document.getElementById("addCouponForm").style.display = "block";
+    }
+
+    function closeAddForm() {
+        document.getElementById("addCouponForm").style.display = "none";
+    }
+
+    function openEditForm(id, code, value, expireAt, category) {
+        function openEditForm(id) {
+    window.location.href = `/editCoupon/${id}`;
+}
+        document.getElementById("edit-code").value = code;
+        document.getElementById("edit-value").value = value;
+        document.getElementById("edit-expireAt").value = expireAt;
+        document.getElementById("edit-category").value = category;
+
+        // Set the action of the form to the edit route
+        document.getElementById("edit-coupon-form").action = `/editCoupon/${id}`;
+
+        document.getElementById("editCouponForm").style.display = "block";
+    }
+
+    function closeEditForm() {
+        document.getElementById("editCouponForm").style.display = "none";
+    }
+
+    function deleteCoupon(element) {
+        event.preventDefault(); // Prevent the default link click behavior
+
+        swal("Are you sure to delete this coupon?", {
+            buttons: ["Cancel", "Delete"],
+        }).then((isOkay) => {
+            if (isOkay) {
+                window.location.href = element.href;
+            }
+        });
+    }
+    </script>
+
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+</body>
+</html>

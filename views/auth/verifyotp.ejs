@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="/css/otp.css">
+</head>
+<body>
+    
+
+    <div class="container otp-container">
+        <h2>OTP Verification</h2>
+        <form  action="/verifyotp" method="post">
+            <%if(locals.message){%>
+                <span class="text-danger"><%=message%></span>
+                <%}%>
+            <div class="otp-input">
+                <input type="text" id="inputotp" class="form-control form-control-lg "  name="otp" required>
+                
+            </div> 
+            <label class="form-label otp-input" for="form2Example17">Enter OTP</label>
+            <button type="submit" class="btn btn-dark w-100">Verify OTP</button>
+            <div class="mt-3">
+                <a id="resend-tag" class="link" href="/resendOTP">Resend OTP</a>
+                <span class="timer ms-2" id="countdown"></span>
+            </div>
+
+            <div class="mt-3">
+                <small>By clicking continue, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></small>
+            </div>
+        </form>
+        <script>
+            let timeleft = 120;
+            let resendButton = document.getElementById('resendButton');
+
+            function updateTimer() {
+                const countdownElement = document.getElementById('countdown');
+                countdownElement.innerHTML = `Resend Otp in ${timeleft} seconds`;
+
+                if (timeleft > 0) {
+                    timeleft--;
+                    setTimeout(updateTimer, 2000);
+                } else {
+                    countdownElement.innerHTML = 'Otp timed out';
+                    resendButton.style.display = 'inline';
+                }
+            }
+
+            function startTimer() {
+                updateTimer();
+                resendButton.style.display = 'none';
+            }
+
+            startTimer();
+        </script>
+    </div>
+
+    <footer class="footer">
+        
+</body>
+</html>

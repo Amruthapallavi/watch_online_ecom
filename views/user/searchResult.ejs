@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product List</title>
+    <link rel="stylesheet" href="/css/result.css"> <!-- Add your CSS file here -->
+</head>
+<body>
+    
+        <nav class="navbar">
+            <div class="navbar-left">
+                <span class="brand">TickTrack</span>
+            </div>
+            <div class="navbar-center">
+                <form class="search-form" action="/search" method="POST">
+                    <input type="text" name="String" class="search-bar" placeholder="Search...">
+                    <button type="submit" class="search-button">Go</button>
+                </form>
+            </div>
+            <div class="navbar-right">
+                <a href="/userHome" class="nav-item">Home</a>
+                <a href="/shop" class="nav-item">Shop</a>
+                <div class="dropdown">
+                    <a href="/user-account" class="nav-item dropdown-toggle">My Account</a>
+                    <div class="dropdown-menu">
+                        <a href="#profile" class="dropdown-item">Profile</a>
+                        <a href="#settings" class="dropdown-item">Settings</a>
+                    </div>
+                </div>
+                <a href="/wishlist" class="nav-item">❤️</a>
+                <a href="/cart" class="nav-item">🛒</a>
+                <a href="/userLogout" class="nav-item logout">Logout</a>
+            </div>
+        </nav>
+    
+    <main style="min-height: 600px;">
+        <div class="product-list">
+            <% products.forEach(product => { %>
+
+                <div class="product-card">
+                    <div id="carousel<%= product._id %>" class="carousel slide" data-bs-ride="false">
+                        <div class="carousel-inner">
+                            
+                            <div class="carousel-item" >
+                                <img src="/<%= product.image[0] %>" class="d-block w-100" alt="<%= product.name %>" style="max-width: 200px;">
+                            </div>
+                        </div>
+                       
+                    </div>
+                    <div class="product-info">
+                        <h2><%= product.pname %></h2>
+                        <p>MRP: <%= product.price %>/-</p>
+                        <p><%=product.description %>/-</p>
+
+                    </div>
+                    <div class="status-indicator">
+                        
+
+                        <button class="status-button"><a href="/product/<%= product._id %>" style="text-decoration: none; color: white; " > <strong>View Details</strong> </a></button><br>
+                        <form action="/add-to-wishlist">
+                        <button class="status-button"><strong>Add to Wishlist</strong></button></form>
+
+                    </div>
+                </div>
+            <% }); %>
+        </div>
+
+        <div class="pagination">
+            <% if (currentPage > 1) { %>
+                <a href="?page=<%= currentPage - 1 %>">&laquo;</a>
+            <% } %>
+
+            <% for (let i = 1; i <= totalPages; i++) { %>
+                <a href="?page=<%= i %>" class="<%= i === currentPage ? 'active' : '' %>"><%= i %></a>
+            <% } %>
+
+            <% if (currentPage < totalPages) { %>
+                <a href="?page=<%= currentPage + 1 %>">&raquo;</a>
+            <% } %>
+        </div>
+    </main>
+    <%- include('../include/userFooter') %>
+

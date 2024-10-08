@@ -1,0 +1,20 @@
+<%- include('../include/userHeader.ejs') %>
+
+<link rel="stylesheet" href="/css/orderFailed.css">
+
+<main class="order-failed-container">
+    <div class="order-failed-card">
+        <h2>Order Failed</h2>
+        <p>Unfortunately, your payment couldn't be processed at this time.</p>
+        <p>Please try again or cancel to return to the home page.</p>
+        
+        <div class="order-failed-actions">
+            <button class="retry-btn" onclick="window.location.href='/checkout'">Retry Payment</button>
+            <button class="cancel-btn" onclick="window.location.href='/userHome'">Cancel</button>
+        </div>
+    </div>
+</main>
+
+<%- include('../include/userFooter') %>
+
+

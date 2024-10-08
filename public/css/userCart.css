@@ -1,0 +1,148 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f9f9f9;
+    margin: 0;
+}
+
+.cart-container {
+    max-width: 1200px;
+    margin: 10px auto;
+    background-color: white;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.cart-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 30px;
+}
+
+.cart-table thead tr {
+    background-color: #f8f4f4;
+}
+
+.cart-table th, .cart-table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.product-info {
+    display: flex;
+    align-items: center;
+}
+
+.product-info img {
+    width: 50px;
+    height: 50px;
+    margin-right: 10px;
+}
+
+.remove-btn {
+    background-color: transparent;
+    border: none;
+    font-size: 18px;
+    color: #e74c3c;
+    cursor: pointer;
+    margin-right: 15px;
+}
+
+.quantity {
+    display: flex;
+    align-items: center;
+}
+
+.quantity-btn {
+    background-color: #333;
+    color: white;
+    border: none;
+    padding: 3px;
+    cursor: pointer;
+    width: 30px;
+    text-align: center;
+}
+
+.quantity input {
+    width: 40px;
+    text-align: center;
+    border: 1px solid #ddd;
+    margin: 0 5px;
+    border-radius: 5px;
+}
+
+.cart-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.coupon-input {
+    padding: 10px;
+    width: 200px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.apply-coupon-btn, .update-cart-btn {
+    background-color: #333;
+    color: white;
+    border: none;
+    padding: 6px 6px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.cart-totals {
+    background-color: #f4f4f4;
+    padding: 20px;
+    border-radius: 5px;
+    text-align: right;
+}
+
+.cart-totals table {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.cart-totals td {
+    padding: 10px;
+}
+
+.checkout-btn {
+    background-color: #333;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 5px;
+    width: 100%;
+}
+#removeCouponBtn {
+    display: none;
+}
+
+.styled-remove-coupon-btn {
+    background-color: #f44336; /* Red color */
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin: 10px 0;
+}
+
+.styled-remove-coupon-btn:hover {
+    background-color: #d32f2f; /* Darker red on hover */
+}

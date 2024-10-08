@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dark Theme Checkout Page</title>
+    <link rel="stylesheet" href="/public/css/newcheck.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <div class="navbar">
+        <div class="logo">Tick-Tock</div>
+        <div class="search-bar">
+            <input type="text" placeholder="Search">
+            <button>Go</button>
+        </div>
+        <ul class="nav-links">
+            <li><a href="#">Home</a></li>
+            <li><a href="#">Shop</a></li>
+            <li><a href="#">Account</a></li>
+            <li><a href="#">Cart</a></li>
+            <li><a href="#">Logout</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Checkout Container -->
+    <div class="checkout-container">
+        <!-- Address Section -->
+        <div class="address-section">
+            <h2>Select Address</h2>
+            <div class="address-card">
+                <input type="radio" name="address" checked>
+                <div class="address-details">
+                    <p>Anna John, House No:102, Green Land, 4th Street, Delhi</p>
+                    <span>PIN: 123334</span>
+                    <a href="#">Edit Address</a>
+                    <a href="#">Add delivery instructions</a>
+                </div>
+            </div>
+            <div class="address-card">
+                <input type="radio" name="address">
+                <div class="address-details">
+                    <p>Peter, 123 HNO, Dream Square, 2nd Street, Kochi</p>
+                    <span>PIN: 454544</span>
+                    <a href="#">Edit Address</a>
+                    <a href="#">Add delivery instructions</a>
+                </div>
+            </div>
+            <button class="btn add-address-btn" id="addAddressBtn">Add New Address</button>
+        </div>
+        <div class="form-container" id="addressForm">
+            <div class="form-header">New Address</div>
+            <form id="newAddressForm">
+                <input type="text" id="name" name="name" placeholder="Name" required>
+                <input type="tel" id="phone" name="phone" placeholder="Phone" required>
+               <span> <small id="phoneError" class="error-message" style="display: none;">Invalid phone number</small></span>
+
+                <input type="text" id="house_no" name="house_no" placeholder="House No." required>
+                <input type="text" id="street" name="street" placeholder="Street" required>
+                <input type="text" id="city" name="city" placeholder="City" required>
+                <input type="text" id="district" name="district" placeholder="District" required>
+                <input type="text" id="pincode" name="pincode" placeholder="Pincode" required>
+                <input type="text" id="state" name="state" placeholder="State" required>
+                <button type="submit" class="btn">Save Address</button>
+            </form>
+        </div>
+        <!-- Order Summary Section -->
+        <div class="order-summary">
+            <div class="summary-details">
+                <h2>Order Summary</h2><br>
+
+                <p>Subtotal: <span>₹34800/-</span></p>
+                <p>Discount: <span>-₹800/-</span></p>
+                <p>Delivery charge: <span>+₹60/-</span></p>
+                <h3>Total: <span>₹34060.00</span></h3>
+            </div>
+        </div>
+
+        <!-- Payment Section -->
+        <div class="payment-section">
+            <h2>Payment</h2>
+            <div class="coupon-section">
+                <input type="text" placeholder="Enter code">
+                <button>Apply</button>
+                <button>View Coupons</button>
+            </div>
+            <h3>Select Payment Method</h3>
+            <div class="payment-option">
+                <input type="radio" name="payment" checked>
+                <label>Wallet - Available Amount: 10,000</label>
+            </div>
+            <div class="payment-option">
+                <input type="radio" name="payment">
+                <label>Razorpay</label>
+            </div>
+            <div class="payment-option">
+                <input type="radio" name="payment">
+                <label>EMI Options</label>
+            </div>
+            <div class="payment-option">
+                <input type="radio" name="payment">
+                <label>Cash on Delivery / Pay on Delivery</label>
+            </div>
+            <button class="place-order-btn">Place Your Order</button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div>Tick-Tock © 2024</div>
+            <ul class="footer-links">
+                <li><a href="#">About Us</a></li>
+                <li><a href="#">Help Center</a></li>
+                <li><a href="#">Contact Us</a></li>
+            </ul>
+        </div>
+    </footer>
+    <script>
+         // JavaScript to toggle the address form visibility
+    document.getElementById('addAddressBtn').addEventListener('click', function() {
+        const form = document.getElementById('addressForm');
+        form.style.display = form.style.display === 'none' || form.style.display === '' ? 'block' : 'none';
+    });
+
+    // Handling form submission
+    document.getElementById('newAddressForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        // Add your logic to handle form data submission here
+        alert('Address Saved!');
+        this.reset();
+        document.getElementById('addressForm').style.display = 'none';
+    });
+
+
+    document.addEventListener('DOMContentLoaded', function () {
+    const phoneInput = document.getElementById('phone');
+    const phoneError = document.getElementById('phoneError');
+    const pincodeInput = document.getElementById('pincode');
+    const pincodeError = document.getElementById('pincodeError');
+    const form = document.getElementById('addressForm');
+
+    // Helper function to determine if an input is valid
+    function isValidPhone(value) {
+        return /^\d{10}$/.test(value);
+    }
+
+    function isValidPincode(value) {
+        return /^\d{6}$/.test(value);
+    }
+
+    // Function to update error message visibility
+    function updateErrorMessages() {
+        const phoneValue = phoneInput.value;
+        const pincodeValue = pincodeInput.value;
+
+        if (phoneValue.length > 0) {
+            phoneError.style.display = isValidPhone(phoneValue) ? 'none' : 'block';
+        } else {
+            phoneError.style.display = 'none';
+        }
+
+        if (pincodeValue.length > 0) {
+            pincodeError.style.display = isValidPincode(pincodeValue) ? 'none' : 'block';
+        } else {
+            pincodeError.style.display = 'none';
+        }
+    }
+
+    phoneInput.addEventListener('input', updateErrorMessages);
+    pincodeInput.addEventListener('input', updateErrorMessages);
+
+    form.addEventListener('submit', function (e) {
+        updateErrorMessages();
+
+        const isPhoneValid = isValidPhone(phoneInput.value);
+        const isPincodeValid = isValidPincode(pincodeInput.value);
+
+        if (!isPhoneValid || !isPincodeValid) {
+            e.preventDefault();
+        }
+    });
+});
+
+
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+increase and decrease
+
+<%- include('../include/userHeader.ejs') %>
+<link rel="stylesheet" href="/css/userCart.css">
+
+<div class="cart-container">
+    <h1>Shopping Cart</h1>
+    <table class="cart-table">
+        <thead>
+            <tr>
+                <th>PRODUCT</th>
+                <th>PRICE</th>
+                <th>QUANTITY</th>
+                <th>TOTAL</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% products.forEach(item => { %>
+            <tr id="product-<%= item.cartProducts._id %>">
+                <td class="product-info">
+                    <form class="d-inline" id="deleteButton" action="/remove-item/<%= item.cartProducts._id %>" method="POST">
+                        <button class="remove-btn" onclick="removeItem('<%= item._id %>')">×</button>
+                    </form>
+                    <img src="<%= item.cartProducts.image[0] %>" alt="Product 1">
+                    <span><%= item.cartProducts.pname %></span>
+                </td>
+                <td>₹<%= item.cartProducts.price %></td>
+                <td>
+                    <div class="quantity">
+                        <button class="quantity-btn decrement" onclick="changeQuantity('<%= item.cartProducts._id %>', -1)">-</button>
+                        <input type="text" id="quantity-<%= item.cartProducts._id %>" value="<%= item.products.quantity %>" readonly>
+                        <button class="quantity-btn increment" onclick="changeQuantity('<%= item.cartProducts._id %>', 1)">+</button>
+                    </div>
+                </td>
+                <td>₹<span id="total-<%= item.cartProducts._id %>"><%= item.cartProducts.price * item.products.quantity %></span></td>
+            </tr>
+            <% }) %>
+        </tbody>
+    </table>
+
+    <div class="cart-actions">
+        <input type="text" placeholder="Coupon Code" class="coupon-input">
+        <button class="apply-coupon-btn">APPLY COUPON</button>
+        <button><a href="/coupons" style="text-decoration: none; color: black;">VIEW COUPONS</a></button>
+        <button class="update-cart-btn"><a href="/shop" style="text-decoration: none; color: white;">UPDATE CART</a></button>
+    </div>
+
+    <div class="cart-totals">
+        <h2>Cart Totals</h2>
+        <table>
+            <tr>
+                <td>Sub-total</td>
+                <td>₹ <span id="subtotal"><%= grandTotal %></span></td>
+            </tr>
+            <tr>
+                <td>Shipping</td>
+                <td>Flat rate: ₹ <%= flat_rate %></td>
+            </tr>
+            <tr>
+                <td>Grand Total</td>
+                <td>₹ <span id="grandTotal"><%= grandTotal + flat_rate %></span></td>
+            </tr>
+        </table>
+        <button class="checkout-btn"><a href="/checkout" style="text-decoration: none; color: white;">PROCEED TO CHECKOUT</a></button>
+    </div>
+</div>
+
+<script>
+    const flatRate = parseFloat('<%= flat_rate %>');
+
+    // Function to change quantity
+    function changeQuantity(productId, change) {
+        const quantityInput = document.getElementById(`quantity-${productId}`);
+        let quantity = parseInt(quantityInput.value) + change;
+
+        // Prevents the quantity from being less than 1
+        if (quantity < 1) quantity = 1;
+
+        // Update quantity in the frontend
+        quantityInput.value = quantity;
+        updateTotal(productId, quantity);
+
+        // Send the updated quantity to the backend
+        updateQuantityInBackend(productId, quantity);
+    }
+
+    function updateTotal(productId, quantity) {
+        const pricePerItem = parseFloat(document.querySelector(`#product-${productId} td:nth-child(2)`).innerText.replace('₹', ''));
+        const totalElement = document.getElementById(`total-${productId}`);
+        const newTotal = pricePerItem * quantity;
+
+        totalElement.innerText = newTotal.toFixed(2);
+
+        // Update subtotal and overall total
+        updateCartTotals();
+    }
+
+    function updateCartTotals() {
+        let subtotal = 0;
+
+        // Calculate subtotal by iterating through each product row's total
+        document.querySelectorAll('tbody tr').forEach(row => {
+            const total = parseFloat(row.querySelector('td:nth-child(4) span').innerText);
+            subtotal += total;
+        });
+
+        // Update the displayed subtotal
+        document.getElementById('subtotal').innerText = subtotal.toFixed(2);
+
+        // Calculate and update grand total (subtotal + flat rate)
+        const grandTotal = subtotal + flatRate;
+        document.getElementById('grandTotal').innerText = grandTotal.toFixed(2);
+    }
+
+    // Function to update quantity in the backend
+    function updateQuantityInBackend(productId, quantity) {
+        fetch(`/cart/update-quantity/${productId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ quantity: quantity })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('Quantity updated successfully');
+            } else {
+                console.error('Error updating quantity');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+</script>
+</body>
+</html>
+
+
+
+
+
+const express = require('express');
+const router = express.Router();
+const cartController = require('../controllers/cartController');
+
+// Route to handle quantity update
+router.post('/update-quantity/:id', cartController.updateQuantity);
+
+module.exports = router;
+
+
+
+
+const cartModel = require('../models/cartModel');
+
+// Function to handle quantity update
+exports.updateQuantity = async (req, res) => {
+    try {
+        const productId = req.params.id;
+        const newQuantity = req.body.quantity;
+        const token = req.cookies.UserToken;
+        const userData = tokenVerification(token);
+        const userId = new ObjectId(userData._id);
+
+        // Update the quantity of the product in the cart
+        const updatedCart = await cartModel.updateOne(
+            { userId: userId, 'products.productId': productId },
+            { $set: { 'products.$.quantity': newQuantity } }
+        );
+
+        if (updatedCart.modifiedCount > 0) {
+            res.json({ success: true, message: 'Quantity updated successfully' });
+        } else {
+            res.json({ success: false, message: 'Failed to update quantity' });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+order successfully
+
+
+
+
+
+
+
+
+  
+   
+
+
+<%- include('../include/userHeader.ejs') %>
+
+  <title>Order Confirmation</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+    }
+    .container {
+      text-align: center;
+      padding: 50px;
+    }
+    .order-success {
+      margin: 0 auto;
+      padding: 20px;
+      background-color: white;
+      border-radius: 8px;
+      width: 50%;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .order-success h1 {
+      color: green;
+      margin-bottom: 20px;
+    }
+    .order-success p {
+      margin-bottom: 30px;
+    }
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+    .buttons a {
+      text-decoration: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      color: white;
+      background-color: #000;
+      transition: background-color 0.3s;
+    }
+    .buttons a:hover {
+      background-color: #444;
+    }
+    .footer {
+      background-color: #000;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      position: fixed;
+      width: 100%;
+      bottom: 0;
+    }
+    .footer ul {
+      list-style: none;
+      padding: 0;
+    }
+    .footer ul li {
+      display: inline;
+      margin: 0 10px;
+    }
+    .footer ul li a {
+      color: white;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="order-success">
+      <img src="https://cdn-icons-png.flaticon.com/512/845/845646.png" alt="Success" width="100">
+      <h1>Order Successfully Placed</h1>
+      <p>Thank you for your purchase</p>
+      <div class="buttons">
+        <a href="/shop">Continue Shopping</a>
+        <a href="/my-orders">View Your Orders</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="footer-content">
+      <div class="footer-left">
+        <h3>Tick-Tock</h3>
+        <ul>
+          <li><a href="#">About</a></li>
+          <li><a href="#">Category</a></li>
+          <li><a href="#">Blog</a></li>
+        </ul>
+      </div>
+      <div class="footer-right">
+        <ul>
+          <li><a href="#">Help Center</a></li>
+          <li><a href="#">Contact Us</a></li>
+        </ul>
+        <ul>
+          <li><a href="#">Login</a></li>
+          <li><a href="#">Register</a></li>
+          <li><a href="#">My Orders</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+
+
+
+
+order model
+
+paymentMethod:{
+    type:String,
+    required:true
+  },
+
+
+
+  dashboard
+
+  const getDashboardData = async (req, res) => {
+    try {
+        const { reportType, startDate, endDate } = req.body;
+
+        let query = { orderStatus: { $ne: 'cancelled' } }; // Only include confirmed orders
+        const today = new Date();
+        let datePeriod = ""; // Variable to store the date period
+
+        // Function to format dates as dd-mm-yyyy
+        const formatDate = (date) => {
+            const day = String(date.getDate()).padStart(2, '0'); // Ensure two-digit day
+            const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-indexed
+            const year = date.getFullYear();
+            return `${day}-${month}-${year}`; // Return formatted date
+        };
+
+        // Set query dates based on reportType
+        if (reportType === 'daily') {
+            const start = new Date();
+            start.setUTCHours(0, 0, 0, 0); // Start of the day in UTC
+            const end = new Date();
+            end.setUTCHours(23, 59, 59, 999); // End of the day in UTC
+
+            query.placedAt = { $gte: start, $lte: end };
+            datePeriod = `Date: ${formatDate(start)}`; // Use formatted date
+        } else if (reportType === 'weekly') {
+            const start = new Date(today);
+            start.setDate(today.getDate() - today.getDay()); // Sunday of the current week
+            start.setHours(0, 0, 0, 0);
+
+            const end = new Date(start);
+            end.setDate(start.getDate() + 6); // Saturday of the current week
+            end.setHours(23, 59, 59, 999);
+
+            query.placedAt = { $gte: start, $lte: end };
+            datePeriod = `Week: ${formatDate(start)} - ${formatDate(end)}`; // Use formatted dates
+        } else if (reportType === 'monthly') {
+            const start = new Date(today.getFullYear(), today.getMonth(), 1);
+            const end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            query.placedAt = { $gte: start, $lte: end };
+            datePeriod = `Month: ${formatDate(start)} - ${formatDate(end)}`; // Use formatted dates
+        } else if (reportType === 'yearly') {
+            const start = new Date(today.getFullYear(), 0, 1);
+            const end = new Date(today.getFullYear() + 1, 0, 0);
+            query.placedAt = { $gte: start, $lte: end };
+            datePeriod = `Year: ${start.getFullYear()}`; // Year remains the same
+        } else if (reportType === 'custom' && startDate && endDate) {
+            query.placedAt = { $gte: new Date(startDate), $lte: new Date(endDate) };
+            datePeriod = `Custom Range: ${formatDate(new Date(startDate))} - ${formatDate(new Date(endDate))}`; // Use formatted dates
+        }
+
+        // Count total orders matching the query
+        const totalOrders = await orderModel.countDocuments(query);
+        console.log('Total Orders:', totalOrders);
+
+        // Aggregate total sales for the sales graph based on reportType
+        let groupByFormat;
+        switch (reportType) {
+            case 'daily':
+                groupByFormat = { $dateToString: { format: "%Y-%m-%d", date: "$placedAt" } }; // Group by day
+                break;
+            case 'weekly':
+                groupByFormat = { $isoWeek: "$placedAt" }; // Group by ISO week
+                break;
+            case 'monthly':
+                groupByFormat = { $dateToString: { format: "%Y-%m", date: "$placedAt" } }; // Group by month
+                break;
+            case 'yearly':
+                groupByFormat = { $dateToString: { format: "%Y", date: "$placedAt" } }; // Group by year
+                break;
+            default:
+                groupByFormat = { $dateToString: { format: "%Y-%m-%d", date: "$placedAt" } }; // Default to daily
+                break;
+        }
+
+        // Calculate metrics based on the selected date range
+        const salesData = await orderModel.aggregate([
+            { $match: query }, // Match the orders based on the selected date range and status
+            {
+                $group: {
+                    _id: groupByFormat, // Group by the selected time format (day, week, month, year)
+                    totalSales: { $sum: { $toDouble: "$grandTotal" } }, // Sum the grandTotal for each period
+                    totalDiscount: { $sum: { $toDouble: "$couponDiscount" } }, // Sum of coupon discounts for each period
+                    totalOfferAmount: { $sum: { $toDouble: "$offerDiscount" } }, // Sum of offerDiscount for each period
+                    totalOrders: { $sum: 1 } // Count the number of orders for each period
+                }
+            },
+            { $sort: { _id: 1 } } // Sort by the date in ascending order
+        ]);
+
+        // Get active users dynamically from user model
+        const activeUsers = await userModel.countDocuments({ is_active: true });
+
+        // Format the sales data for the graph
+        const formattedSalesData = salesData.map(item => ({
+            label: item._id, // The date (daily, weekly, monthly, etc.)
+            totalSales: item.totalSales, // Total sales for that period
+            totalDiscount: item.totalDiscount, // Total coupon discount for that period
+            totalOfferAmount: item.totalOfferAmount, // Total offer discount for that period
+            totalOrders: item.totalOrders // Total orders for that period
+        }));
+
+        // Calculate overall totals (from start to now)
+        const overallMetrics = await orderModel.aggregate([
+            {
+                $match: { orderStatus: { $ne: "cancelled" } }
+            },
+            {
+                $group: {
+                    _id: null,
+                    overallTotalSales: { $sum: { $toDouble: "$grandTotal" } },
+                    totalCouponDiscount: { $sum: { $toDouble: "$couponDiscount" } },
+                    totalOfferDiscount: { $sum: { $toDouble: "$offerDiscount" } },
+                    totalOrders: { $sum: 1 } // Count total orders
+                }
+            }
+        ]);
+
+        // Access the overall metrics
+        const overallData = overallMetrics[0] || {
+            overallTotalSales: 0,
+            totalCouponDiscount: 0,
+            totalOfferDiscount: 0,
+            totalOrders: 0
+        };
+ console.log(totalOrders,
+    activeUsers,".....",
+     formattedSalesData,".....",
+     overallData.overallTotalSales,".....", // Total sales from start to now
+     overallData.totalCouponDiscount,".....", // Total coupon discount from start to now
+     overallData.totalOfferDiscount,".....", // Total offer discount from start to now
+    overallData.totalOrders);
+        // Send the response back to the client with all required data
+        res.json({
+            totalOrders,
+            activeUsers,
+            salesData: formattedSalesData,
+            overallTotalSales: overallData.overallTotalSales, // Total sales from start to now
+            totalCouponDiscount: overallData.totalCouponDiscount, // Total coupon discount from start to now
+            totalOfferDiscount: overallData.totalOfferDiscount, // Total offer discount from start to now
+            totalOverallOrders: overallData.totalOrders // Total orders from start to now
+        });
+
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+
+
+
+
+second without graph
+
+
+
+const getDashboardData = async (req, res) => {
+    try {
+        const { reportType, startDate, endDate } = req.body;
+
+        let query = { orderStatus: { $ne: 'cancelled' } }; // Only include confirmed orders
+        const today = new Date();
+        let datePeriod = ""; // Variable to store the date period
+
+        // Function to format dates as dd-mm-yyyy
+        const formatDate = (date) => {
+            const day = String(date.getDate()).padStart(2, '0'); // Ensure two-digit day
+            const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-indexed
+            const year = date.getFullYear();
+            return `${day}-${month}-${year}`; // Return formatted date
+        };
+
+        // Set query dates based on reportType
+        if (reportType === 'daily') {
+            const start = new Date();
+            start.setUTCHours(0, 0, 0, 0); // Start of the day in UTC
+            const end = new Date();
+            end.setUTCHours(23, 59, 59, 999); // End of the day in UTC
+
+            query.placedAt = { $gte: start, $lte: end };
+            datePeriod = `Date: ${formatDate(start)}`; // Use formatted date
+        } else if (reportType === 'weekly') {
+            const start = new Date(today);
+            start.setDate(today.getDate() - today.getDay()); // Sunday of the current week
+            start.setHours(0, 0, 0, 0);
+
+            const end = new Date(start);
+            end.setDate(start.getDate() + 6); // Saturday of the current week
+            end.setHours(23, 59, 59, 999);
+
+            query.placedAt = { $gte: start, $lte: end };
+            datePeriod = `Week: ${formatDate(start)} - ${formatDate(end)}`; // Use formatted dates
+        } else if (reportType === 'monthly') {
+            const start = new Date(today.getFullYear(), today.getMonth(), 1);
+            const end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            query.placedAt = { $gte: start, $lte: end };
+            datePeriod = `Month: ${formatDate(start)} - ${formatDate(end)}`; // Use formatted dates
+        } else if (reportType === 'yearly') {
+            const start = new Date(today.getFullYear(), 0, 1);
+            const end = new Date(today.getFullYear() + 1, 0, 0);
+            query.placedAt = { $gte: start, $lte: end };
+            datePeriod = `Year: ${start.getFullYear()}`; // Year remains the same
+        } else if (reportType === 'custom' && startDate && endDate) {
+            query.placedAt = { $gte: new Date(startDate), $lte: new Date(endDate) };
+            datePeriod = `Custom Range: ${formatDate(new Date(startDate))} - ${formatDate(new Date(endDate))}`; // Use formatted dates
+        }
+
+        // Count total orders matching the query
+        const totalOrders = await orderModel.countDocuments(query);
+        console.log('Total Orders:', totalOrders);
+
+        // Aggregate total sales for the sales graph based on reportType
+        let groupByFormat;
+        switch (reportType) {
+            case 'daily':
+                groupByFormat = { $dateToString: { format: "%Y-%m-%d", date: "$placedAt" } }; // Group by day
+                break;
+            case 'weekly':
+                groupByFormat = { $isoWeek: "$placedAt" }; // Group by ISO week
+                break;
+            case 'monthly':
+                groupByFormat = { $dateToString: { format: "%Y-%m", date: "$placedAt" } }; // Group by month
+                break;
+            case 'yearly':
+                groupByFormat = { $dateToString: { format: "%Y", date: "$placedAt" } }; // Group by year
+                break;
+            default:
+                groupByFormat = { $dateToString: { format: "%Y-%m-%d", date: "$placedAt" } }; // Default to daily
+                break;
+        }
+
+        const salesData = await orderModel.aggregate([
+            { $match: query }, // Match the orders based on the selected date range and status
+            {
+                $group: {
+                    _id: groupByFormat, // Group by the selected time format (day, week, month, year)
+                    totalSales: { $sum: { $toDouble: "$grandTotal" } }, // Sum the grandTotal for each period
+                    totalOrders: { $sum: 1 } // Count the number of orders for each period
+                }
+            },
+            { $sort: { _id: 1 } } // Sort by the date in ascending order
+        ]);
+
+        // Aggregate total sales and discount for overall metrics
+        const totalSalesMetrics = await orderModel.aggregate([
+            {
+                $match: { orderStatus: { $ne: "cancelled" } }
+            },
+            {
+                $group: {
+                    _id: null,
+                    totalGrandTotal: { $sum: { $toDouble: "$grandTotal" } },
+                    totalDiscount: { $sum: { $toDouble: "$couponDiscount" } },
+                    totalOfferAmount: { $sum: { $toDouble: "$offerDiscount" } } // Sum of offerDiscount
+                }
+            }
+        ]);
+
+        // Access the total metrics
+        const { totalGrandTotal = 0, totalDiscount = 0, totalOfferAmount = 0 } = totalSalesMetrics[0] || {};
+
+        // Get active users dynamically from user model
+        const activeUsers = await userModel.countDocuments({ is_active: true });
+
+        // Format the sales data for the graph
+        const formattedSalesData = salesData.map(item => ({
+            label: item._id, // The date (daily, weekly, monthly, etc.)
+            totalSales: item.totalSales // Total sales for that period
+        }));
+
+        // Calculate overall total sales (from start to now)
+        const overallTotalMetrics = await orderModel.aggregate([
+            {
+                $match: { orderStatus: { $ne: "cancelled" } }
+            },
+            {
+                $group: {
+                    _id: null,
+                    overallTotal: { $sum: { $toDouble: "$grandTotal" } }
+                }
+            }
+        ]);
+
+        // Access the overall total
+        const overallTotal = overallTotalMetrics[0] ? overallTotalMetrics[0].overallTotal : 0;
+        console.log({
+            totalGrandTotal,
+            overallTotal, // Include overall total in the response
+            totalOrders,
+            totalDiscount,
+            totalOfferAmount, // Include total offer amount in the response
+            activeUsers,
+            salesData: formattedSalesData,
+            datePeriod, 
+        });
+        
+        // Send the response back to the client with all required data
+        res.json({
+            totalGrandTotal,
+            overallTotal, // Include overall total in the response
+            totalOrders,
+            totalDiscount,
+            totalOfferAmount, // Include total offer amount in the response
+            activeUsers,
+            salesData: formattedSalesData,
+            datePeriod, 
+        });
+
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+
+
+
+
+admin dashboard
+
+
+
+<%- include('../include/adminHeader.ejs') %>
+
+<link rel="stylesheet" href="/css/adminDashboard.css">
+<title>Admin Dashboard</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 0;
+    }
+
+    main {
+        padding: 20px;
+        max-width: 1200px;
+        margin: auto;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+        text-align: center;
+        color: #333;
+    }
+
+    h2 {
+        color: #444;
+        margin-bottom: 15px;
+    }
+
+    .summary {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        flex-wrap: wrap; /* Allow wrapping on smaller screens */
+    }
+
+    .card {
+        background: #f9f9f9;
+        padding: 20px;
+        border-radius: 8px;
+        flex: 1 1 20%; /* Adjusted for better responsiveness */
+        margin: 10px;
+        text-align: center;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .sales-chart {
+        margin-bottom: 20px;
+    }
+
+    .top-products {
+        background: #f9f9f9;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+
+    footer {
+        text-align: center;
+        padding: 10px 0;
+        background: #f9f9f9;
+        margin-top: 20px;
+    }
+
+    select, button {
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+        transition: border-color 0.3s;
+    }
+
+    select:focus, button:focus {
+        border-color: #007BFF; /* Change border color on focus */
+        outline: none; /* Remove default outline */
+    }
+
+    .report-controls {
+        display: flex;
+        flex-direction: column; /* Stack controls vertically */
+        align-items: flex-start;
+        margin-bottom: 20px;
+    }
+
+    .generate-report-button, .download-button {
+        margin-left: 10px;
+    }
+
+    .download-options {
+        display: flex;
+        justify-content: center; /* Center the download buttons */
+        flex-direction: column; /* Stack buttons vertically */
+        margin-top: 20px;
+    }
+
+    .download-button {
+        background-color: #007BFF; /* Button color */
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+
+    .download-button:hover {
+        background-color: #0056b3; /* Darker on hover */
+    }
+
+    .download-button:active {
+        background-color: #004494; /* Even darker when clicked */
+    }
+
+</style>
+</head>
+<body>
+
+<main style="color: black;">
+    <h1>Dashboard</h1>
+    <div>
+        <h2>Sales Report</h2>
+        <div class="report-controls">
+            <label for="reportType">Report Type:</label>
+            <select id="reportType">
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="yearly">Yearly</option>
+                <option value="custom">Custom Range</option>
+            </select>
+
+            <div id="customRange" style="display: none;">
+                <label for="startDate">Start Date:</label>
+                <input type="date" id="startDate">
+                <label for="endDate">End Date:</label>
+                <input type="date" id="endDate">
+            </div>
+
+            <button class="generate-report-button" onclick="generateReport()">Generate Report</button>
+        </div>
+    </div>
+    
+    <div class="summary">
+        <div class="card">
+            <h2>Total Sales</h2>
+            <p id="totalSales">₹0</p>
+            <!-- <p>+20% month over month</p> -->
+        </div>
+        <div class="card">
+            <h2>Orders</h2>
+            <p id="totalOrders">0</p>
+            <!-- <p>+33% last month</p> -->
+        </div>
+        <div class="card">
+            <h2>Discount</h2>
+            <p id="totalDiscount">₹0</p>
+            <!-- <p>-8% month over month</p> -->
+        </div>
+        <div class="card">
+            <h2>Active Users</h2>
+            <p id="newUsers">0</p>
+            <!-- <p>-8% month over month</p> -->
+        </div>
+    </div>
+    
+    <div class="sales-chart">
+        <h2>Total Sales</h2>
+        <canvas id="salesChart"></canvas>
+    </div>
+
+    <div class="top-products">
+        <h2>Top Selling Products</h2>
+        <ul>
+            <li>Omega Speedmaster - In stock - ₹6,799</li>
+            <li>Fossil Diamonds - In stock - ₹1,999</li>
+            <li>Armani Exchange - In stock - ₹10,999</li>
+            <li>Fossil Dark - In stock - ₹1,999</li>
+        </ul>
+    </div>
+
+    <div class="download-options">
+        <button class="download-button" onclick="downloadPDF()">Download PDF</button>
+        <button class="download-button" onclick="downloadExcel()">Download Excel</button>
+    </div>
+</main>
+
+<footer>
+    <p>Tick-Tock</p>
+    <p>About Us | Category | Blog</p>
+    <div>
+        <p>Information | Help Center | My Orders</p>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    const ctx = document.getElementById('salesChart').getContext('2d');
+    let salesChart; // Declare salesChart variable globally
+
+    // Function to generate report and fetch data from the backend
+    function generateReport() {
+        const reportType = document.getElementById('reportType').value;
+        let startDate = null;
+        let endDate = null;
+
+        if (reportType === 'custom') {
+            startDate = document.getElementById('startDate').value;
+            endDate = document.getElementById('endDate').value;
+        }
+
+        // Fetch dashboard data from backend
+        fetch('/dashboard-data', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ reportType, startDate, endDate }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Update the dashboard metrics
+            updateDashboardData(
+                `₹${data.totalGrandTotal.toLocaleString()}`, 
+                data.totalOrders.toString(), 
+                `₹${data.totalDiscount.toLocaleString()}`, 
+                data.activeUsers.toString()
+            );
+
+            // Prepare the data for the chart
+            const labels = data.salesData.map(item => item.label); // Labels (e.g., dates)
+            const chartData = data.salesData.map(item => item.totalSales); // Sales totals
+
+            // Update chart with the new data
+            updateChart(labels, chartData);
+        })
+        .catch(error => console.error('Error fetching dashboard data:', error));
+    }
+
+    // Function to update dashboard totals
+    function updateDashboardData(totalSales, totalOrders, totalDiscount, activeUsers) {
+        document.getElementById('totalSales').innerText = totalSales;
+        document.getElementById('totalOrders').innerText = totalOrders;
+        document.getElementById('totalDiscount').innerText = totalDiscount;
+        document.getElementById('newUsers').innerText = activeUsers;
+    }
+
+    // Function to update or create the sales chart
+    function updateChart(labels, data) {
+        if (salesChart) {
+            // If the chart already exists, just update it
+            salesChart.data.labels = labels;
+            salesChart.data.datasets[0].data = data;
+            salesChart.update();
+        } else {
+            // Create a new chart if one doesn't exist
+            salesChart = new Chart(ctx, {
+                type: 'line', // You can also use 'bar', 'pie', etc.
+                data: {
+                    labels: labels, // X-axis labels
+                    datasets: [{
+                        label: 'Total Sales',
+                        data: data, // Y-axis data
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            beginAtZero: true
+                        },
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    // Show/Hide custom date range fields
+    document.getElementById('reportType').addEventListener('change', function() {
+        const customRangeDiv = document.getElementById('customRange');
+        customRangeDiv.style.display = this.value === 'custom' ? 'block' : 'none';
+    });
+
+    function downloadPDF() {
+        const reportType = document.getElementById('reportType').value;
+        let startDate = null;
+        let endDate = null;
+
+        if (reportType === 'custom') {
+            startDate = document.getElementById('startDate').value;
+            endDate = document.getElementById('endDate').value;
+        }
+
+        // Redirect to the backend route for PDF generation
+        window.location.href = `/download/pdf?reportType=${reportType}&startDate=${startDate}&endDate=${endDate}`;
+    }
+
+    function downloadExcel() {
+        const reportType = document.getElementById('reportType').value;
+        let startDate = null;
+        let endDate = null;
+
+        if (reportType === 'custom') {
+            startDate = document.getElementById('startDate').value;
+            endDate = document.getElementById('endDate').value;
+        }
+
+        // Redirect to the backend route for Excel generation
+        window.location.href = `/download/excel?reportType=${reportType}&startDate=${startDate}&endDate=${endDate}`;
+    }
+</script>
+
+</body>
+</html>
+
+
+

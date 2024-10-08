@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart</title>
+    <link rel="stylesheet" href="/c/cart.css">
+</head>
+<body>
+    <div class="cart-container">
+        <h1>Shopping Cart</h1>
+        <table class="cart-table">
+            <thead>
+                <tr>
+                    <th>PRODUCT</th>
+                    <th>PRICE</th>
+                    <th>QUANTITY</th>
+                    <th>TOTAL</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% product.forEach(item => { %>
+                <tr>
+                    <td class="product-info">
+                        <button class="remove-btn">×</button>
+                        <img src="<%= item.image %>" alt="<%= item.name %>">
+                        <span><%= item.name %></span>
+                    </td>
+                    <td>$<%= item.price %></td>
+                    <td>
+                        <div class="quantity">
+                            <button class="quantity-btn">-</button>
+                            <input type="text" value="<%= item.quantity %>" readonly>
+                            <button class="quantity-btn">+</button>
+                        </div>
+                    </td>
+                    <td>$<%= item.price * item.quantity %></td>
+                </tr>
+                <% }) %>
+            </tbody>
+        </table>
+        
+        <div class="cart-actions">
+            <input type="text" placeholder="Coupon Code" class="coupon-input">
+            <button class="apply-coupon-btn">APPLY COUPON</button>
+            <button class="update-cart-btn">UPDATE CART</button>
+        </div>
+        
+        <div class="cart-totals">
+            <h2>Cart Totals</h2>
+            <table>
+                <tr>
+                    <td>Sub-total</td>
+                    <td>$<%= subTotal %></td>
+                </tr>
+                <tr>
+                    <td>Shipping</td>
+                    <td>Flat rate: $<%= shipping %></td>
+                </tr>
+                <tr>
+                    <td>Total</td>
+                    <td>$<%= total %></td>
+                </tr>
+            </table>
+            <button class="checkout-btn">PROCEED TO CHECKOUT</button>
+        </div>
+    </div>
+</body>
+</html>

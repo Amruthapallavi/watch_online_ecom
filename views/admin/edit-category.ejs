@@ -1,0 +1,107 @@
+<%- include('../include/adminHeader.ejs') %>
+<style>
+    /* styles.css */
+
+/* body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f0f0f0;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+} */
+
+/* .container {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 60%;
+    max-width: 600px;
+    box-sizing: border-box;
+} */
+.container {
+    padding: 30px;
+    width: 80%;
+    max-width: 70%;
+    box-sizing: border-box;
+}
+h2 {
+    color: #333;
+    text-align: center;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    color: #555;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="file"],
+textarea {
+    width: calc(100% - 20px); /* Adjust for padding */
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 100px;
+    max-height: 200px; /* Limit height for better appearance */
+}
+
+input[type="submit"] {
+    background-color: #060606;
+    color: white;
+    
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+input[type="submit"]:hover {
+    background-color: #6f716f;
+}
+
+</style>
+    <div class="container">
+        <h2>Edit Category</h2>
+        <form action="/edit-category/<%= catData._id %>" method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="image">Category Image:</label>
+                <input type="file" id="image" name="cimage" value="<%= catData.cimage %>" required >
+              
+            </div>
+            <div class="form-group">
+                
+                <label for="name">Category Name:</label>
+                <input type="text" id="name" name="cname" value="<%= catData.cname %>" required>
+            </div>
+            <br><br>
+            <div class="form-group">
+                <input type="submit" value="Submit">
+            </div>
+           
+        </form>
+    </div>
+
+
+    <script>
+    
+    </script>
+    <%- include('../include/adminFooter.ejs') %>
+

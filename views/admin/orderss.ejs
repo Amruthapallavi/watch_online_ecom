@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Orders</title>
+    <link rel="stylesheet" href="/css/adminOrder.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                <h1>Tick</h1>
+            </div>
+            <div class="search-bar">
+                <input type="text" placeholder="Search">
+                <button>Go</button>
+            </div>
+            <ul>
+                <li><a href="#">Dashboard</a></li>
+                <li><a href="#">Users</a></li>
+                <li><a href="#">Orders</a></li>
+                <li><a href="#">Products</a></li>
+                <li><a href="#">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="order-list">
+            <ul>
+                <li>
+                    <img src="watch1.png" alt="Fossil Diamets">
+                    <div class="details">
+                        <h3>Fossil Diamets</h3>
+                        <p>Color: Black</p>
+                        <p>MRP: ₹13,999</p>
+                    </div>
+                    <div class="status-container">
+                        <span class="status yellow"></span>
+                        <span>Pending</span>
+                    </div>
+                    <div class="actions">
+                        <button class="edit-btn">Edit</button>
+                        <button class="status-btn">Status</button>
+                    </div>
+                </li>
+                <li>
+                    <img src="watch2.png" alt="Fossil Dark">
+                    <div class="details">
+                        <h3>Fossil Dark</h3>
+                        <p>Color: Black</p>
+                        <p>MRP: ₹8,999</p>
+                    </div>
+                    <div class="status-container">
+                        <span class="status yellow"></span>
+                        <span>Pending</span>
+                    </div>
+                    <div class="actions">
+                        <button class="edit-btn">Edit</button>
+                        <button class="status-btn">Status</button>
+                    </div>
+                </li>
+                <li>
+                    <img src="watch3.png" alt="Armani Exchange">
+                    <div class="details">
+                        <h3>Armani Exchange</h3>
+                        <p>Color: Silver</p>
+                        <p>MRP: ₹10,999</p>
+                    </div>
+                    <div class="status-container">
+                        <span class="status green"></span>
+                        <span>Delivered</span>
+                    </div>
+                    <div class="actions">
+                        <button class="edit-btn">Edit</button>
+                        <button class="status-btn">Status</button>
+                    </div>
+                </li>
+            </ul>
+        </section>
+        <div class="pagination">
+            <button disabled>&lt; Previous</button>
+            <span>Page 1 of 26</span>
+            <button>Next &gt;</button>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-section">
+            <h3>Tick-Tock</h3>
+            <p>Watch Store</p>
+        </div>
+        <div class="footer-section">
+            <h4>About</h4>
+            <ul>
+                <li><a href="#">About Us</a></li>
+                <li><a href="#">Category</a></li>
+                <li><a href="#">Blog</a></li>
+            </ul>
+        </div>
+        <div class="footer-section">
+            <h4>Information</h4>
+            <ul>
+                <li><a href="#">Help Center</a></li>
+                <li><a href="#">Contact Us</a></li>
+            </ul>
+        </div>
+        <div class="footer-section">
+            <h4>Users</h4>
+            <ul>
+                <li><a href="#">Login</a></li>
+                <li><a href="#">Register</a></li>
+                <li><a href="#">My Orders</a></li>
+            </ul>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

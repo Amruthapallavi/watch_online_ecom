@@ -1,0 +1,196 @@
+<%- include('../include/adminHeader.ejs') %>
+<style>
+    body{
+        padding: 0;
+    }
+  .pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+  }
+  
+  .pagination a {
+    margin: 0 5px;
+    padding: 10px;
+    background-color: #ddd;
+    text-decoration: none;
+    color: black;
+    border-radius: 5px;
+  }
+  
+  .pagination a.active {
+    background-color: black;
+    color: white;
+  }
+</style>
+<% if (typeof message !== 'undefined') { %>
+    <p style="color: green; text-align: center;"><%= message %></p>
+<% } %>
+
+<section>
+    <div class="container">
+        <div class="row mt-4">
+            <form class="d-flex" action="/search-product" method="post">
+                <input class="form-control me-2" type="search" name="String" placeholder="Search" aria-label="Search">
+                <button class="btn btn-outline-dark searchButton" type="submit">Search</button>
+            </form>
+            <a href="add-product" class="btn btn-dark ml-auto mb-5">Add Product</a>
+        </div>
+
+        <table class="table table-striped table-bordered mt-5" id="peopleTable">
+            <thead>
+                <tr>
+                    <th scope="col">Image</th>
+                    <th scope="col">Product Name</th>
+                    <th scope="col">Category</th>
+                    <th scope="col">Quantity</th>
+                    <th scope="col">Price</th>
+                    <th scope="col">Offer</th>
+                    <th scope="col">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (data.length > 0) { %>
+                    <% for (let i = 0; i < data.length; i++) { 
+                        const offerValue = data[i].productOffer ? data[i].productOffer : 0;
+                    %>
+                    <tr>
+                        <td><img src="/<%= data[i].image[0] %>" width="60px" height="60px" alt="Loading"></td>
+                        <td><%= data[i].pname %></td>
+                        <td><%= data[i].categoryInfo.cname %></td>
+                        <td><%= data[i].quantity %></td>
+                        <td><%= data[i].price %></td>
+                        <td><%= offerValue %></td>
+                        <td>
+                            <a href="/edit-product/<%= data[i]._id %>" class="btn btn-primary">Edit</a>
+                            <% if (offerValue > 0) { %>
+                                <button class="btn btn-danger" onclick="removeProductOffer('<%= data[i]._id %>')">Remove Offer</button>
+                            <% } else { %>
+                                <button class="btn btn-success" onclick="showProductOfferPopup('<%= data[i]._id %>')">Add Offer</button>
+                            <% } %>
+                            <form class="d-inline" id="deleteButton<%= data[i]._id %>" action="/delete-product/<%= data[i]._id %>" method="POST">
+                                <button class="btn btn-danger deleteProduct" type="submit">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    <% } %>
+                <% } else { %>
+                    <tr>
+                        <td colspan="7">No products found.</td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<div class="pagination">
+    <% if (currentPage > 1) { %>
+        <a href="/products?page=<%= currentPage - 1 %>">&laquo;</a>
+    <% } %>
+    <% for (let i = 1; i <= totalPages; i++) { %>
+        <a href="/products?page=<%= i %>" class="<%= i === currentPage ? 'active' : '' %>"><%= i %></a>
+    <% } %>
+    <% if (currentPage < totalPages) { %>
+        <a href="/products?page=<%= currentPage + 1 %>">&raquo;</a>
+    <% } %>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+   
+    function showProductOfferPopup(productId) {
+    Swal.fire({
+        title: 'Add Offer',
+        html: `<input type="number" id="offerValue" class="swal2-input" placeholder="Enter Offer Value (%)" required>`,
+        confirmButtonText: 'Submit',
+        showCancelButton: true,
+        preConfirm: () => {
+            const offerValueInput = document.getElementById('offerValue');
+            if (!offerValueInput || !offerValueInput.value) {
+                Swal.showValidationMessage('Please enter an offer value.');
+                return false;
+            }
+            const offerValue = parseFloat(offerValueInput.value);
+            if (isNaN(offerValue) || offerValue < 0) {
+                Swal.showValidationMessage('Please enter a valid offer value (greater than or equal to 0).');
+                return false;
+            }
+            return { offerValue };
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const { offerValue } = result.value;
+
+            // Ensure productId is being passed correctly
+            fetch('/add-product-offer/' + productId, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ offerValue })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Success!', 'The offer has been added.', 'success').then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire('Error!', 'There was an error adding the offer.', 'error');
+                }
+            })
+            .catch(() => Swal.fire('Error!', 'There was an error with the request.', 'error'));
+        }
+    });
+}
+
+
+
+    function removeProductOffer(productId) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'Do you really want to remove this offer?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, remove it!',
+            cancelButtonText: 'No, keep it'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch('/remove-product-offer/' + productId, {
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire('Removed!', 'The offer has been removed.', 'success').then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Error!', 'There was an error removing the offer.', 'error');
+                    }
+                })
+                .catch(() => Swal.fire('Error!', 'There was an error with the request.', 'error'));
+            }
+        });
+    }
+
+    document.querySelectorAll('.deleteProduct').forEach((button) => {
+        button.addEventListener('click', (e) => {
+            const productId = e.target.closest('form').id.replace('deleteButton', '');
+            if (!confirm('Do you really want to delete this product?')) {
+                e.preventDefault();
+            } else {
+                Swal.fire({
+                    title: 'Deleting...',
+                    text: 'Your product is being deleted.',
+                    icon: 'info',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                const form = document.getElementById('deleteButton' + productId);
+                form.submit();
+            }
+        });
+    });
+</script>
+
+<%- include('../include/adminFooter.ejs') %>

@@ -1,0 +1,206 @@
+@mixin bg($url) {
+    background-attachment: fixed;
+    background-image: url(#{$url});
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+  }
+  @mixin col($c, $m: 0px) {
+    $margin: calc(((12 / #{$c}) - 1) * #{$m});
+    width: calc(((100% - #{$margin}) / 12) * #{$c});
+    &:not(:last-child) {
+      margin: 0 #{$m} 0 0;
+    }
+  }
+  
+  * {
+    box-sizing: border-box;
+    color: #f9f9fa;
+    font: 400 15px 'Didact Gothic', sans-serif;
+    &::after, &::before {
+      box-sizing: inherit;
+    }
+  }
+  html, body {
+    font: 400 15px 'Didact Gothic', sans-serif;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    padding: 0;
+    width: 100%;
+  }
+  body {
+    background-image: ('https://tse2.mm.bing.net/th?id=OIP.onx1BSv_U9jzNa9qFYojVgHaEK&pid=Api&P=0&h=180');
+    color: #f7f7fa;
+    position: relative;
+  }
+  a {
+    color: #f7f7f6;
+    text-decoration: none;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+  label {
+    display: block;
+  }
+  input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+    display: block;
+    outline: none;
+    padding: 0 8px 8px 30px;
+    position: relative;
+    transition: all 0.2s ease-in-out;
+    width: 100%;
+    &:focus {
+      border-bottom-color: #0c0d1f;
+    }
+  }
+  .row {
+    &::after {
+      clear: both;
+      content: '';
+      display: block;
+      width: 100%;
+    }
+  }
+  .col {
+    border-radius: inherit;
+    float: left;
+    margin: 0;
+    padding: 30px 50px;
+    position: relative;
+    &.col-6 {
+      @include col(6);
+    }
+  }
+  .container { }
+  .login-box {
+    backface-visibility: hidden;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 1px;
+    box-shadow:
+      0 0 20px 0 rgba(0, 0, 0, 0.4),
+      0 0 0 2000px rgba(#0c0d1f, 0.3);
+    left: 50%;
+    position: absolute;
+    top: 50%;
+    transform:
+      translate3d(-50%, -50%, 0)
+      scale(1, 1);
+    width: 90%;
+    max-width: 1000px;
+  }
+  .login-title {
+    background: transparent;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 1);
+    width: 60%;
+  }
+  h1 {
+    font: 400 48px 'Lobster', cursive;
+    text-transform: uppercase;
+  }
+  .small-text {
+    font-size: 22px;
+  }
+  .login-form {
+    background-image: ('https://tse2.mm.bing.net/th?id=OIP.onx1BSv_U9jzNa9qFYojVgHaEK&pid=Api&P=0&h=180');
+    background: black;
+    text-align: center;
+    width: 40%;
+    > form {
+      > *:not(:last-child) {
+        margin: 0 0 20px;
+      }
+    }
+  }
+  .avatar {
+    background: rgba(#fff, 1);
+    border-radius: 50%;
+    box-shadow: none;
+    cursor: pointer;
+    height: 100px;
+    margin: 0 auto 30px;
+    position: relative;
+    transition: all 0.3s ease-in-out;
+    width: 100px;
+    &:hover {
+      box-shadow:
+        0 0 20px rgba(0, 0, 0, 0.1);
+    }
+    &::after, &::before {
+      border-radius: 50%;
+      color: #faf9f7;
+      content: '';
+      left: 50%;
+      position: absolute;
+      transform: translate3d(-50%, -50%, 0) rotate(-45deg);
+      z-index: 1;
+    }
+    &::after {
+      border: 3px solid;
+      height: 32px;
+      top: 36%;
+      width: 32px;
+    }
+    &::before {
+      border: 3px solid transparent;
+      border-top: 3px solid;
+      border-right: 3px solid;
+      height: 48px;
+      top: 73%;
+      width: 48px;
+    }
+    img {
+      border-radius: inherit;
+      height: 100%;
+      object-fit: cover;
+      position: relative;
+      width: 100%;
+      z-index: 2;
+    }
+  }
+  .registration {
+    margin: 0 0 20px;
+  }
+  .login, .passwd {
+    position: relative;
+    &::after {
+      backface-visibility: hidden;
+      color: rgba(248, 251, 252, 0.2);
+      display: block;
+      font: 400 16px 'FontAwesome', sans-serif;
+      left: 14px;
+      position: absolute;
+      top: 35%;
+      transform:
+        translate3d(-50%, -50%, 0)
+        scale(1);
+      z-index: 1;
+    }
+  }
+  .login {
+    &::after {
+      content: '\f2be';
+    }
+  }
+  .passwd {
+    &::after {
+      content: '\f084';
+    }
+  }
+  .button {
+    border: none;
+    background: #cfc9c9;
+    color: #090909;
+    cursor: pointer;
+    display: block;
+    padding: 12px;
+    width: 100%;
+  }
+  .lost-passwd {
+    margin: 30px 0 0;
+  }
+  

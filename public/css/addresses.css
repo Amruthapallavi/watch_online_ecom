@@ -1,0 +1,201 @@
+/* General Body Styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #faf6f6;
+    color: #060606;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Navbar Styles */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: black;
+    padding: 15px 30px;
+    width: 100%;
+}
+
+.logo {
+    color: #e0e0e0;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.search-bar input {
+    padding: 8px;
+    width: 200px;
+    border: 1px solid #333;
+    background: #1c1c1e;
+    color: #f5f5f5;
+    border-radius: 5px;
+}
+
+.search-bar button {
+    padding: 8px 12px;
+    background-color: #3a3a3c;
+    color: #f5f5f5;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.nav-links {
+    display: flex;
+    list-style: none;
+    gap: 20px;
+}
+
+.nav-links li a {
+    color: #e0e0e0;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+
+/* Main Checkout Container Styles */
+.checkout-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center; /* Center the content */
+    gap: 20px;
+    padding: 20px;
+    max-width: 1600px;
+}
+.status-button {
+    margin-right: 0px;
+    padding: 5px 10px;
+    border: none;
+    display:flex;
+    align-items: end;
+    justify-content: end;
+    border-radius: 5px;
+    background-color: black;
+    color: white;
+    cursor: pointer;
+}
+/* Address Section */
+.address-section {
+    flex: 0 0 1150px; /* Fixed width */
+    min-width: 100%;
+    background: #ededef;
+    border-radius: 8px;
+    padding: 20px;
+    color: #040404;
+}
+
+.address-card {
+    display: flex;
+    align-items: start;
+    gap: 10px;
+    padding: 15px;
+    border: 1px solid #333;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    background-color: #fcfcff;
+}
+
+.address-card input[type="radio"] {
+    margin-top: 5px;
+}
+
+.address-details {
+    flex-grow: 1;
+}
+
+.address-details p {
+    margin: 0 0 8px 0;
+    font-weight: bold;
+}
+
+.address-details a {
+    color: #0abde3;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.add-address-btn {
+    background-color: #3a3a3c;
+    color: #f5f5f5;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+
+body {
+    background-color: #fcfafa;
+    color: #040404;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+}
+.main-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+.form-container {
+    display: none;
+    width: 80%;
+    background-color: #ebe9e9;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+.form-container input,
+.form-container select {
+    width: 80%;
+    padding: 6px 8px;
+    margin: 6px 0;
+    border: 1px solid #444;
+    border-radius: 4px;
+    background-color: white;
+    color: #080808;
+    font-size: 0.9em;
+}
+.btn {
+    padding: 8px 12px;
+    border: none;
+    background-color: #444;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-top: 10px;
+    font-size: 0.9em;
+}
+.btn:hover {
+    background-color: #555;
+}
+.add-address-btn {
+    margin-top: 20px;
+    display: inline-block;
+}
+.form-header {
+    font-size: 1.1em;
+    margin-bottom: 10px;
+}
+
+
+.error-message {
+    color: red;
+    display: none;
+    font-size: 0.9em;
+}
+
+
+
+
+

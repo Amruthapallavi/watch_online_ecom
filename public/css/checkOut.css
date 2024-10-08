@@ -1,0 +1,225 @@
+/* General Body Styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f9f9f9;
+    margin: 0;
+    padding: 0;
+    color: #333;
+}
+
+/* Navbar Styles */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #000;
+    padding: 15px 30px;
+}
+
+.logo {
+    color: #fff;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.search-bar input {
+    padding: 8px;
+    min-width: 200px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.search-bar button {
+    padding: 8px 12px;
+    background-color: #000;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.nav-links {
+    display: flex;
+    list-style: none;
+    gap: 20px;
+}
+
+.nav-links li a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.nav-links li a .heart-icon {
+    content: '♥';
+    color: red;
+}
+
+/* Main Content Styles */
+main {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+}
+
+/* Address Section */
+.address-section {
+    flex: 3;
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.address-card {
+    display: flex;
+    align-items: start;
+    gap: 10px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+
+.address-card input[type="radio"] {
+    margin-top: 5px;
+}
+
+.address-details {
+    flex-grow: 1;
+}
+
+.address-details p {
+    margin: 0 0 8px 0;
+    font-weight: bold;
+}
+
+.address-details a {
+    color: #007bff;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.add-address-btn {
+    background-color: #000;
+    color: #fff;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+/* Order Summary Section */
+.order-summary {
+    flex: 1;
+
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.summary-details p {
+    display: flexbox;
+    justify-content: space-between;
+    margin: 5px 0;
+}
+
+.summary-details h3 {
+    display: flex;
+    justify-content: space-between;
+    color: #333;
+    margin-top: 15px;
+}
+
+/* Payment Section */
+.payment-section {
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.payment-section h2 {
+    margin-bottom: 20px;
+}
+
+.payment-section input[type="text"] {
+    padding: 8px;
+    width: calc(100% - 100px);
+    margin-right: 10px;
+    border: 1px solid #e9e0e0;
+    border-radius: 5px;
+}
+
+.payment-section button {
+    padding: 8px 15px;
+    background-color: #000;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.payment-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background: #f4f4f4;
+}
+
+.payment-option label {
+    flex-grow: 1;
+}
+
+.place-order-btn {
+    display: block;
+    margin: 20px 0;
+    padding: 15px;
+    width: 100%;
+    text-align: center;
+    background-color: #000;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+/* Footer Section */
+footer {
+    background-color: #000;
+    padding: 20px;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.footer-links {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+}
+
+.footer-links li a {
+    color: #fff;
+    text-decoration: none;
+}

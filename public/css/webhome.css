@@ -1,0 +1,96 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-image: url('https://wallpapercave.com/wp/wp6974688.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    /* background-color: #000000; */
+    color: #fff;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+}
+
+.logo h1 {
+    font-family: 'Georgia', serif;
+    font-size: 36px;
+    color: #fff;
+}
+
+nav ul {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+}
+
+nav ul li a {
+    text-decoration: none;
+    color: #fff;
+    font-size: 16px;
+}
+
+nav ul li a:hover {
+    color: #c0c0c0;
+}
+.hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 60px 0;
+    background-image: url('images/hero-bg.jpg');
+    background-size: cover;
+    background-position: center;
+    border-radius: 15px;
+    /* box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3); */
+}
+
+.hero-text {
+    max-width: 600px;
+    padding-top: 60px;
+}
+
+.hero-text h2 {
+    font-family: 'Georgia', serif;
+    font-size: 48px;
+    color: #fff;
+    margin-bottom: 20px;
+}
+
+.hero-text p {
+    font-size: 18px;
+    margin-bottom: 30px;
+}
+
+.btn {
+    padding: 10px 20px;
+    background-color: #fff;
+    color: #000;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.btn:hover {
+    background-color: #34497d;
+}
+
+.hero-image img {
+    max-width: 100%;
+    border-radius: 15px;
+}

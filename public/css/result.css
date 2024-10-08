@@ -1,0 +1,234 @@
+body {
+    font-family: Arial, sans-serif;
+}
+
+
+
+
+
+
+
+
+
+.product-list {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.product-card {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px;
+    border: 1px solid #ddd;
+    background-color: white;
+}
+
+.product-card .product-info h2 {
+    margin: 0;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+}
+/* 
+.status-cancelled {
+    color: red;
+}
+
+.status-pending {
+    color: orange;
+}
+
+.status-delivered {
+    color: green;
+} */
+
+.status-button {
+    margin-left: 10px;
+    padding: 5px 10px;
+    min-height: 210px;
+    min-height: 40px;
+    border: none;
+    border-radius: 5px;
+    background-color: black;
+    color: white;
+    cursor: pointer;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.pagination a {
+    margin: 0 5px;
+    padding: 10px;
+    background-color: #ddd;
+    text-decoration: none;
+    color: black;
+    border-radius: 5px;
+}
+
+.pagination a.active {
+    background-color: black;
+    color: white;
+}
+
+footer {
+    padding: 20px;
+    background-color: black;
+    color: white;
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+}
+
+.footer-logo {
+    font-size: 24px;
+}
+
+.footer-links {
+    display: flex;
+    gap: 20px;
+}
+
+.footer-links .link-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.footer-links .link-group a {
+    color: white;
+    text-decoration: none;
+    margin: 5px 0;
+}
+
+
+body {
+    margin: 0;
+    
+    font-family: Arial, sans-serif;
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: black; /* Black background for the navbar */
+    border-bottom: 1px solid #333; /* Slightly lighter black for border */
+    height: 70px; /* Fixed height for the navbar */
+}
+
+.navbar-left .brand {
+    font-size: 24px;
+    font-weight: bold;
+    color: white; /* White text for the brand name */
+}
+
+.navbar-center {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+}
+
+.search-form {
+    display: flex;
+    align-items: center;
+}
+
+.search-bar {
+    border: 1px solid #444; /* Slightly lighter black border */
+    border-radius: 5px;
+    padding: 5px;
+    background-color: white; /* White background for the search bar */
+    color: black; /* Black text for the search bar */
+    width: 200px;
+}
+
+.search-button {
+    border: none;
+    background-color: white; /* White background for the button */
+    color: black; /* Black text for the button */
+    padding: 6px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 5px;
+}
+
+.navbar-right {
+    display: flex;
+    align-items: center;
+}
+
+.nav-item {
+    text-decoration: none;
+    color: white; /* White text for nav items */
+    padding: 0 15px;
+    line-height: 30px;
+    transition: background-color 0.3s;
+}
+
+.nav-item:hover,
+.nav-item.active {
+    background-color: white; /* White background on hover/active */
+    color: black; /* Black text for active/hovered item */
+    border-radius: 5px;
+}
+
+.dropdown {
+    position: relative;
+}
+
+.dropdown-toggle::after {
+    content: '▼';
+    margin-left: 5px;
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: black; /* Black background for dropdown menu */
+    border: 1px solid #333; /* Slightly lighter black border */
+    border-radius: 5px;
+    padding: 10px;
+    min-width: 150px;
+}
+
+.dropdown-menu .dropdown-item {
+    display: block;
+    padding: 5px 10px;
+    text-decoration: none;
+    color: white; /* White text for dropdown items */
+}
+
+.dropdown-menu .dropdown-item:hover {
+    background-color: #333; /* Darker background on hover */
+}
+
+.dropdown:hover .dropdown-menu {
+    display: block;
+}
+
+.logout {
+    background-color: white; /* White background for logout button */
+    color: black; /* Black text for logout button */
+    border-radius: 5px;
+    padding: 5px 10px;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.logout:hover {
+    background-color: black; /* Black background on hover */
+    color: white; /* White text on hover */
+    border: 1px solid white; /* White border on hover */
+}

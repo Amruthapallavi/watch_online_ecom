@@ -1,0 +1,165 @@
+/* Basic Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f9f9f9;
+}
+
+header {
+    background-color: #f1f1f1;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header .logo h1 {
+    margin: 0;
+}
+
+header .search-bar {
+    display: flex;
+}
+
+header .search-bar input {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+header .search-bar button {
+    padding: 5px 10px;
+    border: none;
+    background-color: black;
+    color: white;
+    cursor: pointer;
+    margin-left: 5px;
+    border-radius: 3px;
+}
+
+header ul {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+}
+
+header ul li a {
+    text-decoration: none;
+    color: black;
+    font-weight: bold;
+}
+
+.order-list ul {
+    list-style: none;
+    padding: 20px;
+}
+
+.order-list ul li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background-color: white;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.order-list ul li img {
+    width: 50px;
+    height: 50px;
+}
+
+.details {
+    flex-grow: 1;
+    padding-left: 20px;
+}
+
+.status-container {
+    display: flex;
+    align-items: center;
+}
+
+.status {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.status.yellow {
+    background-color: yellow;
+}
+
+.status.green {
+    background-color: green;
+}
+
+.actions {
+    display: flex;
+    gap: 10px;
+}
+
+.actions button {
+    padding: 5px 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.edit-btn {
+    background-color: #ddd;
+    color: black;
+}
+
+.status-btn {
+    background-color: black;
+    color: white;
+}
+
+.pagination {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.pagination button {
+    padding: 5px 10px;
+    margin: 0 10px;
+    border: none;
+    background-color: #ddd;
+    cursor: pointer;
+}
+
+footer {
+    background-color: #f1f1f1;
+    padding: 20px;
+    display: flex;
+    justify-content: space-around;
+}
+
+footer h3, footer h4 {
+    margin-bottom: 10px;
+}
+
+footer ul {
+    list-style: none;
+    padding: 0;
+}
+
+footer ul li {
+    margin-bottom: 5px;
+}
+
+footer ul li a {
+    text-decoration: none;
+    color: black;
+}
+
+footer p {
+    margin-bottom: 10px;
+}

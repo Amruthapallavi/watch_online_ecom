@@ -1,0 +1,64 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+}
+.navbar {
+    background-color: white;
+}
+.navbar-brand {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+.otp-container {
+    max-width: 400px;
+    margin: 5rem auto;
+    padding: 2rem;
+    background-color: white;
+    border-radius: 8px;
+    text-align: center;
+}
+.footer {
+    background-color: white;
+    padding: 2rem 0;
+    margin-top: 2rem;
+}
+.search-container {
+    position: relative;
+    width: 100%;
+    max-width: 300px;
+}
+.search-container input {
+    width: 100%;
+    padding: 0.5rem 2rem 0.5rem 1rem;
+    background-color: black;
+    color: white;
+    border: none;
+}
+.search-container .bi-search {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    color: white;
+}
+.otp-input {
+    display: flex;
+    justify-content: center;
+    margin: 2rem 0;
+}
+.otp-input input {
+    width: 350px;
+    height: 50px;
+    margin: 0 0.5rem;
+    text-align: center;
+    font-size: 1.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+.resend-otp {
+    color: #007bff;
+    text-decoration: none;
+}
+.timer {
+    color: #28a745;
+}

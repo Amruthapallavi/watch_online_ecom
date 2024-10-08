@@ -1,0 +1,283 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background-color: #fff;
+    border-bottom: 1px solid #ccc;
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.search-bar input {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+.search-bar button {
+    padding: 5px 10px;
+    background-color: #000;
+    color: #fff;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+nav ul {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+}
+
+nav ul li a {
+    text-decoration: none;
+    color: #000;
+}
+
+.my-account {
+    padding: 20px;
+    background-color: #fff;
+    margin: 20px;
+    border-radius: 5px;
+}
+
+.my-account h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.account-options {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.account-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #333;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s;
+}
+
+.account-option i {
+    font-size: 30px;
+    margin-bottom: 10px;
+}
+
+.account-option p {
+    font-size: 18px;
+    margin: 0;
+}
+
+.account-option small {
+    color: #666;
+    font-size: 12px;
+}
+
+.account-option:hover {
+    background-color: #eaeaea;
+}
+
+
+
+
+
+
+
+
+
+<%- include('../include/userHeader.ejs') %>
+
+<title>Order Details</title>
+<link rel="stylesheet" href="/css/order-details.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> <!-- SweetAlert CDN -->
+
+<style>
+    body {
+        padding: 0;
+        background-color: #fff;
+    }
+</style>
+
+<div class="container" style="background-color: rgb(239, 237, 237);">
+    <div class="order-details">
+        <h2>Order Details</h2>
+
+        <!-- Order Information -->
+        <div class="order-info">
+            <p>Order ID: <%= order.paymentDetails.orderId %></p>
+            <p>Date: <%= new Date(order.placedAt).toLocaleString('en-IN', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            }) %></p>
+
+            <p>Status:
+                <span class="order-status" style="color:
+                    <% if (order.orderStatus === 'confirmed') { %> green
+                    <% } else if (order.orderStatus === 'pending') { %> orange
+                    <% } else if (order.orderStatus === 'cancelled') { %> red
+                    <% } else if (order.orderStatus === 'Return') { %> orange
+                    <% } else if (order.orderStatus === 'delivered') { %> blue
+                    <% } %>;">
+                    <%= order.orderStatus %>
+                </span>
+            </p>
+        </div>
+
+        <!-- Product Details -->
+        <div class="product-details">
+            <h3>Product Details</h3>
+            <% order.products.forEach(product => { %>
+            <div class="product-item">
+                <p><strong><%= product.pname %></strong></p>
+                <p>Qty: <%= product.quantity %></p>
+                <p>Price: ₹<%= product.price %></p>
+            </div>
+            <% }) %>
+        </div>
+
+        <!-- Customer Information -->
+        <div class="customer-info">
+            <h3>Customer Information</h3>
+            <p>Name: <%= user.name %></p>
+            <p>Email: <%= user.email %></p>
+            <p>Phone: <%= user.phone %></p>
+        </div>
+
+        <!-- Payment Details -->
+        <div class="payment-info">
+            <h3>Payment Information</h3>
+            <p>Payment Method: <%= order.paymentDetails.method %></p>
+            <p>Payment ID: <%= order.paymentDetails.paymentId %></p>
+            <p>Total: ₹<%= order.grandTotal %></p>
+        </div>
+
+        <div class="order-actions">
+            <!-- Add the download invoice button -->
+            <button id="downloadInvoiceBtn">Download Invoice</button>
+            <% if (order.orderStatus === 'delivered') { %>
+            <button id="returnOrderBtn">Return Order</button>
+            <% } else if (order.orderStatus == 'confirmed' || order.orderStatus == 'shipped') { %>
+            <button id="cancelOrderBtn">Cancel Order</button>
+            <% } else { %>
+            <button id="viewMyOrdersBtn" onclick="window.location.href='/my-orders'">View My Orders</button>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<!-- Handle Invoice Download -->
+<!-- Handle Invoice Download -->
+<script>
+document.getElementById('downloadInvoiceBtn').addEventListener('click', function() {
+    // Get order details to send to the backend
+    const orderData = {
+        order: {
+            orderId: '<%= order.paymentDetails.orderId %>',
+            placedAt: '<%= order.placedAt %>',
+            products: <%- JSON.stringify(order.products) %>,
+            grandTotal: <%= order.grandTotal %>,
+            deliveryCharges: +30, // Add delivery charges
+            couponApplied: '<%= order.couponApplied || "No Coupon Applied" %>' // Include coupon applied status
+        },
+        user: {
+            name: '<%= user.name %>',
+            email: '<%= user.email %>'
+        }
+    };
+
+    // Send a POST request to download the invoice
+    fetch('/download-invoice', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.blob(); // Get the PDF as a Blob
+    })
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `invoice_${orderData.order.orderId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+    })
+    .catch(error => {
+        console.error('Error downloading invoice:', error);
+        Swal.fire('Error!', 'There was an error downloading the invoice. Please try again.', 'error');
+    });
+});
+</script>
+  
+    
+
+<%- include('../include/userFooter.ejs') %>
+
+
+
+
+quantity :increment
+
+document.querySelectorAll('.quantity').forEach(container => {
+    container.addEventListener('click', function (event) {
+        const target = event.target;
+        if (target.classList.contains('decrement') || target.classList.contains('increment')) {
+            const productId = target.getAttribute('data-id');
+            const quantityInput = document.getElementById(`quantity-${productId}`);
+            let quantity = parseInt(quantityInput.value);
+
+            // Get the available quantity from the row's data attributes (if needed)
+            // const availableQuantity = parseInt(document.querySelector(`#product-${productId}`).dataset.availableQuantity);
+
+            if (target.classList.contains('decrement')) {
+                quantity = Math.max(quantity - 1, 1); // Prevent quantity from going below 1
+            } else if (target.classList.contains('increment')) {
+                // Increment quantity
+                quantity += 1;
+
+                // Check if quantity has reached the limit of 5
+                if (quantity > 5) {
+                    // Show SweetAlert when maximum limit reached
+                    swal("Maximum limit reached", "You can only add up to 5 items of this product.", "warning");
+                    quantity = 5; // Reset quantity to 5
+                }
+            }
+
+            // Update quantity input value
+            quantityInput.value = quantity;
+
+            // Update total for this product and the overall cart totals
+            updateTotal(productId, quantity);
+            updateCartTotals();
+            updateHiddenQuantityInput(productId, quantity); // Update hidden input
+        }
+    });
+});

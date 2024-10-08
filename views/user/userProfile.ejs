@@ -1,0 +1,227 @@
+<%- include('../include/userHeader.ejs') %>
+
+<link rel="stylesheet" href="/css/userProfile.css">
+<style>
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        font-family: 'Arial', sans-serif;
+    }
+    
+    header h1 {
+        font-size: 2.5rem;
+        color: #333;
+        text-align: center;
+        margin-bottom: 20px;
+        text-transform: capitalize;
+    }
+
+    .profile {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .profile-icon img {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        margin-bottom: 10px;
+        object-fit: cover;
+        border: 2px solid #ddd;
+    }
+
+    .user-details h2, .user-details h4 {
+        font-size: 1.3rem;
+        color: #555;
+        margin-bottom: 10px;
+    }
+
+    .user-details p {
+        color: #777;
+        font-size: 1rem;
+    }
+
+    button {
+        background-color: #5cb85c;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 1rem;
+        margin-top: 20px;
+        transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+        background-color: #4cae4c;
+    }
+
+    .edit-profile-form {
+        margin-top: 40px;
+        padding: 20px;
+        border-radius: 8px;
+        background: #f9f9f9;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .edit-profile-form h3 {
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 1.8rem;
+    }
+
+    .edit-profile-form input[type="text"], .edit-profile-form input[type="number"], .edit-profile-form input[type="email"] {
+        width: 100%;
+        padding: 10px;
+        margin: 10px 0;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    .form-group {
+        text-align: center;
+    }
+
+    .form-group input[type="submit"] {
+        background-color: #007bff;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 1rem;
+    }
+
+    .form-group input[type="submit"]:hover {
+        background-color: #0056b3;
+    }
+
+    .error-message {
+        color: red;
+        font-size: 0.9rem;
+        display: none;
+    }
+</style>
+
+<div class="container">
+    <header>
+        <h1>My Account</h1>
+        <!-- < if (typeof message !== 'undefined') { %>
+           <p style="color: red;"><= message %></p>
+        < } %> -->
+    </header>
+
+    <section class="profile">
+        <!-- <div class="profile-icon">
+            <img src="" alt="User Icon">
+            <p class="email"></p>
+        </div> -->
+        <div class="user-details">
+            <h2>Name: <%= data.name %></h2>
+            <h4>Email: <%= data.email %></h4>
+            <h4>Contact No: <%= data.phone %></h4>
+            <p><%= address.house_no %>, <%= address.street %>, <%= address.locality %>, <%= address.city %>, <%= address.district %></p>
+            <p><%= address.pincode %>, <%= address.state %></p>
+            <button id="edit-profile-btn">Edit Profile</button>
+        </div>
+    </section>
+
+    <section class="edit-profile-form" id="edit-profile-form" style="display: none;">
+        <h3>Edit Profile</h3>
+        <form action="/edit-profile/<%= data._id %>" method="POST" id="profile-form">
+            <input type="text" id="edit-name" name="name" placeholder="Full Name" value="<%= data.name %>" required>
+            <span class="error-message" id="name-error">Name cannot contain numbers.</span>
+            <input type="number" id="edit-phone" name="phone" placeholder="Phone Number" value="<%= data.phone %>" required>
+            <span class="error-message" id="phone-error">Phone number must be 10 digits.</span>
+            <input type="email" id="edit-email" name="email" placeholder="Email" value="<%= data.email %>" required>
+            <div class="form-group">
+                <input type="submit" value="Save Profile">
+            </div>
+        </form>
+    </section>
+
+    <section class="orders">
+        <h3>Your Orders</h3>
+        <div class="order">
+            <p>Order #12345 - <span class="status">Shipped</span></p>
+        </div>
+        <div class="order">
+            <p>Order #12346 - <span class="status">Delivered</span></p>
+        </div>
+        <div class="order">
+            <p>Order #12347 - <span class="status">Processing</span></p>
+        </div>
+    </section>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    // Show/Hide Edit Profile Form
+    document.getElementById('edit-profile-btn').addEventListener('click', function() {
+        const profileForm = document.getElementById('edit-profile-form');
+        profileForm.style.display = profileForm.style.display === 'none' || profileForm.style.display === '' ? 'block' : 'none';
+    });
+
+    // Frontend Validation
+    document.getElementById('profile-form').addEventListener('submit', function(event) {
+        let isValid = true;
+        
+        // Name Validation
+        const nameInput = document.getElementById('edit-name');
+        const nameError = document.getElementById('name-error');
+        if (/\d/.test(nameInput.value)) {
+            nameError.style.display = 'block';
+            isValid = false;
+        } else {
+            nameError.style.display = 'none';
+        }
+
+        // Phone Number Validation
+        const phoneInput = document.getElementById('edit-phone');
+        const phoneError = document.getElementById('phone-error');
+        if (!/^\d{10}$/.test(phoneInput.value)) {
+            phoneError.style.display = 'block';
+            isValid = false;
+        } else {
+            phoneError.style.display = 'none';
+        }
+
+        if (!isValid) {
+            event.preventDefault(); // Prevent form submission if validation fails
+        }
+    });
+
+    // Display SweetAlert if there is a message from the backend
+    <% if (typeof message !== 'undefined') { %>
+        const errorMessage = "<%= message %>";
+        const errorType = "<%= errorType %>";
+        
+        if (errorType === 'email') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Email already exists!',
+            });
+        } else if (errorType === 'phone') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Phone number already exists!',
+            });
+        }
+    <% } %>
+
+  
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('status') === 'success') {
+        Swal.fire({
+            icon: 'success',
+            title: 'Profile Updated',
+            text: 'Your profile has been successfully updated!',
+        });
+    }
+</script>
+
+
+<%- include('../include/userFooter.ejs') %>

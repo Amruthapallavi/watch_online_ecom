@@ -1,0 +1,53 @@
+<%- include('../include/userHeader.ejs') %>
+
+    <link rel="stylesheet" href="/css/account.css">
+
+
+   
+
+    <main>
+        <section class="my-account">
+            <h2>My Account</h2>
+            <div class="account-options">
+                <a href="my-orders" class="account-option">
+                    <i class="fa fa-box"></i>
+                    <p>Your Orders</p>
+                    <small>See your orders and track it</small>
+                </a>
+                <a href="/user-account" class="account-option">
+                    <i class="fa fa-user"></i>
+                    <p>Your Profile</p>
+                    <small>Edit your profile</small>
+                </a>
+                <a href="#" class="account-option">
+                    <i class="fa fa-credit-card"></i>
+                    <p>Payment Option</p>
+                </a>
+                <a href="/addresses" class="account-option">
+                    <i class="fa fa-address-card"></i>
+                    <p>Your Address</p>
+                </a>
+                <a href="/my-wallet" class="account-option">
+                    <i class="fa fa-wallet"></i>
+                    <p>Wallet & Transactions</p>
+                </a>
+                <a href="/coupons-vouchers" class="account-option">
+                    <i class="fa fa-tag"></i>
+                    <p>Coupons & Vouchers</p>
+                </a>
+                <a href="/contact" class="account-option">
+                    <i class="fa fa-envelope"></i>
+                    <p>Contact Us</p>
+                </a>
+                <a href="/userLogout" class="account-option">
+                    <i class="fa fa-sign-out-alt"></i>
+                    <p>Log Out</p>
+                </a>
+            </div>
+        </section>
+    </main>
+
+   
+    <script src="/js/main.js"></script>
+    <%- include('../include/userFooter') %>
+

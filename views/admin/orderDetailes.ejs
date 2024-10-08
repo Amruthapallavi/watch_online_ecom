@@ -1,0 +1,120 @@
+<%- include('../include/adminHeader.ejs') %>
+
+<title>Order Details</title>
+<link rel="stylesheet" href="/css/order-details.css"> 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> 
+
+<body>
+    <div class="container">
+        <div class="order-details">
+            <h2>Order Details</h2>
+
+            <div class="order-info">
+                <p>Order ID: <%= order.paymentDetails.orderId %></p>
+                <p>Date: <%= order.placedAt %></p>
+                <p>Status: 
+                    <span class="order-status" style="color:<%= order.orderStatus === 'cancelled' ? 'red' : (order.orderStatus === 'Delivered' ? 'green' : 'orange') %>;">
+                        <%= order.orderStatus %>
+                    </span>
+                </p>  
+                <% if (order.orderStatus === 'cancelled') { %>
+                    <p>Cancellation Reason: "<%= order.cancellationReason %>"</p>                 
+                <% } %>
+            </div>
+
+            <!-- Product Details -->
+            <div class="product-details">
+                <h3>Product Details</h3>
+                <% order.products.forEach(product => { %>
+                    <div class="product-item">
+                        <p><strong><%= product.pname %></strong></p>
+                        <p>Qty: <%= product.quantity %></p>
+                    </div>
+                <% }) %>
+            </div>
+
+            <!-- Payment Details -->
+            <div class="payment-info">
+                <h3>Payment Information</h3>
+                <p>Payment Method: <%= order.paymentDetails.method %></p>
+                <p>Payment ID: <%= order.paymentDetails.paymentId %></p>
+                <p>Total: ₹<%= order.grandTotal %></p>
+            </div>
+
+            <!-- Change Order Status -->
+            <% if (order.orderStatus !== 'Delivered' && order.orderStatus !== 'cancelled') { %>
+                <div class="order-status">
+                    <h3>Change Order Status</h3>
+                    <form id="status-form">
+                        <label for="order-status">Order Status:</label>
+                        <select id="order-status" name="order-status">
+                            <option value="" disabled selected>Select status</option>
+                            <option value="confirm">Confirm</option>
+                            <option value="pending">Pending</option>
+                            <option value="cancelled">Cancelled</option>
+                            <option value="Delivered">Delivered</option>
+                        </select>
+                        <button type="submit">Update Status</button>
+                    </form>
+                </div>
+            <% } %>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('status-form')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const newStatus = document.getElementById('order-status').value;
+            if (!newStatus) {
+                Swal.fire('Warning!', 'Please select a status to change.', 'warning');
+                return;
+            }
+
+            // Show confirmation popup
+            Swal.fire({
+                title: 'Are you sure?',
+                text: `Do you want to change the order status to "${newStatus}"?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, change it!',
+                cancelButtonText: 'No, keep it'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const orderId = '<%= orderId %>'; // Get the order ID
+
+                    // Proceed with changing the order status
+                    fetch('/change-order-status', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ orderId, newStatus })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            if (newStatus === 'cancelled') {
+                                // Update wallet logic if order is cancelled
+                                return fetch('/update-wallet', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({ orderId }) // Send orderId to the backend
+                                });
+                            }
+                            Swal.fire('Success!', 'Order status has been changed.', 'success')
+                                .then(() => {
+                                    location.reload(); // Reload the page to reflect changes
+                                });
+                        } else {
+                            Swal.fire('Error!', 'There was an error changing the order status.', 'error');
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

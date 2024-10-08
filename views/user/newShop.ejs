@@ -1,0 +1,64 @@
+<%- include('../include/userHeader') %>
+<link rel="stylesheet" href="/css/shop.css">
+
+<div class="container mt-5">
+  <!-- Filtering Options -->
+  <div class="filter-bar">
+    <form action="/shop" method="GET" class="d-flex justify-content-around">
+      <div>
+        <label for="category">Category:</label>
+        <select name="category" id="category">
+          <option value="all">All</option>
+          <option value="men">Men</option>
+          <option value="women">Women</option>
+          <option value="unisex">Unisex</option>
+          <!-- Add other categories as needed -->
+        </select>
+      </div>
+      <div>
+        <label for="price">Price:</label>
+        <select name="price" id="price">
+          <option value="all">All</option>
+          <option value="0-50">$0 - $50</option>
+          <option value="51-100">$51 - $100</option>
+          <option value="101-200">$101 - $200</option>
+        </select>
+      </div>
+      <div>
+        <label for="brand">Brand:</label>
+        <select name="brand" id="brand">
+          <option value="all">All</option>
+          <option value="mvmt">MVMT</option>
+          <option value="armani">Armani Exchange</option>
+          <option value="fossil">Fossil</option>
+          <option value="seiko">Seiko</option>
+        </select>
+      </div>
+      <div>
+        <label for="offers">Offers:</label>
+        <select name="offers" id="offers">
+          <option value="all">All</option>
+          <option value="discount">Discounts</option>
+          <option value="bogo">Buy One Get One</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-dark">Filter</button>
+    </form>
+  </div>
+
+  <!-- Product Display Sections -->
+  <h2 class="section-title">Top Brands</h2>
+  <div class="product-section">
+    <% products.forEach(product => { %>
+      <div class="product-card">
+        <img src="/<%= product.image %>" alt="<%= product.name %>">
+        <h3><%= product.brand %></h3>
+        <p><%= product.description %></p>
+        <p>$<%= product.price %></p>
+        <a href="/wishlist/add/<%= product._id %>" class="btn btn-outline-dark">Add to Wishlist</a>
+      </div>
+    <% }) %>
+  </div>
+</div>
+
+<%- include('../include/userFooter.ejs') %>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>project</title>
+    <link rel="stylesheet" href="/css/loginSignup.css">
+</head>
+<body>
+    
+
+
+
+
+    <div class="container row login-box">
+  <div class="col login-title">
+    <h1 style="color: black;">
+      Tick-Track
+    </h1>
+    <span class="small-text" style="color: black;">Let's get started!</span>
+  </div>
+  <div class="col login-form" style="background-image: url('https://wallpaperaccess.com/full/5843873.jpg');">
+        <!-- <p style="color: red;" class="p-red">{{exists}}</p> -->
+
+    <div class="avatar">
+          <!--- <img src="https://tse1.mm.bing.net/th?id=OIP.mrfb_atnkblnmsDiAbLNKwHaHa&pid=Api&rs=1&c=1&qlt=95&w=120&h=120" alt="" /> --->
+    </div>
+    <% 
+    
+    if(typeof message!== 'undefined'){
+        %>
+        <p style="color: green;"><%= message %></p>
+
+        <%
+    }
+
+    %>
+
+    <div class="registration" >
+      Join with us 
+    </div>
+    <form id="signup-form" action="/signup" method="POST" >
+      <label for="login" class="login">
+        <input id="name" class="form-control" type="text" name="name" placeholder="Full Name" pattern="^(?!\s*$)[a-zA-Z](?:[-'a-zA-Z]+[a-zA-Z])?$" required minlength="3" maxlength="20" required />
+        <small id="username-error" style="color: red;" class="error-message"></small>
+
+        <div id="name-feedback"></div>
+
+        </label>
+      <label for="login" class="login">
+        <input id="email" type="email" name="email" placeholder="E-mail" required />
+      </label>
+      <label for="login" class="login">
+        <input class="form-control" id="phone" type="number" name="phone" placeholder="Phone-number" oninput="validatePhoneNumber()" required >      
+        <!---pattern="[0-9]{10}" title="Please enter a 10-digit valid phone number" required --->
+        <div id="phone-number"></div>
+
+        </label>
+      
+      <label for="passwd" class="passwd">
+        <input id="passwd" type="password" name="password" placeholder="Password" required/>
+      </label>
+       <!-- <label for="passwd" id="reminder" class="passwd">
+        <input id="confirm-passwd" type="password" name="password" placeholder="confirm-Password" required/>
+      </label> -->
+      <input class="button" type="submit" value="Sign up">
+    </form>
+    <div class="lost-passwd">
+      <a href="/login">already have Account? Sign In</a>
+    </div>
+  </div>
+</div>
+
+<script>
+                function validatePhoneNumber() {
+                    const phoneNumberInput = document.getElementById('phone');
+                    const phoneNumber = phoneNumberInput.value;
+                    const mobileMessage= document.getElementById('phone-number')
+        
+                    // Define the phone number validation criteria (assuming a 10-digit format)
+                    const phoneRegex = /^\d{10}$/;
+        
+                    // Check if the phone number meets the criteria
+                    if (phoneRegex.test(phoneNumber)) {
+                     
+                      mobileMessage.innerHTML='<span style="color: green;"></span>';
+                        
+                    } else {
+                      mobileMessage.innerHTML='<span style="color: red;">Invalid number</span>';
+                    }
+                }
+
+                document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('signup-form');
+
+    form.addEventListener('submit', (event) => {
+        let isValid = true;
+
+        // Clear previous error messages
+        document.querySelectorAll('.error-message').forEach(msg => msg.textContent = '');
+
+        // Validate Username
+        const username = document.getElementById('name');
+        const usernamePattern = /^[a-zA-Z]+$/; // Only letters allowed
+        if (!usernamePattern.test(username.value.trim())) {
+            document.getElementById('username-error').textContent = 'Invalid Name. Only Letters allowed (No numbers)';
+            isValid = false;
+        }
+         if (!isValid) {
+            event.preventDefault();
+        }
+    });
+});
+                </script>
+    
+</body>
+</html>

@@ -1,0 +1,191 @@
+<%- include('../include/adminHeader.ejs') %>
+
+<% 
+if (typeof message !== 'undefined') {
+    %>
+    <p style="color: green; text-align: center;"><%= message %></p>
+<%
+}
+%>
+
+<section>
+    <div class="container">
+        <div class="row mt-4">
+            <form class="d-flex" action="/search" method="post">
+                <input class="form-control me-2" type="search" name="String" placeholder="Search" aria-label="Search">
+                <button class="btn btn-outline-dark searchButton" type="submit">Search</button>
+            </form>
+            <a href="add-category" class="btn btn-dark ml-auto mb-5">Add Category</a>
+        </div>
+
+        <table class="table table-striped table-bordered mt-5" id="peopleTable">
+            <thead>
+                <tr>
+                    <th scope="col">Image</th>
+                    <th scope="col">Category Name</th>
+                    <th scope="col">Offer</th>
+                    <th scope="col">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% 
+                if (data.length > 0) {
+                    for (let i = 0; i < data.length; i++) {
+                        const offerValue = data[i].categoryOffer ? data[i].categoryOffer : 0;
+                %>
+                <tr>
+                    <td><img src="/<%= data[i].cimage %>" width="60px" height="60px" alt="<%= data[i].cname %>"></td>
+                    <td><%= data[i].cname %></td>
+                    <td><%= offerValue %></td>
+                    <td>
+                        <a href="/edit-category/<%= data[i]._id %>" class="btn btn-primary">Edit</a>
+                        <% if (offerValue > 0) { %>
+                            <button class="btn btn-danger" onclick="removeOffer('<%= data[i]._id %>')">Remove Offer</button>
+                        <% } else { %>
+                            <button class="btn btn-success" onclick="showOfferPopup('<%= data[i]._id %>')">Add Offer</button>
+                        <% } %>
+                        <form class="d-inline" id="deleteButton<%= data[i]._id %>" action="/delete-category/<%= data[i]._id %>" method="POST">
+                            <button class="btn btn-danger deleteCategory" type="submit">Delete</button>      
+                        </form>
+                    </td>
+                </tr>
+                <% 
+                    }
+                } else { 
+                %>
+                <tr>
+                    <td colspan="4">No categories found.</td>
+                </tr>
+                <% 
+                } 
+                %>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  function showOfferPopup(categoryId) {
+    Swal.fire({
+        title: 'Add Offer',
+        html: `
+            <input type="number" id="offerValue" class="swal2-input" placeholder="Enter Offer Value (%)" required>
+        `,
+        confirmButtonText: 'Submit',
+        showCancelButton: true,
+        preConfirm: () => {
+            const offerValueInput = document.getElementById('offerValue'); // Access input directly by ID
+            
+            // Check if the input exists and has a value
+            if (!offerValueInput || !offerValueInput.value) {
+                Swal.showValidationMessage(`Please enter an offer value.`);
+                return false; // Prevent further execution
+            }
+
+            // Parse the offer value and check if it's valid
+            const offerValue = parseFloat(offerValueInput.value);
+            if (isNaN(offerValue) || offerValue < 0) {
+                Swal.showValidationMessage(`Please enter a valid offer value (greater than or equal to 0).`);
+                return false;
+            }
+
+            return { offerValue }; // Return the valid offer value
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const { offerValue } = result.value;
+
+            // Debugging: Log the values
+            console.log('Category ID:', categoryId); // Log category ID
+            console.log('Offer Value:', offerValue); // Log offer value
+
+            fetch('/add-offer/' + categoryId, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ offerValue }) // Send the offer value
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Success!', 'The offer has been added.', 'success').then(() => {
+                        location.reload(); // Reload to reflect changes
+                    });
+                } else {
+                    Swal.fire('Error!', data.message || 'There was an error adding the offer.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Fetch Error:', error); // Log fetch error
+                Swal.fire('Error!', 'There was an error with the request.', 'error');
+            });
+        }
+    });
+}
+
+function removeOffer(categoryId) {
+    console.log("Removing offer for category ID:", categoryId); // Debugging log
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "Do you really want to remove this offer?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, remove it!',
+        cancelButtonText: 'No, keep it'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            console.log("Fetching to remove offer..."); // Debugging log
+            fetch('/remove-offer/' + categoryId, {
+                method: 'POST'
+            })
+            .then(response => {
+                console.log("Response Status:", response.status); // Debugging log
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Removed!', 'The offer has been removed.', 'success').then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire('Error!', 'There was an error removing the offer.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error("Fetch Error:", error); // Debugging log for catch block
+                Swal.fire('Error!', 'There was an error with the request.', 'error');
+            });
+        }
+    });
+}
+
+    const deleteButtons = document.querySelectorAll('.deleteCategory');
+    deleteButtons.forEach((button) => {
+        button.addEventListener('click', (e) => {
+            const categoryId = e.target.closest('form').id.replace('deleteButton', '');
+            if (!confirm("Do you really want to delete this category?")) {
+                e.preventDefault();
+            } else {
+                Swal.fire({
+                    title: 'Deleting...',
+                    text: 'Your category is being deleted.',
+                    icon: 'info',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                const form = document.getElementById('deleteButton' + categoryId);
+                form.submit();
+            }
+        });
+    });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<%- include('../include/adminFooter.ejs') %>

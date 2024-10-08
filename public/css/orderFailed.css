@@ -1,0 +1,65 @@
+/* Basic styling for the order failed page */
+.order-failed-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 80vh;
+    background-color: #f9f9f9;
+}
+
+.order-failed-card {
+    background-color: white;
+    border-radius: 10px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.order-failed-card h2 {
+    font-size: 28px;
+    color: #ff4d4d;
+    margin-bottom: 20px;
+}
+
+.order-failed-card p {
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 30px;
+}
+
+.order-failed-actions {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.retry-btn, .cancel-btn {
+    background-color: #ff4d4d;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.retry-btn:hover, .cancel-btn:hover {
+    background-color: #e60000;
+}
+
+.cancel-btn {
+    background-color: #666;
+}
+
+.cancel-btn:hover {
+    background-color: #444;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .order-failed-card {
+        width: 90%;
+        padding: 20px;
+    }
+}

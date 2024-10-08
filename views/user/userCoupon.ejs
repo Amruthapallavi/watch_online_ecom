@@ -1,0 +1,66 @@
+<%- include('../include/userHeader') %>
+
+  <title>Coupon & Voucher List</title>
+  <link rel="stylesheet" href="/css/userCoupon.css">
+
+  </header>
+
+  <main>
+    <div class="container">
+      <h1>Coupon & Voucher List</h1>
+      <table>
+        <thead>
+          <tr>
+            <!-- <th>Images</th> -->
+            <th>Code</th>
+            <th>Discount Value</th>
+            
+            <th>Min_Purchase</th>
+            <th>ExpiresAt</th>
+            <!-- <th>Validity</th> -->
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% coupons.forEach(function(coupon) { %>
+            <tr>
+              <!-- <td><img src="<= coupon.imageUrl %>" alt="Coupon Image"></td> -->
+              <td><%= coupon.code %></td>
+              <td><%= coupon.value %></td>
+              <td><%= coupon.min_purchase %></td>
+              <td><%= coupon.expiresAt.toISOString().split('T')[0] %></td>
+              
+
+              <!-- <td><= coupon.validity %></td> -->
+              <td>
+                <button class="copy-btn" data-code="<%= coupon.code %>">Copy</button>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <button><a href="/cart">Continue</a></button>
+  </main>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+  const copyButtons = document.querySelectorAll('.copy-btn');
+
+  copyButtons.forEach(button => {
+    button.addEventListener('click', (e) => {
+      const couponCode = e.target.getAttribute('data-code');
+      navigator.clipboard.writeText(couponCode).then(() => {
+        alert(`Coupon code "${couponCode}" copied to clipboard!`);
+      }).catch(err => {
+        console.error('Failed to copy coupon code: ', err);
+      });
+    });
+  });
+});
+
+</script>
+  <script src="/scripts/coupon.js"></script>
+  <%- include('../include/userFooter') %>
+

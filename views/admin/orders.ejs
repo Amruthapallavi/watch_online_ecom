@@ -1,0 +1,96 @@
+<%- include('../include/adminHeader.ejs') %>
+<style>
+  body{
+    padding: 0;
+  }
+</style>
+<h3 style="color: black; text-align: center; padding-top: 20px;">Order Management</h3>
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Requests</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <% if (orders) { %>
+          <% orders.forEach((item) => { %>
+            <% if (item.cancelRequested === true) { %>
+              <a style="color: black; text-decoration: none;" href="/AdminOrderDetails/<%= item._id %>">
+                <div class="border-bottom p-2">
+                  <%= item.orderId %> <span class="text-warning">(Cancel Request)</span>
+                </div>
+              </a>
+            <% } %>
+          <% }) %>
+        <% } %>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Notification bell icon -->
+<div class="container container1 d-flex justify-content-between">
+  <h3>ORDERS</h3>
+  <div style="cursor: pointer; position: relative;" class="modal-opener d-flex" data-bs-toggle="modal" data-bs-target="#exampleModal">
+    <% if (orders) { %>
+      <% orders.forEach((item) => { %>
+        <% if (item.cancelRequested === true) { %>
+          <div style="position: absolute; height: 10px; width: 10px;" class="rounded-circle bg-danger"></div>
+        <% } %>
+      <% }) %>
+    <% } %>
+    <i style="font-size: x-large;" class="fas fa-bell"></i>
+  </div>
+</div>
+
+<div class="container container1 pt-5 pb-5 border mb-5">
+  <table id="tableProduct" class="table p-1 table-striped table-content">
+    <thead>
+      <tr>
+        <th scope="col">User Name</th>
+        <th scope="col">Phone No</th>
+        <th scope="col">Total Price</th>
+        <th scope="col">Ordered Date</th>
+        <th scope="col">Status</th>
+        <th scope="col">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% orders.forEach((item) => { %>
+        <tr>
+          <td style="text-transform: capitalize;"><%= item.user.name %></td>
+          <td><%= item.user.phone %></td>
+          <td><%= item.grandTotal %></td>
+          <td><%= String(item.placedAt).split(' ').slice(0, 4).join(' ') %></td>
+          <td class="<%= item.orderStatus === 'confirmed' ? 'text-success' : item.orderStatus === 'pending' ? 'text-warning' : item.orderStatus === 'cancelled' ? 'text-danger' : 'text-primary' %>">
+            <%= item.orderStatus %>
+          </td>
+          <td class="d-flex">
+            <a href="/AdminOrderDetails/<%= item._id %>" style="text-decoration: none;">
+              <i class="fa-solid fa-circle-info ms-3">Edit</i>
+            </a>
+          </td>
+        </tr>
+      <% }); %>
+    </tbody>
+  </table>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
+<script>
+  $(document).ready(function() {
+    $('#tableProduct').DataTable({
+      responsive: true
+    });
+  });
+</script>
+
+<%- include('../include/adminFooter.ejs') %>

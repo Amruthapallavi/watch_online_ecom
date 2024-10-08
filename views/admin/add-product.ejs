@@ -1,0 +1,281 @@
+<%- include('../include/adminHeader.ejs') %>
+<link href="https://unpkg.com/cropperjs/dist/cropper.css" rel="stylesheet"/>
+
+<style>
+    .container {
+        padding: 30px;
+        width: 80%;
+        max-width: 900px;
+        box-sizing: border-box;
+        margin: auto;
+    }
+    h2 {
+        color: #333;
+        text-align: center;
+    }
+    .form-group {
+        margin-bottom: 20px;
+    }
+    label {
+        display: block;
+        margin-bottom: 5px;
+        color: #555;
+    }
+    input[type="text"],
+    input[type="number"],
+    input[type="file"],
+    textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+    textarea {
+        resize: vertical;
+        min-height: 100px;
+        max-height: 200px;
+    }
+    input[type="submit"] {
+        background-color: #060606;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        width: 100%;
+    }
+    input[type="submit"]:hover {
+        background-color: #6f716f;
+    }
+    #imagePreview .image-container {
+        position: relative;
+        display: inline-block;
+        margin-right: 10px;
+        margin-bottom: 10px;
+    }
+    #imagePreview .image-container img {
+        max-width: 100px;
+        max-height: 100px;
+    }
+    #imagePreview .image-container button {
+        position: absolute;
+        top: 0;
+        right: 0;
+        background-color: red;
+        color: white;
+        border: none;
+        cursor: pointer;
+        padding: 2px 5px;
+    }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    #cropModal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        display: none;
+        justify-content: center;
+        align-items: center;
+    }
+    .modal-content {
+        background-color: white;
+        padding: 20px;
+        max-width: 600px;
+        width: 100%;
+        position: relative;
+    }
+</style>
+
+<div class="container">
+    <h2>Add New Product</h2>
+    <form id="productForm" action="/add-product" method="POST" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="name">Product Name:</label>
+            <input type="text" id="name" name="pname" required>
+        </div>
+        <div class="form-group">
+            <label for="category">Category :</label>
+            <select class="form-select p-3" id="category" name="category" required>
+                <% catData.forEach(function(item) { %>
+                    <option value="<%= item._id %>"><%= item.cname %></option>
+                <% }); %>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="quantity">Quantity :</label>
+            <input type="number" id="quantity" name="quantity" min="1" required>
+        </div>
+        <div class="form-group">
+            <label>Product Images:</label>
+            <input type="file" id="productImages" name="image" multiple accept="image/*" required>
+        </div>
+        <div id="imagePreview" style="display: flex; flex-wrap: wrap;"></div>
+
+        <div id="cropModal">
+            <div class="modal-content">
+                <img id="imageToCrop" style="max-width: 100%;">
+                <button type="button" id="cropButton">Crop</button>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="price">Price:</label>
+            <input type="number" id="price" name="price" min="1" required>
+        </div>
+        <div class="form-group">
+            <label for="description">Description:</label>
+            <textarea id="description" name="description" required></textarea>
+        </div>
+        <div class="form-group">
+            <input type="submit" value="Add Product">
+        </div>
+    </form>
+</div>
+
+<script src="https://unpkg.com/cropperjs"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://unpkg.com/cropperjs"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+let cropper;
+const productImages = document.getElementById('productImages');
+const imagePreview = document.getElementById('imagePreview');
+const cropModal = document.getElementById('cropModal');
+const imageToCrop = document.getElementById('imageToCrop');
+const cropButton = document.getElementById('cropButton');
+let croppedImages = [];
+let currentFileIndex = 0;
+let selectedFiles = [];
+
+// Event Listener for file selection
+productImages.addEventListener('change', function(event) {
+    selectedFiles = Array.from(event.target.files);
+    currentFileIndex = 0; // Reset index
+    croppedImages = []; // Reset cropped images
+    imagePreview.innerHTML = ''; // Clear previous images
+    if (selectedFiles.length > 0) {
+        processNextImage();
+    }
+});
+
+function processNextImage() {
+    if (currentFileIndex < selectedFiles.length) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            imageToCrop.src = e.target.result;
+            cropModal.style.display = 'flex';
+            cropper = new Cropper(imageToCrop, {
+                aspectRatio: 1,
+                viewMode: 1,
+            });
+        };
+        reader.readAsDataURL(selectedFiles[currentFileIndex]);
+    }
+}
+
+// Cropping the current image and proceeding to the next
+cropButton.addEventListener('click', function() {
+    const canvas = cropper.getCroppedCanvas();
+    const croppedImage = canvas.toDataURL();
+
+    const imageContainer = document.createElement('div');
+    imageContainer.classList.add('image-container');
+
+    const img = document.createElement('img');
+    img.src = croppedImage;
+    imageContainer.appendChild(img);
+
+    const deleteButton = document.createElement('button');
+    deleteButton.textContent = 'X';
+    deleteButton.addEventListener('click', function() {
+        imageContainer.remove();
+        croppedImages = croppedImages.filter(image => image !== croppedImage);
+    });
+    imageContainer.appendChild(deleteButton);
+
+    imagePreview.appendChild(imageContainer);
+    croppedImages.push(croppedImage);
+
+    cropModal.style.display = 'none';
+    cropper.destroy();
+    cropper = null;
+
+    currentFileIndex++;
+    processNextImage();
+});
+
+// Form validation and submission
+document.getElementById('productForm').addEventListener('submit', async function(event) {
+    event.preventDefault(); // Prevent default form submission
+
+    const productName = document.getElementById('name').value.trim();
+    const quantity = document.getElementById('quantity').value;
+    const price = document.getElementById('price').value;
+    const description = document.getElementById('description').value.trim();
+
+    if (productName === "" || quantity <= 0 || price <= 0 || description === "" || croppedImages.length === 0) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Invalid input',
+            text: 'Please fill in all fields with valid data, including images!',
+        });
+        return false;
+    }
+
+    // Create FormData and append cropped images
+    const formData = new FormData(this);
+    croppedImages.forEach((image, index) => {
+        formData.append(`croppedImage_${index}`, image);
+    });
+
+    try {
+        const response = await fetch('/add-product', { // Adjust to your endpoint
+            method: 'POST',
+            body: formData
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: result.message || 'Product added successfully!',
+            }).then(() => {
+                // Redirect to the products page after closing the alert
+                window.location.href = '/products'; // Adjust the URL as needed
+            });
+            this.reset(); // Reset form fields
+            imagePreview.innerHTML = ''; // Clear image previews
+            croppedImages = []; // Reset cropped images
+        } else {
+            const error = await response.json();
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: error.message || 'Failed to add product. Please try again.',
+            }).then(() => {
+                // Redirect to the products page after closing the alert
+                window.location.href = '/products'; // Adjust the URL as needed
+            });
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error!',
+            text: 'Something went wrong. Please try again later.',
+        });
+    }
+});
+</script>
+
+
+<%- include('../include/adminFooter.ejs') %>
