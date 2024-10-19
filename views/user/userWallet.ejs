@@ -4,69 +4,132 @@
 <!-- Include SweetAlert CSS -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 </head>
+<style>
+  .pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+  }
+  
+  .pagination a {
+    margin: 0 5px;
+    padding: 10px;
+    background-color: #ddd;
+    text-decoration: none;
+    color: black;
+    border-radius: 5px;
+  }
+  
+  .pagination a.active {
+    background-color: black;
+    color: white;
+  }
+  <style>
+    /* Add some additional styles for the referral section */
+    .referral-code-section {
+        margin-top: 20px;
+        display: flex;
+        align-items: center;
+    }
+
+    .referral-code-section input {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        flex: 1;
+        margin-right: 10px;
+    }
+
+    .referral-code-section button {
+        padding: 10px 15px;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .referral-code-section button:hover {
+        background-color: #0056b3;
+    }
+</style>
+</style>
 <body>
-
-<main>
-  <section class="wallet-section">
-    <h1>Wallet</h1>
-
-    <div class="wallet-grid">
-      <!-- Wallet Transactions Table -->
-      <div class="wallet-table">
-        <% if (wallet.transactionDetails && wallet.transactionDetails.length > 0) { %>
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Order Id</th>
-                <th>Type</th>
-                <th>Amount</th>
-                <th>Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% wallet.transactionDetails.forEach((transaction, index) => { %>
+  <main>
+    <section class="wallet-section">
+      <h1>Wallet</h1>
+  
+      <div class="wallet-grid">
+        <!-- Wallet Transactions Table -->
+        <div class="wallet-table">
+          <% if (wallet.transactionDetails && wallet.transactionDetails.length > 0) { %>
+            <table>
+              <thead>
                 <tr>
-                  <td>#<%= index + 1 %></td>
-                  <td><%= transaction.orderId %></td>
-                  <td class="<%= transaction.paymentType === 'credit' ? 'credit-type' : 'debit-type' %>">
-                    <%= transaction.paymentType === 'credit' ? 'Credit' : 'Debit' %>
-                  </td>
-                  <td class="<%= transaction.paymentType === 'credit' ? 'credit-amount' : 'debit-amount' %>">
-                    <%= transaction.paymentType === 'credit' ? '+' : '-' %> ₹<%= transaction.amount %>
-                  </td>
-                  <td><%= new Date(transaction.date).toLocaleDateString() %></td>
+                  <th>ID</th>
+                  <th>Order Id</th>
+                  <th>Type</th>
+                  <th>Amount</th>
+                  <th>Date</th>
                 </tr>
-              <% }); %>
-            </tbody>
-          </table>
-        <% } else { %>
-          <p>No transactions found.</p>
-        <% } %>
-      </div>
-
-      <!-- Wallet Control Section -->
-      <div class="wallet-controls">
-        <div class="add-to-wallet">
-          <input type="number" id="walletAmount" placeholder="Enter Amount">
-          <button onclick="addToWallet()">Add to Wallet</button>
+              </thead>
+              <tbody>
+                <% wallet.transactionDetails.forEach((transaction, index) => { %>
+                  <tr>
+                    <td>#<%= index + 1 %></td>
+                    <td><%= transaction.orderId %></td>
+                    <td class="<%= transaction.paymentType === 'credit' ? 'credit-type' : 'debit-type' %>">
+                      <%= transaction.paymentType === 'credit' ? 'Credit' : 'Debit' %>
+                    </td>
+                    <td class="<%= transaction.paymentType === 'credit' ? 'credit-amount' : 'debit-amount' %>">
+                      <%= transaction.paymentType === 'credit' ? '+' : '-' %> ₹<%= transaction.amount %>
+                    </td>
+                    <td><%= new Date(transaction.date).toLocaleDateString() %></td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          <% } else { %>
+            <p>No transactions found.</p>
+          <% } %>
         </div>
-
-        <div class="current-balance">
-          <p>Current Balance</p>
-          <span>₹<%= wallet.balance ? wallet.balance : 0 %></span>
+  
+        <!-- Wallet Control Section -->
+        <div class="wallet-controls">
+          <div class="add-to-wallet">
+            <input type="number" id="walletAmount" placeholder="Enter Amount">
+            <button onclick="addToWallet()">Add to Wallet</button>
+          </div>
+  
+          <div class="current-balance">
+            <p>Current Balance</p>
+            <span>₹<%= wallet.balance ? wallet.balance : 0 %></span>
+          </div>
+          
+          <!-- Referral Code Section -->
+          <div class="referral-code-section">
+            <input type="text" id="referralCodeInput" placeholder="Enter Referral Code">
+            <button onclick="redeemReferralCode()">Redeem Referral Code</button>
+          </div>
         </div>
         
       </div>
-    </div>
-  </section>
-</main>
+    </section>
+  </main>
+<div class="pagination">
+  <% if (currentPage > 1) { %>
+  <a href="/my-wallet?page=<%= currentPage - 1 %>">&laquo;</a>
+  <% } %>
 
-<footer>
-  <div class="footer-content">
-    <!-- Your footer content here -->
-  </div>
-</footer>
+  <% for (let i = 1; i <= totalPages; i++) { %>
+  <a href="/my-wallet?page=<%= i %>" class="<%= i === currentPage ? 'active' : '' %>"><%= i %></a>
+  <% } %>
+
+  <% if (currentPage < totalPages) { %>
+  <a href="/my-wallet?page=<%= currentPage + 1 %>">&raquo;</a>
+  <% } %>
+</div>
+
 
 <!-- Include SweetAlert JS -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -156,6 +219,63 @@
         .catch(error => console.error('Error:', error));
       }
     });
+  }
+</script>
+<script>
+  function redeemReferralCode() {
+      const referralCode = document.getElementById('referralCodeInput').value.trim();
+
+      // Validation: Check if the input is empty
+      if (!referralCode) {
+          Swal.fire({
+              icon: 'warning',
+              title: 'Invalid Code',
+              text: 'Please enter a referral code.',
+              showConfirmButton: false,
+              timer: 1500
+          });
+          return;
+      }
+
+      // Send the referral code to the backend
+      fetch('/redeem-referral-code', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ referralCode }),
+      })
+      .then(response => response.json())
+      .then(data => {
+          if (data.success) {
+              Swal.fire({
+                  icon: 'success',
+                  title: 'Success!',
+                  text: data.message,
+                  showConfirmButton: false,
+                  timer: 1500
+              });
+              // Optionally refresh the wallet balance or user data
+          } else {
+              Swal.fire({
+                  icon: 'error',
+                  title: 'Error',
+                  text: data.message,
+                  showConfirmButton: false,
+                  timer: 1500
+              });
+          }
+      })
+      .catch(error => {
+          console.error('Error:', error);
+          Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'An unexpected error occurred.',
+              showConfirmButton: false,
+              timer: 1500
+          });
+      });
   }
 </script>
 

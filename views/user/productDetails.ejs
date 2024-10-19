@@ -34,11 +34,11 @@
             <h1 class="product-title"><%= product.pname %></h1>
             
             <div class="product-price"><p> <% if (offerPrice < product.price) { %>
-                <span style="text-decoration: line-through; color: #888;">$<%= product.price %></span> 
-                <strong style="color: #000;">$<%= offerPrice %></strong>
+                <span style="text-decoration: line-through; color: #888;">₹ <%= product.price %></span> 
+                <strong style="color: #000;">₹ <%= offerPrice %></strong>
                 <span class="badge bg-success ms-2">Offer: <%= product.productOffer > 0 ? product.productOffer : category.categoryOffer %>%</span>
             <% } else { %>
-                <strong style="color: #000;">$<%= product.price %></strong>
+                <strong style="color: #000;">₹ <%= product.price %></strong>
             <% } %></p></div>
             
             <div class="rating">
@@ -54,7 +54,7 @@
                 <div class="product-list">
                     <div class="product-card" id="product-<%= product._id %>">
                         <h3><%= product.name %></h3>
-                        <!-- <p>Price: $<%= product.price %></p> -->
+                        <!-- <p>Price: $<= product.price %></p> -->
                         
                         <div class="product-description">
                             <p><%= product.description %></p>
@@ -136,11 +136,11 @@
                             <!-- Price display with offer comparison -->
                             <p class="card-text">
                                 <% if (offerPercentage > 0 && offerPrice < product.price) { %>
-                                    <span style="text-decoration: line-through; color: #888;">$<%= product.price %></span>
-                                    <strong style="color: #000;">$<%= offerPrice.toFixed(2) %></strong>
+                                    <span style="text-decoration: line-through; color: #888;">₹ <%= product.price %></span>
+                                    <strong style="color: #000;"> ₹ <%= offerPrice.toFixed(2) %></strong>
                                     <span class="badge bg-success ms-2">Offer: <%= offerPercentage %>%</span>
                                 <% } else { %>
-                                    <strong style="color: #000;">$<%= product.price %></strong>
+                                    <strong style="color: #000;">₹ <%= product.price %></strong>
                                 <% } %>
                             </p>
                         </div>
@@ -180,26 +180,37 @@ thumbnails.forEach(thumbnail => {
     });
 });
 
-    async function addToCart(form) {
-        const formData = new FormData(form);
-        const response = await fetch(form.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest', // Indicate AJAX request
-            }
+
+async function addToCart(form) {
+    const formData = new FormData(form);
+    const response = await fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest', // Indicate AJAX request
+        }
+    });
+
+    const data = await response.json(); // Parse JSON response
+
+    // Check if the response indicates success or error
+    if (data.success) {
+        swal({
+            title: "Successful!",
+            text: data.message,
+            icon: "success",
+            button: "OK",
+        }).then(() => {
+            window.location.href = '/shop'; // Redirect to shop after acknowledgment
         });
-
-        const data = await response.json(); // Parse JSON response
-
-        if (data.success) {
+    } else {
+        // Check if the error message is for exceeding maximum quantity
+        if (data.message === "Maximum quantity already added to cart.") {
             swal({
-                title: "Successful!",
+                title: "Limit Reached!",
                 text: data.message,
-                icon: "success",
+                icon: "warning", // Use a warning icon for this specific case
                 button: "OK",
-            }).then(() => {
-                window.location.href = '/shop'; // Redirect to shop after acknowledgment
             });
         } else {
             swal({
@@ -210,8 +221,9 @@ thumbnails.forEach(thumbnail => {
             });
         }
     }
+}
 
-    </script>
+     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.js"></script>
 
     <!-- Footer -->

@@ -34,12 +34,12 @@
                         <!-- Check if there's a discount by comparing original and final price -->
                         <% if (product.originalPrice > product.finalPrice) { %>
                             <!-- Strike through the original price and show the discounted price -->
-                            <span style="text-decoration: line-through; color: red;">₹<%= product.originalPrice.toFixed(2) %></span>
-                            <span style="font-weight: bold; color: green;">₹<%= product.finalPrice.toFixed(2) %></span>
+                            <span style="text-decoration: line-through; color: red;"> ₹<%= product.originalPrice.toFixed(2) %></span>
+                            <span style="font-weight: bold; color: green;"> ₹<%= product.finalPrice.toFixed(2) %></span>
                             <span style="color: orange;"> (Offer Applied!)</span>
                         <% } else { %>
                             <!-- No offer, just show the original price -->
-                            <span style="font-weight: bold;">₹<%= product.originalPrice.toFixed(2) %></span>
+                            <span style="font-weight: bold;"> ₹<%= product.originalPrice.toFixed(2) %></span>
                         <% } %>
                     </p>
                     

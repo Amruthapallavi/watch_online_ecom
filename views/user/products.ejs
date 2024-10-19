@@ -215,10 +215,11 @@
         <a href="/unisex" class="nav-link">Unisex</a>
 
         <select id="category-filter">
-            <option value="all">Sort by Price</option>
-            <option value="low_to_high">Low-to-High</option>
-            <option value="high_to_low">High-to-Low</option>
+            <option value="all" <%= sortOption === 'all' ? 'selected' : '' %>>Sort by Price</option>
+            <option value="low_to_high" <%= sortOption === 'low_to_high' ? 'selected' : '' %>>Low-to-High</option>
+            <option value="high_to_low" <%= sortOption === 'high_to_low' ? 'selected' : '' %>>High-to-Low</option>
         </select>
+        
     </div>
 </form>
 
@@ -267,11 +268,11 @@
                     <p class="card-text"><%= product.description %></p>
                     <p class="card-text">
                         <% if (product.offerPrice < product.price) { %>
-                            <span style="text-decoration: line-through; color: #888;">$<%= product.price %></span> 
-                            <strong style="color: #000;">$<%= product.offerPrice %></strong>
+                            <span style="text-decoration: line-through; color: #888;"> ₹ <%= product.price %></span> 
+                            <strong style="color: #000;"> ₹ <%= product.offerPrice %></strong>
                             <span class="badge bg-success ms-2">Offer: <%= product.productOffer ? product.productOffer : categoryMap[product.category._id] %>%</span>
                         <% } else { %>
-                            <strong style="color: #000;">$<%= product.price %></strong>
+                            <strong style="color: #000;"> ₹ <%= product.price %></strong>
                         <% } %>
                         
                     </p>
@@ -301,17 +302,18 @@
 
     <div class="pagination">
         <% if (currentPage > 1) { %>
-            <a href="/shop?page=<%= currentPage - 1 %>">&laquo;</a>
+            <a href="/shop?page=<%= currentPage - 1 %>&sort=<%= sortOption %>">&laquo;</a>
         <% } %>
-
+    
         <% for (let i = 1; i <= totalPages; i++) { %>
-            <a href="/shop?page=<%= i %>" class="<%= i === currentPage ? 'active' : '' %>"><%= i %></a>
+            <a href="/shop?page=<%= i %>&sort=<%= sortOption %>" class="<%= i === currentPage ? 'active' : '' %>"><%= i %></a>
         <% } %>
-
+    
         <% if (currentPage < totalPages) { %>
-            <a href="/shop?page=<%= currentPage + 1 %>">&raquo;</a>
+            <a href="/shop?page=<%= currentPage + 1 %>&sort=<%= sortOption %>">&raquo;</a>
         <% } %>
     </div>
+    
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
@@ -319,12 +321,13 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-    document.getElementById('category-filter').addEventListener('change', function() {
-        const selectedValue = this.value;
-        // Redirect to the sorted products page
-        window.location.href = `/shop?sort=${selectedValue}`;
-    });
-   
+   document.getElementById('category-filter').addEventListener('change', function() {
+    const selectedValue = this.value;
+    const currentPage = new URLSearchParams(window.location.search).get('page') || 1; // Get current page or default to 1
+    // Redirect to the sorted products page
+    window.location.href = `/shop?sort=${selectedValue}&page=${currentPage}`;
+});
+
   
 
 

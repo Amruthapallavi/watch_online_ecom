@@ -213,37 +213,75 @@ footer {
         margin-bottom: 20px;
     }
 
+
+/* General styles for cards */
+.card {
+    background-color: #f8f9fa; /* Light gray background */
+    color: #212529; /* Dark gray text */
+    border-radius: 10px; /* Rounded corners */
+    padding: 15px; /* Inner spacing */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15); /* Subtle shadow for depth */
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth hover effects */
+    margin: 10px; /* Space between cards */
+    position: relative; /* For pseudo-element positioning */
+}
+
+/* Hover effect */
+.card:hover {
+    transform: translateY(-5px); /* Lift effect on hover */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25); /* More prominent shadow on hover */
+}
+
+/* Specific styles for different card types */
+.card.revenue {
+    border-left: 5px solid #070707; /* Dark gray accent */
+}
+
+.card.sales {
+    border-left: 5px solid #050505; /* Medium gray accent */
+}
+
+.card.products {
+    border-left: 5px solid #080808; /* Light gray accent */
+}
+
+.card.visits {
+    border-left: 5px solid #050505; /* Very light gray accent */
+}
+
+/* Card titles */
+.card h3 {
+    font-size: 1.25rem; /* Smaller font size for card titles */
+    margin-bottom: 10px; /* Space below title */
+    color: #080808; /* Dark gray color */
+}
+
+/* Card content */
+.card p {
+    font-size: 0.875rem; /* Smaller font size for card content */
+    line-height: 1.4; /* Spacing between lines */
+    color: #050505; /* Medium gray color */
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
     .card {
-        background: #fff;
-        padding: 20px;
-        border-radius: 8px;
-        width: 20%; /* Set width of each card */
-        margin: 10px;
-        text-align: center;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        color: white;
+        flex: 1 1 100%; /* Stack cards on small screens */
+        margin: 5px 0; /* Reduced margin for smaller screens */
+    }
+}
+
+@media (min-width: 769px) {
+    .card-container {
+        display: flex; /* Flexbox layout for larger screens */
+        flex-wrap: wrap; /* Allow wrapping of cards */
     }
 
-    /* Style for each card's background color */
-    .card.revenue {
-        background-color: #e5e2df; /* Red */
-        color: black;
+    .card {
+        flex: 1 1 calc(25% - 20px); /* Four cards in a row with spacing */
     }
+}
 
-    .card.sales {
-        background-color: #e5e2df; /* Red */
-        color: black;
-    }
-
-    .card.products {
-        background-color: #e5e2df; /* Red */
-        color: black;
-    }
-
-    .card.visits {
-        background-color: #e5e2df; /* Red */
-        color: black;
-    }
 
     .percentage-card {
         background-color: #fff;
@@ -466,6 +504,288 @@ footer {
     }
 
     .product-mrp {
+        text-align: left;
+    }
+}
+
+
+.charts-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin: 20px;
+}
+
+.chart-box {
+    width: 15%; /* Adjust chart width to fit side-by-side */
+    padding: 10px;
+}
+
+canvas {
+    width: 100% !important; /* Ensure canvas takes full width of the container */
+    height: auto !important;
+}
+
+.chart-title {
+    text-align: center;
+    margin-bottom: 10px;
+}
+.summary {
+display: flex;
+justify-content: space-between;
+margin: 20px;
+}
+
+.percentage-card {
+text-align: center;
+flex: 1;
+margin: 0 10px;
+}
+
+.summary1 {
+    display: flex;
+     justify-content: space-between;
+      display: flex;
+            justify-content: space-between;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+        justify-content: space-between;
+        margin-bottom: 20px;
+}
+
+
+.container {
+    max-width: 800px; /* Set a max width for better alignment */
+    margin: 0 auto; /* Center the container */
+    padding: 20px; /* Add some padding */
+}
+
+.report-controls {
+    display: flex;
+    flex-direction: column; /* Stack controls vertically */
+    margin-bottom: 20px; /* Space below controls */
+}
+
+.report-controls label {
+    margin-top: 10px; /* Space above labels */
+}
+
+.report-controls select,
+.report-controls input {
+    width: 100%; /* Full width for inputs */
+    padding: 10px; /* Padding for better touch area */
+    margin-top: 5px; /* Space above inputs */
+}
+
+.generate-report-button {
+    padding: 10px; /* Padding for button */
+    background-color: #007bff; /* Blue background */
+    color: white; /* White text */
+    border: none; /* No border */
+    border-radius: 5px; /* Rounded corners */
+    cursor: pointer; /* Pointer cursor on hover */
+    margin-top: 10px; /* Space above button */
+}
+
+.generate-report-button:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+}
+
+.summary1 {
+    display: flex; /* Flex layout for summary */
+    flex-wrap: wrap; /* Allow wrapping */
+    justify-content: space-around; /* Space items evenly */
+    margin-top: 20px; /* Space above summary */
+    
+}
+
+.percentage-card {
+    padding: 20px; /* Padding for cards */
+    border: 1px solid #ccc; /* Light border */
+    border-radius: 8px; /* Rounded corners */
+    background-color: #fffbfb; /* Light background */
+    text-align: center; /* Center text */
+    width: 45%; /* Responsive width for cards */
+    margin-bottom: 20px; /* Space below cards */
+}
+
+.percentage-card h2 {
+    margin-bottom: 10px; /* Space below headings */
+    font-size: 18px; /* Font size for headings */
+    color: #333; /* Dark color for text */
+}
+
+.percentage-card p {
+    font-size: 24px; /* Larger font size for values */
+    font-weight: bold; /* Bold text */
+    color: #0c0c0c; /* Color for the values */
+}
+#paymentMethodsChart {
+    width: 100px;  /* Desired width */
+    height: 100px; /* Desired height */
+}
+
+/* Add this to your CSS file */
+    .sales-report-section {
+        margin-top: 20px;
+        border: 1px solid #ccc;
+        padding: 15px;
+        border-radius: 8px;
+    }
+
+    .sales-report-container {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .sales-report-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .sales-report-row:last-child {
+        border-bottom: none;
+    }
+
+    .more-button {
+        margin-top: 10px;
+        color: blue;
+        cursor: pointer;
+        text-decoration: underline;
+        display: inline-block;
+    }
+
+    @media (max-width: 600px) {
+        .sales-report-row {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .sales-report-row span {
+            margin: 2px 0;
+        }
+    }/* Order List Container */
+.order-list-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f7f7f7;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Headline Style */
+.order-headline {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background-color: #333;
+    color: white;
+    font-weight: bold;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.order-headline span {
+    flex: 1;
+    text-align: center;
+}
+
+/* Order Item Style */
+.order-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.order-item {
+    background-color: white;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Order Header */
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-bottom: 1px solid #ddd;
+}
+
+.order-header span {
+    flex: 1;
+    text-align: center;
+    font-weight: 500;
+}
+
+/* More and Less Button Style */
+.more-btn, .less-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.more-btn:hover, .less-btn:hover {
+    background-color: #0056b3;
+}
+
+/* Order Details Section */
+.order-details {
+    padding: 15px;
+    background-color: #f1f1f1;
+    display: none;
+}
+
+.order-details p {
+    margin: 5px 0;
+    font-size: 14px;
+    color: #555;
+}
+
+/* Filter Style */
+.order-filter {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.order-filter label {
+    margin-right: 10px;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.order-filter select {
+    padding: 8px 12px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    background-color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .order-headline, .order-header {
+        flex-direction: column;
+    }
+
+    .order-header span {
+        margin-bottom: 10px;
+    }
+
+    .order-details p {
         text-align: left;
     }
 }

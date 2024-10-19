@@ -21,90 +21,22 @@
     <div id="wrapper">
         <nav class="navbar navbar-default top-navbar" role="navigation">
             <div class="navbar-header">
-                <button type="button" class="navbar-toggle waves-effect waves-dark" data-toggle="collapse" data-target=".sidebar-collapse">
+                <button type="button" class="navbar-toggle waves-effect waves-light" data-toggle="collapse" data-target=".sidebar-collapse">
                     <span class="sr-only">Toggle navigation</span>
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand waves-effect waves-dark" href="index.html"><i class="large material-icons">track_changes</i> <strong>target</strong></a>
 				
-		<div id="sideNav" href=""><i class="material-icons dp48">toc</i></div>
+		      <div id="sideNav" href=""><i class="material-icons dp48">toc</i></div>
             </div>
 
-            <ul class="nav navbar-top-links navbar-right"> 
-				<a href="/userHome" class="nav-item">Home</a>
-				<a href="/shop" class="nav-item">Shop</a>
-				<div class="dropdown">
-					<a href="/account" class="nav-item dropdown-toggle">My Account</a>
-					<div class="dropdown-menu">
-						<a href="/user-account" class="dropdown-item">Profile</a>
-						<a href="#settings" class="dropdown-item">Settings</a>
-					</div>
-				</div>
-				<a href="/wishlist" class="nav-item">❤️</a>
-				<a href="/cart" class="nav-item">🛒</a>
-				<a href="/userLogout" class="nav-item logout">Logout</a>
-            </ul>
+            
         </nav>
 		<!-- Dropdown Structure -->
-<ul id="dropdown1" class="dropdown-content">
-<li><a href="#"><i class="fa fa-user fa-fw"></i> My Profile</a>
-</li>
-<li><a href="#"><i class="fa fa-gear fa-fw"></i> Settings</a>
-</li> 
-<li><a href="#"><i class="fa fa-sign-out fa-fw"></i> Logout</a>
-</li>
+ 
 </ul>
-<ul id="dropdown2" class="dropdown-content w250">
-  <li>
-                                <div>
-                                    <i class="fa fa-comment fa-fw"></i> New Comment
-                                    <span class="pull-right text-muted small">4 min</span>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="divider"></li>
-                        <li>
-                                <div>
-                                    <i class="fa fa-twitter fa-fw"></i> 3 New Followers
-                                    <span class="pull-right text-muted small">12 min</span>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="divider"></li>
-                        <li>
-                                <div>
-                                    <i class="fa fa-envelope fa-fw"></i> Message Sent
-                                    <span class="pull-right text-muted small">4 min</span>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="divider"></li>
-                        <li>
-                                <div>
-                                    <i class="fa fa-tasks fa-fw"></i> New Task
-                                    <span class="pull-right text-muted small">4 min</span>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="divider"></li>
-                        <li>
-                                <div>
-                                    <i class="fa fa-upload fa-fw"></i> Server Rebooted
-                                    <span class="pull-right text-muted small">4 min</span>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="divider"></li>
-                        <li>
-                            <a class="text-center" href="#">
-                                <strong>See All Alerts</strong>
-                                <i class="fa fa-angle-right"></i>
-                            </a>
-                        </li>
-</ul>
-  
+
  <!--/. NAV TOP  -->
         <nav class="navbar-default navbar-side" role="navigation">
             <div class="sidebar-collapse">
@@ -118,7 +50,7 @@
 
                     
                     <li>
-                        <a href="empty.html" class="waves-effect waves-dark"><i class="fa fa-fw fa-file"></i> Empty Page</a>
+                        <a href="/users" class="waves-effect waves-dark"><i class="fa fa-fw fa-file"></i> Empty Page</a>
                     </li>
                 </ul>
 
@@ -168,10 +100,10 @@
 						</div>
 						<div class="card-stacked orange">
 						<div class="card-content">
-						<h3>36,540</h3> 
+						<h3><%=data.totalOrders%></h3> 
 						</div>
 						<div class="card-action">
-						<strong>SALES</strong>
+						<strong>ORDERS</strong>
 						</div>
 						</div>
 						</div> 
@@ -184,10 +116,10 @@
 						</div>
 						<div class="card-stacked blue">
 						<div class="card-content">
-						<h3>24,225</h3> 
+						<h3><%=data.totalOfferDiscount%></h3> 
 						</div>
 						<div class="card-action">
-						<strong>PRODUCTS</strong>
+						<strong>DISCOUNT</strong>
 						</div>
 						</div>
 						</div> 
@@ -201,10 +133,10 @@
 						</div>
 						<div class="card-stacked green">
 						<div class="card-content">
-						<h3>88,658</h3> 
+						<h3><%=activeUsers%></h3> 
 						</div>
 						<div class="card-action">
-						<strong>VISITS</strong>
+						<strong>USERS</strong>
 						</div>
 						</div>
 						</div> 
@@ -411,6 +343,14 @@
     <!-- JS Scripts-->
     <!-- jQuery Js -->
     <script src="/js copy/jquery-1.10.2.js"></script>
+	<script>
+		var pieData = <%- JSON.stringify(donutData) %>;
+	
+		var ctx = document.getElementById("morris-donut-chart").getContext("2d");
+		var myPieChart = new Chart(ctx).Pie(pieData, {
+			responsive: true
+		});
+	</script>
 	
 	<!-- Bootstrap Js -->
     <script src="/js copy/bootstrap.min.js"></script>

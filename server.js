@@ -13,6 +13,7 @@ const flash = require('connect-flash');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const moment = require('moment');
 
 const { body, validationResult } = require('express-validator');
 // const logger=require('morgan')
@@ -25,15 +26,17 @@ app.use(cors({
     methods: ['POST', 'GET'],
     credentials: true // If you are sending cookies or using sessions
 }));
+
 const userRouter= require('./routes/userRoutes');
 const adminRouter = require('./routes/adminRoutes');
 const authRouter = require('./routes/auth');
 app.use(express.urlencoded({extended:true}));
-app.use(session({
-    secret: process.env.SESSION_SECRET_KEY,
-    resave:false,
-    saveUninitialized:true
-  }));
+
+  app.use(session({
+    secret:process.env.SESSION_SECRET_KEY, // Change this to a strong secret
+    resave: false,
+    saveUninitialized: true,
+}));
 // app.use(logger('dev'));
 
 app.use((req, res, next) => {
@@ -54,7 +57,14 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname,'public')));
 app.use(express.static(path.join(__dirname, 'uploadedImages')));
 
- 
+app.get('*', (req, res) => {
+  res.status(404).render('user/404'); // Renders the 404 page
+});
+
+app.use((err, req, res, next) => {
+  console.error(err.stack); // Log the error for debugging
+  res.status(500).render('user/500'); // Renders the 500 page
+});
 app.use(passport.initialize());
 app.use(passport.session());
 

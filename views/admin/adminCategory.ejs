@@ -11,17 +11,17 @@ if (typeof message !== 'undefined') {
 <section>
     <div class="container">
         <div class="row mt-4">
-            <form class="d-flex" action="/search" method="post">
-                <input class="form-control me-2" type="search" name="String" placeholder="Search" aria-label="Search">
-                <button class="btn btn-outline-dark searchButton" type="submit">Search</button>
-            </form>
-            <a href="add-category" class="btn btn-dark ml-auto mb-5">Add Category</a>
+            // <form class="d-flex" action="/search" method="post">
+            //     <input class="form-control me-2" type="search" name="String" placeholder="Search" aria-label="Search">
+            //     <button class="btn btn-outline-dark searchButton" type="submit">Search</button>
+            // </form>
+            
+            <a href="javascript:void(0);" class="btn btn-dark ml-auto mb-5" onclick="showAddCategoryPopup()">Add Category</a>
         </div>
 
         <table class="table table-striped table-bordered mt-5" id="peopleTable">
             <thead>
                 <tr>
-                    <th scope="col">Image</th>
                     <th scope="col">Category Name</th>
                     <th scope="col">Offer</th>
                     <th scope="col">Actions</th>
@@ -34,20 +34,21 @@ if (typeof message !== 'undefined') {
                         const offerValue = data[i].categoryOffer ? data[i].categoryOffer : 0;
                 %>
                 <tr>
-                    <td><img src="/<%= data[i].cimage %>" width="60px" height="60px" alt="<%= data[i].cname %>"></td>
                     <td><%= data[i].cname %></td>
                     <td><%= offerValue %></td>
                     <td>
-                        <a href="/edit-category/<%= data[i]._id %>" class="btn btn-primary">Edit</a>
-                        <% if (offerValue > 0) { %>
-                            <button class="btn btn-danger" onclick="removeOffer('<%= data[i]._id %>')">Remove Offer</button>
-                        <% } else { %>
-                            <button class="btn btn-success" onclick="showOfferPopup('<%= data[i]._id %>')">Add Offer</button>
-                        <% } %>
-                        <form class="d-inline" id="deleteButton<%= data[i]._id %>" action="/delete-category/<%= data[i]._id %>" method="POST">
-                            <button class="btn btn-danger deleteCategory" type="submit">Delete</button>      
-                        </form>
-                    </td>
+    <a href="javascript:void(0);" class="btn btn-primary" onclick="editCategory('<%= data[i]._id %>', '<%= data[i].cname %>')">Edit</a>
+    <% if (offerValue > 0) { %>
+        <button class="btn btn-danger" onclick="removeOffer('<%= data[i]._id %>')">Remove Offer</button>
+    <% } else { %>
+        <button class="btn btn-success" onclick="showOfferPopup('<%= data[i]._id %>')">Add Offer</button>
+    <% } %>
+    <form class="d-inline" id="deleteButton<%= data[i]._id %>" action="/delete-category/<%= data[i]._id %>" method="POST">
+        <button class="btn btn-danger deleteCategory" type="submit">Delete</button>      
+    </form>
+</td>
+
+
                 </tr>
                 <% 
                     }
@@ -166,25 +167,147 @@ function removeOffer(categoryId) {
     });
 }
 
-    const deleteButtons = document.querySelectorAll('.deleteCategory');
-    deleteButtons.forEach((button) => {
-        button.addEventListener('click', (e) => {
-            const categoryId = e.target.closest('form').id.replace('deleteButton', '');
-            if (!confirm("Do you really want to delete this category?")) {
-                e.preventDefault();
-            } else {
+   
+const deleteButtons = document.querySelectorAll('.deleteCategory');
+deleteButtons.forEach((button) => {
+    button.addEventListener('click', (e) => {
+        e.preventDefault(); // Prevent the default form submission immediately
+        const categoryId = e.target.closest('form').id.replace('deleteButton', '');
+
+        // Use SweetAlert for confirmation
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "Do you really want to delete this category?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'No, keep it'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Show a loading message while deleting
                 Swal.fire({
                     title: 'Deleting...',
                     text: 'Your category is being deleted.',
                     icon: 'info',
                     timer: 2000,
-                    showConfirmButton: false
+                    showConfirmButton: false,
+                    onOpen: () => {
+                        Swal.showLoading();
+                    }
                 });
+
                 const form = document.getElementById('deleteButton' + categoryId);
-                form.submit();
+                form.submit(); // Submit the form after confirmation
             }
         });
     });
+});
+
+
+
+    function showAddCategoryPopup() {
+    Swal.fire({
+        title: 'Add Category',
+        html: `
+            <input type="text" id="categoryName" class="swal2-input" placeholder="Enter Category Name" required>
+        `,
+        confirmButtonText: 'Submit',
+        showCancelButton: true,
+        preConfirm: () => {
+            const categoryName = document.getElementById('categoryName').value;
+
+            if (!categoryName) {
+                Swal.showValidationMessage(`Please enter a category name.`);
+                return false; // Prevent further execution
+            }
+
+            return { categoryName }; // Return the valid data
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const { categoryName } = result.value;
+
+            const formData = new FormData();
+            formData.append('cname', categoryName); // Only append category name
+
+            fetch('/add-category', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest', // Indicate AJAX request
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Success!', data.message, 'success').then(() => {
+                        location.reload(); // Reload to reflect changes
+                    });
+                } else {
+                    Swal.fire('Error!', data.message || 'There was an error adding the category.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Fetch Error:', error);
+                Swal.fire('Error!', 'There was an error with the request.', 'error');
+            });
+        }
+    });
+}
+function editCategory(categoryId, currentCategoryName) {
+    Swal.fire({
+        title: 'Edit Category',
+        html: `
+            <input type="text" id="categoryName" class="swal2-input" placeholder="Enter New Category Name" value="${currentCategoryName}" required>
+        `,
+        confirmButtonText: 'Submit',
+        showCancelButton: true,
+        preConfirm: () => {
+            const categoryNameInput = document.getElementById('categoryName');
+            
+            if (!categoryNameInput || !categoryNameInput.value) {
+                Swal.showValidationMessage(`Please enter a category name.`);
+                return false;
+            }
+
+            const categoryName = categoryNameInput.value;
+            return { categoryName };
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const { categoryName } = result.value;
+            
+            fetch('/edit-category/' + categoryId, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ cname: categoryName }) // Send updated category name
+            })
+            .then(response => {
+                console.log('Response:', response); // Log the response for debugging
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Success!', 'Category has been updated.', 'success').then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire('Error!', data.message || 'There was an error updating the category.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Fetch Error:', error);
+                Swal.fire('Error!', 'There was an error with the request.', 'error');
+            });
+        }
+    });
+}
+
 </script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 

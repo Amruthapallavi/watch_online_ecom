@@ -167,80 +167,83 @@ const resendOtp= (req, res) => {
     // res.redirect("/verifyOTP");
   }
 
+  const crypto = require('crypto');
 
-const verifyOtp = async (req, res) => {
+  const verifyOtp = async (req, res) => {
+      try {
+          const data = req.session.userData;
+          const hashedPassword = await bcrypt.hash(data.password, 10);
+          const { otp } = req.body; // Extract OTP from the request body
+  
+          if (req.session.otp === Number(otp)) {
+              // Generate a unique referral code
+              const referralCode = generateUniqueReferralCode();
+  
+              // Insert the new user into the database with the referral code
+              await userModel.collection.insertOne({
+                  name: data.name,
+                  email: data.email,
+                  phone: data.phone,
+                  password: hashedPassword,
+                  is_active: true,
+                  referralCode: referralCode // Save the generated referral code
+              });
+  
+              res.redirect('/login');
+          }
+      } catch (error) {
+          console.log(error.message);
+          res.redirect('/500');
+      }
+  }
+  
+  const generateUniqueReferralCode = () => {
+      return crypto.randomBytes(4).toString('hex').toUpperCase(); 
+  }
+  
+
+const doUserLogin = async (req, res) => {
     try {
-        // console.log(req.body)
-        const data = req.session.userData;
-        // console.log(data);
-        const hashedPassword = await bcrypt.hash(data.password,10);
-        console.log(req.session.otp);
+        const email = req.body.email;
+        const password = req.body.password;
 
-        if(req.session.otp === Number(req.body.otp)){
-            await userModel.collection.insertOne({name:data.name,email:data.email,phone:data.phone,password:hashedPassword,is_active:true})
-            res.redirect('/login')
+        const userData = await userModel.findOne({ email: email });
+        
+        if (userData) {
+            if (userData.is_active === true && userData.is_admin === false) {
+                
+                const passwordMatch = await bcrypt.compare(password, userData.password);
+                
+                if (passwordMatch) {
+                    const products = await productModel.find();
+                    
+                    const payload = { userData };
+                    const token = jwt.sign(payload, 'secretKey', { expiresIn: "24h" });
 
+                    res.cookie("UserToken", token, {
+                        httpOnly: true,
+                        secure: true,
+                        sameSite: "strict",
+                    });
+                    
+                    req.session.isLoggedIn = true;
+                    req.session.user_id = userData._id;
+
+                    res.redirect('/userHome');
+                } else {
+                    res.render('auth/userLogin', { message: 'Invalid credentials' });
+                }
+            } else {
+                res.render('auth/userLogin', { message: 'You are currently blocked' });
+            }
+        } else {
+            res.render('auth/userLogin', { message: 'Invalid credentials' });
         }
-         // Generate JWT
-        //  const token = jwt.sign(
-        //     { userId: data._id, username: data.name },
-        //     process.env.JWT_SECRET,
-        //     { expiresIn: process.env.JWT_EXPIRES_IN }
-        // );
-
-        // Optionally, set the token as a cookie or send it in the response
-        // res.cookie('token', token, { httpOnly: true });
-        // res.redirect('/');
-    } catch (error) {
-        console.log(error.message)
-        res.redirect('/500')
-    }
-}
-
-
-const doUserLogin = async(req,res)=>{
-    try {
-         
-        const email=req.body.email;
-        const password=req.body.password;
-
-      const userData= await userModel.findOne({email:email});
-    //   console.log(userData.password,password);
-
-    if (userData && userData.is_active==true && userData.is_admin== false) {
-
-       const passwordMatch= await bcrypt.compare(password,userData.password);
-       req.session.isLoggedIn = true;
-       if (passwordMatch) {
-            const products = await productModel.find();
-            
-            // req.session.userId = userData._id;
-            // req.session.user = userData;
-            const payload = {userData};
-           const token = jwt.sign(payload,'secretKey',{expiresIn:"24h"})
-        //    console.log(token);
-            res.cookie("UserToken", token, {
-            httpOnly: true,
-            secure: true,
-            sameSite: "strict",
-          });
-          req.session.user_id=userData._id;
-            res.redirect('/userHome');
-        //  console.log(req.session.userId);
-
-       } else {
-        res.render('auth/userLogin',{message:'invalid credentials '})
-
-       }
-
-    } else {
-       res.render('auth/userLogin',{message:'You are Currently Blocked'});
-    }
     } catch (error) {
         console.log(error.message);
+        res.status(500).render('auth/userLogin', { message: 'An error occurred. Please try again.' });
     }
-}
-
+};
 
 
 const getAdminLogin = (req, res) => {
@@ -251,27 +254,46 @@ const getAdminLogin = (req, res) => {
     req.session.error = "";
   }
 
-const doAdminLogin = async (req, res) => {
-    try {
-        const email=req.body.email;
-        const password=req.body.password;
 
-      const adminData= await userModel.findOne({email:email});
-    //   console.log(adminData.password,password);
-
-        if(adminData && adminData.is_admin== true){
+  
+  const doAdminLogin = async (req, res) => {
+      try {
+          const email = req.body.email;
+          const password = req.body.password;
+  
+          if (!email || !password) {
+              req.session.loginError = 'Email and password are required';
+              return res.redirect('/admin'); // Redirect to the login page
+          }
+  
+          const adminData = await userModel.findOne({ email: email });
+  
+          if (adminData && adminData.is_admin) {
+              const isPasswordValid = await bcrypt.compare(password, adminData.password);
+  
             
-            res.redirect('/adminHome');
-        }else{
-            req.session.error='invalid credentials';
-            res.redirect('/admin');
-        }
-    
-    } catch (error) {
-      console.log(error);
-    }
-}
-
+  
+              if (isPasswordValid) {
+                  req.session.admin = true; 
+                  req.session.loginError = null; 
+                  return res.redirect('/adminHome'); 
+              } else {
+                  req.session.loginError = 'Invalid credentials'; 
+              }
+          } else {
+              req.session.loginError = 'Invalid credentials';
+          }
+  
+          // Render the login page with the session data
+          return res.render('auth/adminLogin', { error: req.session.loginError, title: 'admin_login' }); // Pass the error directly
+      } catch (error) {
+          console.log(error);
+          req.session.loginError = 'An error occurred during login'; // General error message
+          return res.render('auth/adminLogin', { error: req.session.loginError, title: 'admin_login' }); // Pass the error directly
+      }
+  };
+  
+  
 const userLogout = (req, res) => {
     req.session.destroy((err) => {
         if (err) {
@@ -283,10 +305,18 @@ const userLogout = (req, res) => {
     });
 };
 
+const adminLogout = (req, res) => {
+    req.session.destroy(err => {
+        if (err) {
+            console.log('Error destroying session:', err);
+            return res.redirect('/admin'); // Redirect to admin page in case of an error
+        }
+        
+        res.redirect('/admin');
+    });
+};
 
-const adminLogout = (req,res)=>{
-    res.redirect('/admin');
-}
+
 
 
 const successGoogleLogin = (req , res) => { 

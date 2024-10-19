@@ -223,3 +223,348 @@ footer {
     color: #fff;
     text-decoration: none;
 }
+
+
+/* // new data */
+
+    /* General Styling */
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f4;
+    }
+    .container {
+        max-width: 1200px;
+        margin: 20px auto;
+        padding: 15px;
+    }
+    .cart-section, .payment-section {
+        background-color: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    h2 {
+        font-size: 24px;
+        margin-bottom: 15px;
+    }
+    .cart-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 0;
+        border-bottom: 1px solid #ccc;
+    }
+    .cart-item:last-child {
+        border-bottom: none;
+    }
+    .cart-item-details {
+        width: 70%;
+    }
+    .cart-item-price {
+        text-align: right;
+    }
+    .summary {
+        width: 30%;
+        float: right;
+    }
+    .summary h3 {
+        font-size: 18px;
+        margin-bottom: 10px;
+    }
+    .summary p {
+        margin: 8px 0;
+        font-size: 16px;
+    }
+    .total-price {
+        font-weight: bold;
+        font-size: 20px;
+    }
+    .clear {
+        clear: both;
+    }
+    /* Coupon Section */
+    .coupon-section {
+        margin-bottom: 20px;
+    }
+    .coupon-section input[type="text"] {
+        width: 60%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        margin-right: 10px;
+    }
+    .coupon-section button {
+        padding: 10px 20px;
+        background-color: #000;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    /* Payment Section */
+    .payment-method {
+        list-style: none;
+        padding: 0;
+    }
+    .payment-method li {
+        margin-bottom: 15px;
+        padding: 15px;
+        background-color: #f9f9f9;
+        border-radius: 5px;
+    }
+    .payment-method input[type="radio"] {
+        margin-right: 15px;
+    }
+    .payment-method label {
+        font-size: 16px;
+        cursor: pointer;
+    }
+    /* Place Order Button */
+    .place-order-btn {
+        width: 100%;
+        padding: 15px;
+        background-color: #000;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 18px;
+    }
+    /* Footer */
+    footer {
+        text-align: center;
+        padding: 20px 0;
+        background-color: #333;
+        color: white;
+        margin-top: 30px;
+    }
+    footer a {
+        color: white;
+        text-decoration: none;
+    }
+
+    /* Responsive Styling */
+    @media screen and (max-width: 768px) {
+        .cart-item {
+            flex-direction: column;
+            text-align: left;
+        }
+        .cart-item-details, .cart-item-price {
+            width: 100%;
+            text-align: left;
+            margin-bottom: 10px;
+        }
+        .summary {
+            width: 100%;
+            float: none;
+        }
+        .coupon-section input[type="text"] {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+    }
+
+    /* Address Selection */
+    .address-selection {
+        margin-top: 20px;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+    }
+
+    .address-box label {
+        display: block;
+        padding: 10px;
+        margin-bottom: 10px;
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .address-box input[type="radio"] {
+        margin-right: 10px;
+    }
+
+    /* General Cart Section */
+    .cart-section {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+
+    /* Cart and Address Section */
+    .cart-details {
+        width: 65%; /* Bigger compared to summary */
+        padding: 20px;
+        background-color: #f9f9f9;
+        border-radius: 10px;
+        border: 1px solid #ddd;
+    }
+
+    /* Summary Section */
+    .summary-section {
+        width: 30%; /* Smaller compared to cart-details */
+        padding: 20px;
+        background-color: #f9f9f9;
+        border-radius: 10px;
+        border: 1px solid #ddd;
+    }
+
+    .summary-section h3 {
+        font-size: 20px;
+        margin-bottom: 10px;
+    }
+
+    .summary-section p {
+        font-size: 16px;
+        margin: 8px 0;
+    }
+
+    .total-price {
+        font-weight: bold;
+        font-size: 18px;
+        margin-top: 15px;
+    }
+
+    /* Responsive Styling */
+    @media screen and (max-width: 768px) {
+        .cart-section {
+            flex-direction: column;
+        }
+
+        .cart-details, .summary-section {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+    }
+
+    @media screen and (max-width: 480px) {
+        .cart-section, .payment-section {
+            padding: 15px;
+        }
+        h2 {
+            font-size: 20px;
+        }
+        .cart-item-details p {
+            font-size: 14px;
+        }
+        .coupon-section button {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .place-order-btn {
+            font-size: 16px;
+            padding: 12px;
+        }
+    }
+    /* Responsive Styling */
+    @media screen and (max-width: 768px) {
+            .cart-section {
+                flex-direction: column;
+            }
+            .address-section, .cart-details, .summary-section {
+                width: 100%;
+                margin-right: 0;
+                margin-bottom: 20px;
+            }
+            .coupon-section input[type="text"] {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+        }
+        .summary-section {
+            width: 30%; /* Smaller for the summary */
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        /* General Styling */
+.cart-section {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+.summary-section {
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    max-width: 400px;
+    margin: 20px auto;
+}
+
+.summary-details {
+    margin-top: 20px;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px; /* Adds spacing between lines */
+}
+
+.summary-label {
+    font-weight: bold;
+    color: #333;
+}
+
+.summary-value {
+    font-weight: normal;
+    text-align: right;
+    color: #555;
+}
+
+.total {
+    font-size: 1.2em;
+    margin-top: 15px;
+}
+
+hr {
+    border: 1px solid #ddd;
+    margin: 15px 0;
+}
+
+.cart-details {
+    width: 65%; /* Larger area for the address section */
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+}
+
+.summary-section {
+    width: 30%; /* Smaller for the summary section */
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.summary-section h3 {
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+.summary-section p {
+    font-size: 16px;
+    margin: 8px 0;
+}
+
+/* Responsive Styling */
+@media screen and (max-width: 768px) {
+    .cart-section {
+        flex-direction: column; /* Stack on smaller screens */
+    }
+
+    .cart-details, .summary-section {
+        width: 100%; /* Full width on small screens */
+        margin-bottom: 20px;
+    }
+}
+

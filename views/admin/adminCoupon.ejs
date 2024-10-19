@@ -11,6 +11,27 @@
     <link rel="stylesheet" href="/css/adminCoupon.css">
     <script defer src="script.js"></script>
 </head>
+<style>
+        .pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.pagination a {
+  margin: 0 5px;
+  padding: 10px;
+  background-color: #ddd;
+  text-decoration: none;
+  color: black;
+  border-radius: 5px;
+}
+
+.pagination a.active {
+  background-color: black;
+  color: white;
+}
+</style>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-black">
         <div class="container bg-black">
@@ -57,7 +78,7 @@
                     <th>Code</th>
                     <th>Value</th>
                     <th>Expire At</th>
-                    <th>Min_purchase</th>
+                    <th>Min Purchase</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -66,10 +87,14 @@
                 <tr>
                     <td><%= coupon.code %></td>
                     <td><%= coupon.value %>%</td>
-                    <td><%= coupon.expiresAt %></td>
+                    <td><%= new Date(coupon.expiresAt).toISOString().split('T')[0] %></td>
                     <td><%= coupon.min_purchase %></td>
                     <td>
-                        <a href="/editCoupon/<%=coupon._id %>"><i class="fa fa-pencil"></i></a>
+                        <!-- Edit button triggers the edit form -->
+                        <a href="#" onclick="openEditForm('<%= coupon._id %>', '<%= coupon.code %>', <%= coupon.value %>, '<%= new Date(coupon.expiresAt).toISOString().split('T')[0] %>', <%= coupon.min_purchase %>)">
+                            <i class="fa fa-pencil"></i>
+                        </a>
+                        <!-- Delete button -->
                         <a href="/deleteCoupon/<%= coupon._id %>" onclick="return deleteCoupon(this)">
                             <i class="fa fa-trash"></i>
                         </a>
@@ -78,59 +103,68 @@
                 <% }) %>
             </tbody>
         </table>
+        
 
         <!-- Add Coupon Form -->
         <div class="form-popup" id="addCouponForm">
-            <form class="coupon-form" id="add-coupon-form" action="/addCoupon" method="POST">
+            <form class="coupon-form" id="add-coupon-form" action="/addCoupon" method="POST" onsubmit="return validateCouponCode('add')">
                 <h2>Add Coupon</h2>
                 <label for="add-code">Coupon Code</label>
                 <input type="text" id="add-code" name="code" required>
 
-                <label for="add-value">Value</label>
-                <input type="number" id="add-value" name="value" required>
+                <label for="add-value">Value (%)</label>
+                <input type="number" id="add-value" name="value" required >
 
                 <label for="add-expireAt">Expire At</label>
                 <input type="date" id="add-expireAt" name="expireAt" required>
 
-                <label for="min-purchase">Min_Purchase</label>
+                <label for="min-purchase">Min Purchase ($)</label>
                 <input type="number" id="min-purchase" name="min_purchase" required>
-
-                <!-- <select id="add-category" name="category">
-                    < category.forEach(cat => { %>
-                    <option value="<= cat._id %>"><= cat.cname %></option>
-                    < }) %>
-                </select> -->
 
                 <button type="submit">Save</button>
                 <button type="button" class="cancel-btn" onclick="closeAddForm()">Cancel</button>
             </form>
         </div>
 
-        <!-- Edit Coupon Form -->
-        <div class="form-popup" id="editCouponForm" style="display:none;">
-            <form class="coupon-form" id="edit-coupon-form" action="/editCoupon/:id" method="POST">
-                <h2>Edit Coupon</h2>
-                <label for="edit-code">Coupon Code</label>
-                <input type="text" id="edit-code" value="" name="code" required>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 
-                <label for="edit-value">Value</label>
-                <input type="number" id="edit-value" name="value" required>
+    </div>    <!-- Edit Coupon Form -->
+       
+<!-- Edit Coupon Form -->
+<div class="form-popup" id="editCouponForm" style="display:none;">
+    <form class="coupon-form" id="edit-coupon-form" action="/editCoupon/:id" method="POST" onsubmit="return validateEditCoupon()">
+        <h2>Edit Coupon</h2>
+        
+        <label for="edit-code">Coupon Code</label>
+        <input type="text" id="edit-code" value="" name="code" required>
 
-                <label for="edit-expireAt">Expire At</label>
-                <input type="date" id="edit-expireAt" name="expireAt" required>
+        <label for="edit-value">Value (%)</label>
+        <input type="number" id="edit-value" name="value" required >
 
-                <label for="edit-category">Eligible Category</label>
-                <select id="edit-category" name="category">
-                    <% category.forEach(cat => { %>
-                    <option value="<%= cat._id %>"><%= cat.cname %></option>
-                    <% }) %>
-                </select>
+        <label for="edit-expireAt">Expire At</label>
+        <input type="date" id="edit-expireAt" name="expireAt" required>
 
-                <button type="submit">Update</button>
-                <button type="button" class="cancel-btn" onclick="closeEditForm()">Cancel</button>
-            </form>
-        </div>
-    </div>
+        <label for="edit-min-purchase">Min Purchase ($)</label>
+        <input type="number" id="edit-min-purchase" name="min_purchase" required>
+
+        <button type="submit">Update</button>
+        <button type="button" class="cancel-btn" onclick="closeEditForm()">Cancel</button>
+    </form>
+</div>
+<div class="pagination">
+    <% if (currentPage > 1) { %>
+        <a href="/adminCoupon?page=<%= currentPage - 1 %>">&laquo;</a>
+    <% } %>
+
+    <% for (let i = 1; i <= totalPages; i++) { %>
+        <a href="/adminCoupon?page=<%= i %>" class="<%= i === currentPage ? 'active' : '' %>"><%= i %></a>
+    <% } %>
+
+    <% if (currentPage < totalPages) { %>
+        <a href="/adminCoupon?page=<%= currentPage + 1 %>">&raquo;</a>
+    <% } %>
+</div>
+
 
     <script>
     function openAddForm() {
@@ -141,16 +175,16 @@
         document.getElementById("addCouponForm").style.display = "none";
     }
 
-    function openEditForm(id, code, value, expireAt, category) {
-        function openEditForm(id) {
-    window.location.href = `/editCoupon/${id}`;
-}
+   
+
+
+function openEditForm(id, code, value, expireAt, minPurchase) {
         document.getElementById("edit-code").value = code;
         document.getElementById("edit-value").value = value;
         document.getElementById("edit-expireAt").value = expireAt;
-        document.getElementById("edit-category").value = category;
+        document.getElementById("edit-min-purchase").value = minPurchase;
 
-        // Set the action of the form to the edit route
+        // Set the form action to the update route with the coupon ID
         document.getElementById("edit-coupon-form").action = `/editCoupon/${id}`;
 
         document.getElementById("editCouponForm").style.display = "block";
@@ -162,8 +196,7 @@
 
     function deleteCoupon(element) {
         event.preventDefault(); // Prevent the default link click behavior
-
-        swal("Are you sure to delete this coupon?", {
+        swal("Are you sure you want to delete this coupon?", {
             buttons: ["Cancel", "Delete"],
         }).then((isOkay) => {
             if (isOkay) {
@@ -171,6 +204,145 @@
             }
         });
     }
+
+   
+    // Function to validate coupon code and value before submitting
+    // function validateCouponCode(formType) {
+    //     const valueField = document.getElementById(`${formType}-value`);
+    //     const couponValue = parseInt(valueField.value, 10);
+
+    //     // Check if the value is greater than 99
+    //     if (couponValue > 99) {
+    //         swal("Error", "Coupon value cannot exceed 99%", "error");
+    //         return false; // Prevent form submission
+    //     }
+
+    //     return true;
+    // }
+
+    // Add validation to both add and edit forms
+    document.getElementById('add-coupon-form').onsubmit = function() {
+        return validateCouponCode('add');
+    };
+
+    document.getElementById('edit-coupon-form').onsubmit = function() {
+        return validateCouponCode('edit');
+    };
+    document.getElementById('add-coupon-form').addEventListener('submit', async function(event) {
+        event.preventDefault(); // Prevent default form submission
+        
+
+        const valueField = document.getElementById('add-value');
+        const couponValue = parseInt(valueField.value, 10);
+        const minPurchaseField = document.getElementById('min-purchase');
+        const minPurchaseValue = parseFloat(minPurchaseField.value);
+        // Check if the coupon value is greater than 99
+        if (couponValue > 99) {
+            Swal.fire('Error', 'Coupon value cannot exceed 99%', 'error');
+            return; // Stop further execution
+        }
+       
+
+       
+
+        // Check if the minimum purchase value is 0
+        if (minPurchaseValue <= 0) {
+            Swal.fire('Error', 'Minimum purchase must be greater than 0', 'error');
+            return; // Stop further execution
+        }
+        const formData = new FormData(this);
+        const formObj = {};
+        formData.forEach((value, key) => formObj[key] = value);
+
+        try {
+            const response = await fetch('/addCoupon', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formObj),
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                // Show success message
+                Swal.fire('Success', data.message, 'success');
+                // Optionally refresh the coupon list or redirect
+                setTimeout(() => {
+                    window.location.reload(); // Refresh the page after successful addition
+                }, 1500);
+            } else {
+                // Show error message
+                Swal.fire('Error', data.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            Swal.fire('Error', 'An unexpected error occurred!', 'error');
+        }
+    });
+
+    function openAddForm() {
+        document.getElementById('addCouponForm').style.display = 'block';
+    }
+
+    function closeAddForm() {
+        document.getElementById('addCouponForm').style.display = 'none';
+    }
+
+//edit coupon
+
+document.getElementById('edit-coupon-form').addEventListener('submit', async function(event) {
+    event.preventDefault(); // Prevent default form submission
+
+    const valueField = document.getElementById('edit-value');
+    const couponValue = parseInt(valueField.value, 10);
+    const minPurchaseField = document.getElementById('edit-min-purchase');
+    const minPurchaseValue = parseFloat(minPurchaseField.value);
+
+    // Check if the coupon value is greater than 99
+    if (couponValue > 99) {
+        Swal.fire('Error', 'Coupon value cannot exceed 99%', 'error');
+        return; // Stop further execution
+    }
+
+    // Check if the minimum purchase value is 0
+    if (minPurchaseValue <= 0) {
+        Swal.fire('Error', 'Minimum purchase must be greater than 0', 'error');
+        return; // Stop further execution
+    }
+
+    const formData = new FormData(this);
+    const formObj = {};
+    formData.forEach((value, key) => formObj[key] = value);
+
+    try {
+        const response = await fetch(this.action, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formObj),
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+            // Show success message
+            Swal.fire('Success', data.message, 'success');
+            // Optionally refresh the coupon list or redirect
+            setTimeout(() => {
+                window.location.reload(); // Refresh the page after successful update
+            }, 1500);
+        } else {
+            // Show error message
+            Swal.fire('Error', data.message, 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        Swal.fire('Error', 'An unexpected error occurred!', 'error');
+    }
+});
+
+    
     </script>
 
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>

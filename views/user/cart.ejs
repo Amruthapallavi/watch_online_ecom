@@ -43,13 +43,13 @@
                 <% }) %>
             </tbody>
         </table>
-        <div class="cart-actions">
+        <!-- <div class="cart-actions">
             <input type="text" id="couponCode" placeholder="Coupon Code" class="coupon-input">
             <button class="apply-coupon-btn" id="applyCouponBtn" onclick="applyCoupon()">APPLY COUPON</button>
             <button id="removeCouponBtn" class="styled-remove-coupon-btn" style="display: none;" onclick="removeCoupon()">REMOVE COUPON</button>
             <button><a href="/coupons" style="text-decoration: none; color: black;">VIEW COUPONS</a></button>
             <button class="update-cart-btn"><a href="/shop" style="text-decoration: none; color: white;">UPDATE CART</a></button>
-        </div>
+        </div> -->
 
         <div class="cart-totals">
             <h2>Cart Totals</h2>
@@ -57,7 +57,7 @@
             <p>Delivery Charge: ₹<span id="flatRate"><%= flat_rate.toFixed(2) %></span></p>
             
             <!-- Display Discount (show offerDiscount if available, else show 0) -->
-            <p>Discount: ₹<span id="discount"><%= discountAmount ? discountAmount.toFixed(2) : 0 %></span></p>
+            <!-- <p>Discount: ₹<span id="discount"><= discountAmount ? discountAmount.toFixed(2) : 0 %></span></p> -->
             
             <!-- Calculate Grand Total by adding delivery charge and subtracting the discount -->
             <p>Grand Total: ₹<span id="grandTotal"><%= grandTotal - (discountAmount || 0).toFixed(2)  %></span></p>
@@ -206,70 +206,70 @@ function confirmRemoveItem(button) {
 }
 
     
-    async function applyCoupon() {
-    const couponCode = document.querySelector('.coupon-input').value;
+//     async function applyCoupon() {
+//     const couponCode = document.querySelector('.coupon-input').value;
 
-    // If the coupon code is empty, show an error
-    if (!couponCode.trim()) {
-        swal('Error', 'Please enter a coupon code.', 'error');
-        return;
-    }
+//     // If the coupon code is empty, show an error
+//     if (!couponCode.trim()) {
+//         swal('Error', 'Please enter a coupon code.', 'error');
+//         return;
+//     }
 
-    // Prepare the product data to send
-    const cartProducts = [...document.querySelectorAll('tbody tr')].map(row => ({
-        productId: row.id.split('-')[1],
-        category: row.dataset.category, // Assuming you have the category in data attributes
-        price: parseFloat(row.querySelector('td:nth-child(2)').innerText.replace('₹', '')),
-        quantity: parseInt(row.querySelector('td:nth-child(3) input').value)
-    }));
+//     // Prepare the product data to send
+//     const cartProducts = [...document.querySelectorAll('tbody tr')].map(row => ({
+//         productId: row.id.split('-')[1],
+//         category: row.dataset.category, // Assuming you have the category in data attributes
+//         price: parseFloat(row.querySelector('td:nth-child(2)').innerText.replace('₹', '')),
+//         quantity: parseInt(row.querySelector('td:nth-child(3) input').value)
+//     }));
 
-    try {
-        const response = await fetch('/apply-coupon', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ couponCode, products: cartProducts }) // Send data as JSON
-        });
+//     try {
+//         const response = await fetch('/apply-coupon', {
+//             method: 'POST',
+//             headers: {
+//                 'Content-Type': 'application/json'
+//             },
+//             body: JSON.stringify({ couponCode, products: cartProducts }) // Send data as JSON
+//         });
 
-        const data = await response.json();
+//         const data = await response.json();
 
-        if (response.ok) {
-            // Update discount and grand total on the frontend
-            document.getElementById('discount').innerText = data.discountAmount.toFixed(2);
-            document.getElementById('grandTotal').innerText = data.grandTotal.toFixed(2);
+//         if (response.ok) {
+//             // Update discount and grand total on the frontend
+//             document.getElementById('discount').innerText = data.discountAmount.toFixed(2);
+//             document.getElementById('grandTotal').innerText = data.grandTotal.toFixed(2);
 
-            // Update hidden input for coupon discount
-            document.getElementById('hidden-coupon-discount').value = data.discountAmount.toFixed(2);
+//             // Update hidden input for coupon discount
+//             document.getElementById('hidden-coupon-discount').value = data.discountAmount.toFixed(2);
 
-            // Show Remove Coupon button and hide Apply Coupon button
-            document.getElementById('removeCouponBtn').style.display = 'inline-block'; // Change visibility
-            document.getElementById('applyCouponBtn').style.display = 'none'; // Hide apply button
+//             // Show Remove Coupon button and hide Apply Coupon button
+//             document.getElementById('removeCouponBtn').style.display = 'inline-block'; // Change visibility
+//             document.getElementById('applyCouponBtn').style.display = 'none'; // Hide apply button
 
-            swal('Success', data.message, 'success');
-        } else {
-            swal('Error', data.message, 'error');
-        }
-    } catch (error) {
-        console.error('Error applying coupon:', error);
-        swal('Error', 'There was an issue applying the coupon. Please try again later.', 'error');
-    }
-}
+//             swal('Success', data.message, 'success');
+//         } else {
+//             swal('Error', data.message, 'error');
+//         }
+//     } catch (error) {
+//         console.error('Error applying coupon:', error);
+//         swal('Error', 'There was an issue applying the coupon. Please try again later.', 'error');
+//     }
+// }
 
-function removeCoupon() {
-    // Reset the discount and update the grand total
-    document.getElementById('discount').innerText = '0.00';
-    updateCartTotals();
+// function removeCoupon() {
+//     // Reset the discount and update the grand total
+//     document.getElementById('discount').innerText = '0.00';
+//     updateCartTotals();
 
-    // Reset hidden coupon discount input
-    document.getElementById('hidden-coupon-discount').value = '0.00';
+//     // Reset hidden coupon discount input
+//     document.getElementById('hidden-coupon-discount').value = '0.00';
 
-    // Hide Remove Coupon button and show Apply Coupon button again
-    document.getElementById('removeCouponBtn').style.display = 'none'; // Hide remove button
-    document.getElementById('applyCouponBtn').style.display = 'inline-block'; // Show apply button
+//     // Hide Remove Coupon button and show Apply Coupon button again
+//     document.getElementById('removeCouponBtn').style.display = 'none'; // Hide remove button
+//     document.getElementById('applyCouponBtn').style.display = 'inline-block'; // Show apply button
 
-    swal('Success', 'Coupon has been removed.', 'success');
-}
+//     swal('Success', 'Coupon has been removed.', 'success');
+// }
 
 </script>
 <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>

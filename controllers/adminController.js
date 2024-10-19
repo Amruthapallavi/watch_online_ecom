@@ -15,8 +15,13 @@ const { error } = require("console");
 const walletModel = require("../models/walletModel");
 const PDFDocument = require('pdfkit');
 const XLSX = require('xlsx');
+const addressModel = require("../models/addressModel");
+const moment = require("moment");
 
-
+const formatDate = (date) => {
+    if (!date) return '';
+    return moment(date).format('MMMM Do YYYY'); 
+};
 
 
 
@@ -33,22 +38,22 @@ const getTopSellingProducts = async () => {
         },
         {
             $lookup: {
-                from: 'products', // Lookup in the products collection
-                localField: '_id', // Use _id (productId) as the matching field
-                foreignField: '_id', // Match with _id in the products collection
-                as: 'productDetails' // Store matching product details in productDetails
+                from: 'products', 
+                localField: '_id', 
+                foreignField: '_id',
+                as: 'productDetails' 
             }
         },
-        { $unwind: '$productDetails' }, // Unwind productDetails to make it a single object
+        { $unwind: '$productDetails' }, 
         {
             $project: {
-                productId: '$_id', // Include the productId
-                productDetails: 1,  // Return the full product details object
-                totalQuantity: 1 // Return the total quantity sold for the product
+                productId: '$_id', 
+                productDetails: 1, 
+                totalQuantity: 1 
             }
         },
-        { $sort: { totalQuantity: -1 } }, // Sort products by total quantity in descending order
-        { $limit: 10 } // Limit to top 10 products
+        { $sort: { totalQuantity: -1 } }, 
+        { $limit: 10 } 
     ]);
 };
 
@@ -96,11 +101,9 @@ const getTopSellingCategories = async () => {
             }
         },
 
-        // Sort by total quantity sold in descending order
         { $sort: { totalQuantity: -1 } },
 
-        // Limit to top 3 categories
-        { $limit: 3 }
+        { $limit: 4 }
     ]);
 };
 
@@ -109,54 +112,213 @@ const getHomePage = async (req, res) => {
         // Overall order statistics
         const overall = await orderModel.aggregate([
             {
+                $unwind: "$productsDetails" // Unwind productsDetails to handle individual products
+            },
+            {
                 $match: {
-                    orderStatus: { $nin: ['cancelled', 'payment pending'] } // Exclude both cancelled and payment pending orders
+                    "productsDetails.productOrderStatus": { $nin: ['Cancelled', 'payment pending'] }, // Exclude products with 'Cancelled' or 'payment pending' status
                 }
             },
             {
                 $group: {
-                    _id: null, // No grouping by specific field, aggregate all matching documents
-                    totalGrandTotal: { $sum: { $toDouble: "$grandTotal" } }, // Sum of grandTotal
-                    totalOfferDiscount: { $sum: { $toDouble: "$couponDiscount" } }, // Sum of offerDiscount
+                    _id: null,
+                    
+                    // Safely sum the offerPrice field, ensuring conversion from strings or null
+                    totalGrandTotal: { $sum: { $toDouble: { $ifNull: ["$productsDetails.offerPrice", 0] } } }, 
+                    
+                    // Safely sum the couponDiscount field, ensuring conversion from strings or null
+                    totalOfferDiscount: { $sum: { $toDouble: { $ifNull: ["$productsDetails.couponDiscount", 0] } } }, 
+        
+                    // Sum applied offers, checking if the field is an array or a number
                     totalAppliedOffers: {
                         $sum: {
-                            $reduce: {
-                                input: "$productsDetails.appliedOffer", // Access appliedOffer inside productsDetails array
-                                initialValue: 0,
-                                in: { $add: ["$$value", { $toDouble: "$$this" }] } // Sum of appliedOffer in productsDetails
+                            $cond: {
+                                if: { $isArray: "$productsDetails.appliedOffer" }, // Check if it's an array
+                                then: {
+                                    $reduce: {
+                                        input: "$productsDetails.appliedOffer", // Process as array
+                                        initialValue: 0,
+                                        in: { $add: ["$$value", { $toDouble: { $ifNull: ["$$this", 0] } }] }
+                                    }
+                                },
+                                else: { $toDouble: { $ifNull: ["$productsDetails.appliedOffer", 0] } } // Process as a single number
                             }
                         }
                     },
-                    totalOrders: { $sum: 1 } // Total count of orders
+        
+                    totalOrders: { $sum: 1 } // Total count of non-cancelled orders
                 }
             }
         ]);
-
-        // Active users count
+        
+        
+        
+console.log('overall',overall);
         const activeUsers = await userModel.countDocuments({ is_active: true });
 
-        // Fetch top selling products and categories
         const topProducts = await getTopSellingProducts();
         const topCategories = await getTopSellingCategories();
 
-        // Log overall results
-        console.log(overall[0]?.totalGrandTotal); // Added optional chaining for safety
-  console.log(topProducts,"and      ",topCategories);
-        // Render the admin dashboard with all data
+        const categorySales = await categoryData(); // Reuse the categoryData function
+        const paymentMethods = await paymentData(); // Reuse the paymentData function
+        console.log(categorySales, "     and      ", paymentMethods);
+
+        const categoryLabels = categorySales.map(category => category.cname);
+       
+        const orders = await orderModel.aggregate([
+
+            {
+                $lookup: {
+                    from: "users", // Replace with your actual user collection name
+                    localField: "userId", // The field in orderModel that holds the user ID
+                    foreignField: "_id", // The field in users collection that corresponds to the user ID
+                    as: "userInfo" // Resulting array field
+                }
+            },
+            {
+                $unwind: "$userInfo" // Unwind the user info to get individual user details
+            },
+            {
+                $unwind: "$productsDetails" // Unwind productsDetails to process each product separately
+            },
+            {
+                $lookup: {
+                    from: "products", // Replace with your actual product collection name
+                    localField: "productsDetails.productId",
+                    foreignField: "_id",
+                    as: "productInfo"
+                }
+            },
+            {
+                $unwind: "$productInfo" // Unwind product info to get individual product details
+            },
+            {
+                $lookup: {
+                    from: "addresses", // Replace with your actual address collection name
+                    localField: "deliveryAddress", // The field in orderModel that holds the address ID
+                    foreignField: "_id", // The field in addresses collection that corresponds to the address ID
+                    as: "addressInfo"
+                }
+            },
+            {
+                $unwind: "$addressInfo" // Unwind address info to get individual address details
+            },
+            {
+                $project: {
+                    order_id: "$_id",
+                    user_id: "$userId", // Include user ID
+                    user_name: "$userInfo.name", // Assuming 'name' is a field in the user model
+                    product_name: "$productInfo.pname", 
+                    image:"$productInfo.image",
+                    productDescription:"$productInfo.description",
+                    quantity: "$productsDetails.quantity",
+                    price:"$productsDetails.price",
+                    appliedOffer:"$productsDetails.appliedOffer",
+                    offerPrice:"$productsDetails.offerPrice",
+                    couponDiscount:"$productsDetails.couponDiscount",
+                    productStatus: "$productsDetails.productOrderStatus",
+                    grandTotal: "$grandTotal", 
+                    total: "$paymentDetails.grandTotal", 
+                    shippingAddress: "$addressInfo", // Include address information here
+                    paymentMethod: "$paymentDetails.method", 
+                    orderId:"$paymentDetails.orderId"
+                }
+            },
+            {
+                $sort: { placedAt: -1 } // Sort orders by placement date
+            }
+        ]).exec();
+        
+        
+        console.log("my orders", orders);
+        
+        // Now, pass categoryLabels to the view as well
         res.render('admin/adminDashBoard', {
             title: 'admin_home',
-            data: overall[0], // Accessing the first element since we are using $group
+            data: overall[0],
             activeUsers,
             topProducts,
-            topCategories
+            orders,
+            topCategories,
+            categorySales,
+            paymentMethods, // Passing payment methods data to the view
+            categoryLabels // Pass category labels to the view
         });
+
     } catch (error) {
         console.log(error.message);
-        res.status(500).send('Server Error'); // Send a server error response in case of failure
+        res.status(500).send('Server Error');
     }
 };
 
 
+const categoryData = async () => {
+    try {
+        const categorySales = await orderModel.aggregate([
+            { $unwind: '$productsDetails' }, // Unwind productsDetails array
+            {
+                $lookup: {
+                    from: 'products', // The name of the product collection
+                    localField: 'productsDetails.productId', // productId in productsDetails
+                    foreignField: '_id', // Match with product _id
+                    as: 'productInfo'
+                }
+            },
+            { $unwind: '$productInfo' }, // Unwind the productInfo array
+            {
+                $lookup: {
+                    from: 'categories', // The name of the category collection
+                    localField: 'productInfo.category', // category field in product model
+                    foreignField: '_id', // Match with the category _id
+                    as: 'categoryInfo'
+                }
+            },
+            { $unwind: '$categoryInfo' }, // Unwind the categoryInfo array
+            {
+                $group: {
+                    _id: '$categoryInfo.cname', // Group by category name
+                    totalSales: { $sum: '$grandTotal' } // Sum the grandTotal for each category
+                }
+            },
+            {
+                $project: {
+                    cname: '$_id', 
+                    totalSales: 1,
+                    _id: 0 
+                }
+            }
+        ]);
+        
+        return categorySales; // Return the resulting category sales data
+    } catch (error) {
+        console.error('Error fetching category sales data:', error);
+        throw error; // Pass the error up
+    }
+};
+
+const paymentData = async () => {
+    try {
+        const paymentMethods = await orderModel.aggregate([
+            {
+                $group: {
+                    _id: '$paymentDetails.method',
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $project: {
+                    method: '$_id',
+                    count: 1,
+                    _id: 0
+                }
+            }
+        ]);
+        return paymentMethods;
+    } catch (error) {
+        console.error('Error fetching payment methods data:', error);
+        throw error; // Pass the error up
+    }
+};
 
 
 
@@ -207,31 +369,27 @@ const adminAdd_Products = async (req,res)=>{
 }
 
 
-const storage = multer.memoryStorage(); // Store images in memory for processing
-const upload = multer({ storage: storage });
 
-// Function to handle product addition
+
 const postAddProduct = async (req, res) => {
     try {
         const data = req.body;
 
-        // Basic validation
-        if (!data.pname || !data.category || !data.quantity || !data.price) {
+        if (!data.pname || !data.category || !data.quantity || !data.price || !data.brand) {
             return res.status(400).json({ message: "All fields are required." });
         }
 
-        // Create a new product instance
         const newProduct = new productModel({
             pname: data.pname,
-            category: new mongoose.Types.ObjectId(data.category), // Correctly create ObjectId
-            quantity: parseInt(data.quantity, 10), // Ensure quantity is an integer
+            brand:data.brand,
+            category: new mongoose.Types.ObjectId(data.category), 
+            quantity: parseInt(data.quantity, 10), 
             description: data.description,
-            price: parseFloat(data.price), // Ensure price is a float
-            image: req.files.map(element => element.filename) // Assuming you have handled file uploads correctly
+            price: parseFloat(data.price), 
+            image: req.files.map(element => element.filename) 
         });
 
-        // Save the new product to the database
-        const result = await newProduct.save(); // Save using the Mongoose model
+        const result = await newProduct.save();
 
         res.status(201).json({ message: "Product added successfully.", product: result });
     } catch (error) {
@@ -239,6 +397,9 @@ const postAddProduct = async (req, res) => {
         res.status(500).json({ message: "Error adding product." });
     }
 };
+
+
+
 
 // const postAddProduct = async (req, res) => {
 //     try {
@@ -281,32 +442,62 @@ const getCategory = async (req,res)=>{
      console.log(error.message);
     }
 }
-const addCategory = async (req,res)=>{
-    const {data} = req.body;
+
+
+// const addCategory = async (req,res)=>{
+//     const {data} = req.body;
+//     try {
+//         const categoryData = new categoryModel({
+//             cname:req.body.cname,
+//             cimage:req.file.filename
+//         })
+//         const data= await categoryData.save();
+//         if(data){
+//             const catData = await categoryModel.find();
+
+//             res.render('admin/adminCategory',{
+//             message:'category successfully added',
+//             data: catData,
+//             title:'categories'
+//           })  ;
+
+//         }else{
+//             res.render('admin/adminProducts',{
+//                 message:'failed '
+//               })  ;  
+//         }
+//     } catch (error) {
+//         console.log(error.message);
+//     }
+// }
+
+
+const addCategory = async (req, res) => {
+    const { cname } = req.body; // Only use category name from request body
     try {
-        const categoryData = new categoryModel({
-            cname:req.body.cname,
-            cimage:req.file.filename
-        })
-        const data= await categoryData.save();
-        if(data){
+        // Check if the category already exists (case insensitive)
+        const existingCategory = await categoryModel.findOne({ cname: { $regex: new RegExp(`^${cname}$`, 'i') } });
+        if (existingCategory) {
+            return res.status(400).json({ success: false, message: "Category already exists." });
+        }
+
+        // Create new category if it doesn't exist
+        const categoryData = new categoryModel({ cname });
+        const data = await categoryData.save();
+
+        if (data) {
             const catData = await categoryModel.find();
-
-            res.render('admin/adminCategory',{
-            message:'category successfully added',
-            data: catData,
-            title:'categories'
-          })  ;
-
-        }else{
-            res.render('admin/adminProducts',{
-                message:'failed '
-              })  ;  
+            res.json({ success: true, message: 'Category successfully added', data: catData });
+        } else {
+            res.status(500).json({ success: false, message: 'Failed to add category' });
         }
     } catch (error) {
         console.log(error.message);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
-}
+};
+
+
 const getaddCategory = async (req,res)=>{
     try {
 
@@ -526,7 +717,6 @@ const updateEditProduct = async (req, res) => {
             }
         });
 
-        // Redirect to products page
         res.redirect('/products');
 
     } catch (error) {
@@ -578,21 +768,17 @@ const getEditProduct = async (req, res) => {
     try {
         const productId = req.params.id;
 console.log(productId);
-        // Fetch all categories for the select dropdown
         const catData = await categoryModel.find();
 
-        // Fetch the product details by ID
         const product = await productModel.findById(productId);
         if (!product) {
             return res.status(404).send('Product not found');
         }
 
-        // Ensure the product has an array for images
         if (!product.images) {
-            product.images = []; // Initialize if not present
+            product.images = []; 
         }
 
-        // Render the edit product page with product and category data
         res.render('admin/edit-product', {
             data: product,
             catData: catData,
@@ -605,26 +791,34 @@ console.log(productId);
 }
 
 
-const getEditCategory = async (req,res)=>{
-   try {
-    const catId=req.params.id;
-    console.log(catId.length);  // Should print 24
-console.log(catId);
-    const catData= await categoryModel.findOne({_id:catId});
-    
-    if(!catData){
-        return res.status(404).send('category not found');
 
+const getEditCategory = async (req, res) => {
+    try {
+        const categoryId = req.params.id;
+        const { cname } = req.body;
+
+        // Check if the category exists
+        const category = await categoryModel.findById(categoryId);
+        if (!category) {
+            return res.status(404).json({ success: false, message: 'Category not found' });
+        }
+
+        // Update the category name
+        category.cname = cname;
+        const updatedCategory = await category.save();
+
+        // Return success response
+        res.json({ success: true, message: 'Category updated successfully' });
+        
+    } catch (error) {
+        console.error('Error updating category:', error.message);
+        res.status(500).json({ success: false, message: 'Server error' });
     }
-    res.render('admin/edit-category',{
-        title:'edit_category',
-        catData:catData
-    })
-   } catch (error) {
-    console.log(error.message);
-   }
-
 }
+
+
+
+
 const blockUser = async (req, res) => {
     try {
         const id = req.params.id;
@@ -661,45 +855,133 @@ const viewOrders = async (req,res)=>{
 try {
     // const orders = await orderModel.find();
     const orders = await orderModel.aggregate([
-        {
-          $lookup: {
-            from: "users",
-            let: { userId: { $toObjectId: "$userId" } },
-            pipeline: [
-              {
-                $match: {
-                  $expr: { $eq: ["$_id", "$$userId"] },
-                },
-              },
-            ],
-            as: "user",
-          },
-        },
-        { $unwind: "$user" },
-        {
-          $lookup: {
-            from: "addresses",
-            localField: "deliveryAddress",
-            foreignField: "_id",
-            as: "address",
-          },
-        },
-        { $unwind: "$address" },
-      ]);
-      let productCount = 0;
 
-      orders.reduce((total, current) => {
-        productCount = current.productsDetails.reduce(
-          (subtotal, subcurrent) => {
-            return (subtotal += subcurrent.quantity);
-          },
-          0
-        );
-        return 0;
-      }, 0);
+        {
+            $lookup: {
+                from: "users", // Replace with your actual user collection name
+                localField: "userId", // The field in orderModel that holds the user ID
+                foreignField: "_id", // The field in users collection that corresponds to the user ID
+                as: "userInfo" // Resulting array field
+            }
+        },
+        {
+            $unwind: "$userInfo" // Unwind the user info to get individual user details
+        },
+        {
+            $unwind: "$productsDetails" // Unwind productsDetails to process each product separately
+        },
+        {
+            $lookup: {
+                from: "products", // Replace with your actual product collection name
+                localField: "productsDetails.productId",
+                foreignField: "_id",
+                as: "productInfo"
+            }
+        },
+        {
+            $unwind: "$productInfo" // Unwind product info to get individual product details
+        },
+        {
+            $lookup: {
+                from: "addresses", // Replace with your actual address collection name
+                localField: "deliveryAddress", // The field in orderModel that holds the address ID
+                foreignField: "_id", // The field in addresses collection that corresponds to the address ID
+                as: "addressInfo"
+            }
+        },
+        {
+            $unwind: "$addressInfo" // Unwind address info to get individual address details
+        },
+        {
+            $project: {
+                order_id: "$_id",
+                user_id: "$userId", // Include user ID
+                user_name: "$userInfo.name", // Assuming 'name' is a field in the user model
+                user_phone:"$userInfo.phone",
+                productId:"$productsDetails.productId",
+                product_name: "$productInfo.pname", 
+                image:"$productInfo.image",
+                productDescription:"$productInfo.description",
+                quantity: "$productsDetails.quantity",
+                price:"$productsDetails.price",
+                appliedOffer:"$productsDetails.appliedOffer",
+                offerPrice:"$productsDetails.offerPrice",
+                couponDiscount:"$productsDetails.couponDiscount",
+                productStatus: "$productsDetails.productOrderStatus",
+                grandTotal: "$grandTotal", 
+                placedAt:"$placedAt",
+                total: "$paymentDetails.grandTotal", 
+                shippingAddress: "$addressInfo", // Include address information here
+                paymentMethod: "$paymentDetails.method", 
+                orderId:"$paymentDetails.orderId"
+            }
+        },
+        {
+            $sort: { placedAt: -1 } // Sort orders by placement date
+        }
+    ]).exec();
+    
+    // console.log(orders,"checking the data");
 
-      orders.productCount = productCount;
+      // Now `orders` will contain the relevant information
+      let totalProductCount = 0; // Initialize a variable to hold the total product count
+
+      // Iterate through the orders and accumulate the product quantities
+      orders.forEach(order => {
+          // Check if productsDetails exists and is an array
+          if (Array.isArray(order.productsDetails)) {
+              // Add the quantities of products in the current order
+              const productCount = order.productsDetails.reduce((subtotal, product) => {
+                  return subtotal + product.quantity; // Sum up the quantity of each product
+              }, 0);
       
+              totalProductCount += productCount; // Add to the total count
+          }
+      });
+      const orderDetails = await orderModel.find({}).populate('userId', 'name phone'); // Populate userId with name and phone
+
+    //   const transformedOrders = orders.flatMap(order => {
+    //       // Check if productsDetails is an array
+    //       if (Array.isArray(order.productsDetails)) {
+    //           return order.productsDetails.map(product => {
+    //               return {
+    //                   order_id: order._id, // Common Order ID
+    //                   paymentMethod: order.paymentDetails.method, // Payment method
+    //                   paymentOrderId: order.paymentDetails.orderId, // Payment Order ID
+    //                   placedAt: order.placedAt, // Order placed date
+    //                   couponCode: order.paymentDetails.couponCode, // Coupon code
+    //                   deliveryAddress: order.deliveryAddress, // Delivery Address
+    //                   userName: order.userId.name, // User's Name from populated data
+    //                   userPhone: order.userId.phone, // User's Phone from populated data
+    //                   productId: product.productId, // Product ID
+    //                   quantity: product.quantity, // Quantity
+    //                   price: product.price, // Original Price
+    //                   offerPrice: product.offerPrice, // Offer Price
+    //                   appliedOffer: product.appliedOffer, // Applied Offer
+    //                   couponDiscount: product.couponDiscount, // Coupon Discount
+    //                   productOrderStatus: product.productOrderStatus, // Product Order Status
+    //                   cancellationReason: product.cancellationReason, // Cancellation Reason
+    //                   isCanceled: product.isCanceled, // Is Canceled
+    //                   refundAmount: product.refundAmount // Refund Amount
+    //               };
+    //           });
+    //       } else {
+    //           console.warn(`productsDetails is not an array for order ID: ${order._id}`, order.productsDetails);
+    //           return []; // Return an empty array if productsDetails is not an array
+    //       }
+    //   });
+      
+      // Now transformedOrders contains all the required details
+      
+    // Now `transformedOrders` can be used to render in your template
+    
+    
+    // Now `transformedOrders` can be used to render in your template
+console.log(orders,"this is transformed orders");    
+
+
+
+    //   console.log(orders,"view orders");
       res.render("admin/orders", {
         title: "Admin Orders",
         orders: orders ? orders : false,
@@ -709,127 +991,240 @@ try {
     //     orders:orders,
     //     title:'Orders'
     // })
-    console.log(orders);
 } catch (error) {
     console.log(error.message);
 }
 }
 
-
-
 const getAdminOrderDetailpage = async (req, res, next) => {
     try {
-      // Fetch the order using its ID
-      const orderId = new ObjectId(req.params.id);
-      console.log('Fetching order:', orderId);
-  
-      // Fetch the order details
-      const order = await orderModel.findById(orderId).populate('deliveryAddress');
-  
-      if (!order) {
-        throw new Error('Order not found');
-      }
-  
-      // Fetch the products details
-      const productsDetails = await productModel.find({
-        _id: { $in: order.productsDetails.map(product => product.productId) }
-      });
-  
-      // Prepare the response object
-      const orderDetails = {
-        orderId: order._id,
-        userId: order.userId,
-        deliveryAddress: order.deliveryAddress,
-        products: order.productsDetails.map(product => {
-          const productDetail = productsDetails.find(p => p._id.toString() === product.productId.toString());
-          return {
-            productId: product.productId,
-            quantity: product.quantity,
-            pname: productDetail ? productDetail.pname : 'Unknown',
-            price: productDetail ? productDetail.price : 0,
-          };
-        }),
-        paymentDetails: {
-          method: order.paymentDetails ? order.paymentDetails.method : 'N/A',
-          orderId: order.paymentDetails ? order.paymentDetails.orderId : null,
-          paymentId: order.paymentDetails ? order.paymentDetails.paymentId : null,
-        },
-        grandTotal: order.grandTotal,
-        orderStatus: order.orderStatus,
-        placedAt: order.placedAt,
-      };
-  
-      // Check if cancellation was requested and add the reason to orderDetails
-      if (order.cancelRequested) {
-        orderDetails.cancellationReason = order.cancellationReason || 'No reason provided';
-      }
-  
-      // If no order is found, handle it
-      if (orderDetails.length === 0) {
-        return res.status(404).send('Order not found');
-      }
-  
-      console.log('Order details:', orderDetails);
-      // Pass the retrieved details to the EJS template
-      req.session.orderId = orderId;
-      res.render("admin/orderDetailes", {
-        title: "Order Details",
-        orderId,
-        order: orderDetails, // Pass the entire order details
-      });
+        console.log(req.query);
+        const { orderId, productId } = req.query;
+        console.log('Fetching order:', orderId);
+     
+        const order = await orderModel.aggregate([
+            {
+                $match: {
+                    _id: new mongoose.Types.ObjectId(orderId), // Match the order ID
+                    'productsDetails.productId': new mongoose.Types.ObjectId(productId) // Ensure it contains the product ID in productsDetails
+                }
+            },
+            {
+                $lookup: {
+                    from: 'addresses', // Lookup to get the address details
+                    localField: 'deliveryAddress',
+                    foreignField: '_id',
+                    as: 'addressData'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'users', // Lookup to get user details
+                    localField: 'userId',
+                    foreignField: '_id',
+                    as: 'userData'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'products', // Lookup to get product details
+                    localField: 'productsDetails.productId', // Field from order model
+                    foreignField: '_id', // Field from product model
+                    as: 'productData'
+                }
+            },
+            {
+                $unwind: '$addressData' // Unwind the address data
+            },
+            {
+                $unwind: '$userData' // Unwind the user data
+            },
+            {
+                $unwind: {
+                    path: '$productData', // Unwind the product data
+                    preserveNullAndEmptyArrays: true // Optional: Include orders with no matching products
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    paymentDetails: 1,
+                    placedAt: 1,
+                    grandTotal: 1,
+                    addressData: 1,
+                    userData: {
+                        name: '$userData.name',
+                        phone: '$userData.phone',
+                        email: '$userData.email',
+                    },
+                    productsDetails: {
+                        $filter: {
+                            input: '$productsDetails',
+                            as: 'product',
+                            cond: { $eq: ['$$product.productId', new mongoose.Types.ObjectId(productId)] } // Condition to match productId
+                        }
+                    },
+                    productInfo: {
+                        pname: '$productData.pname', // Product name
+                        image: '$productData.image', // Product image
+                        description: '$productData.description', // Product description
+                        brand: '$productData.brand' // Product brand
+                    }
+                }
+            },
+            {
+                $addFields: {
+                    productsDetails: {
+                        $map: {
+                            input: '$productsDetails',
+                            as: 'pd',
+                            in: {
+                                price: '$$pd.price',
+                                offerPrice: '$$pd.offerPrice',
+                                appliedOffer: '$$pd.appliedOffer',
+                                couponDiscount: '$$pd.couponDiscount',
+                                productOrderStatus: '$$pd.productOrderStatus',
+                                refundAmount: { $ifNull: ['$$pd.refundAmount', 0] }, // Use 0 if refundAmount is null
+                                quantity: '$$pd.quantity',
+                                cancellationReason: { $ifNull: ['$$pd.cancellationReason', 'N/A'] }, // Use N/A if cancellationReason is null
+                                returnReason: { $ifNull: ['$$pd.returnReason', 'N/A'] } // Use N/A if returnReason is null
+                            }
+                        }
+                    }
+                }
+            }
+        ]);
+
+        // console.log("Order:", order);
+
+        if (!order || order.length === 0) {
+            throw new Error('Order not found');
+        }
+
+        const user = await userModel.findById(order[0].userId); // Use order[0].userId to find user
+        const addressDetails = await addressModel.findById(order[0].deliveryAddress); // Use order[0].deliveryAddress
+
+        const orderDetail = order[0]; // Get the first element from the array
+
+        // Prepare the response object
+        const orderDetails = {
+            orderId: orderDetail._id,
+            userId: orderDetail.userId,
+            deliveryAddress: orderDetail.addressData || null,
+            userData: { // Include user data
+                name: orderDetail.userData.name || 'Anonymous',
+                email: orderDetail.userData.email || 'No email provided',
+                phone: orderDetail.userData.phone || 'No phone provided',
+            },
+            products: orderDetail.productsDetails.map(product => {
+                return {
+                    productId: productId,
+                    quantity: product.quantity,
+                    price: product.price,
+                    offerPrice: product.offerPrice,
+                    appliedOffer: product.appliedOffer,
+                    couponDiscount: product.couponDiscount,
+                    orderStatus: product.productOrderStatus,
+                    pname: orderDetail.productInfo.pname || 'Unknown',
+                    image: orderDetail.productInfo.image || 'no-image.jpg',
+                };
+            }),
+            paymentDetails: {
+                method: orderDetail.paymentDetails ? orderDetail.paymentDetails.method : 'N/A',
+                orderId: orderDetail.paymentDetails ? orderDetail.paymentDetails.orderId : null,
+                paymentId: orderDetail.paymentDetails ? orderDetail.paymentDetails.paymentId : null,
+            },
+            grandTotal: orderDetail.grandTotal,
+            couponDiscount: orderDetail.couponDiscount || null,
+            offerDiscount: orderDetail.offerDiscount || 0,
+            placedAt: formatDate(orderDetail.placedAt),
+        };
+        
+        // Include cancellation reason if it exists
+        if (orderDetail.cancelRequested) {
+            orderDetails.cancellationReason = orderDetail.cancellationReason || 'No reason provided';
+        }
+        
+
+        console.log('Order details:', orderDetails);
+
+        // Pass the retrieved details to the EJS template
+        req.session.orderId = orderId; // Store orderId in session
+        res.render("admin/orderDetailes", {
+            title: "Order Details",
+            orderId,
+            user,
+            order: orderDetails, // Pass the entire order details
+        });
     } catch (error) {
-      console.error('Error fetching order details:', error.message);
-      next(error); // Pass the error to the next middleware or error handler
+        console.error('Error fetching order details:', error.message);
+        next(error); // Pass the error to the next middleware or error handler
     }
-  };
-  
+};
 
 
-  const getAdminCouponPage= async (req, res,next) => {
+
+  const getAdminCouponPage = async (req, res, next) => {
     try {
-      const coupons = await couponModel.find({ isDeleted: false });
-      const category = await categoryModel.find();
-      res.render("admin/adminCoupon", {
-        title: "Admin Coupon",
-        adminName: req.session.adminName,
-        coupons,
-        category,
-        // success: req.session.success ? true : false,
-      });
-      delete req.session.success;
-    } catch (error) {
-      console.log(error);
-      next(error);
-    }
-  }
+        const perPage = 8;
+        const page = parseInt(req.query.page) || 1; // Ensure page is an integer
+        const coupons = await couponModel.find({ isDeleted: false })
+            .skip((perPage * page) - perPage)
+            .limit(perPage);
+        const count = await couponModel.countDocuments({ isDeleted: false });
 
-const  doAddCoupon = async (req, res,next) => {
+
+        res.render("admin/adminCoupon", {
+            title: "Admin Coupon",
+            adminName: req.session.adminName,
+            coupons,
+            currentPage: page,
+            totalPages: Math.ceil(count / perPage)
+        });
+
+        delete req.session.success;
+    } catch (error) {
+        console.log(error);
+        next(error);
+    }
+};
+
+
+  const doAddCoupon = async (req, res, next) => {
     try {
-      const databody = req.body;
-      console.log("checking",databody);
-    //   if (!Array.isArray(databody.categoryId)) {
-    //     databody.categoryId = [databody.categoryId];
-    //   }
-    //   const catId = databody.categoryId.map((item) => {
-    //     return new ObjectId(item);
-    //   });
-  const catId=new ObjectId(databody.category);
-      await couponModel.collection.insertOne({
-        // code: databody.code.toLowerCase(),
-        code:databody.code,
-        value: Number(databody.value),
-        expiresAt: new Date(databody.expireAt),
-        min_purchase: databody.min_purchase,
-        isDeleted: false,
-      });
+        const databody = req.body;
+        console.log("checking", databody);
 
-      req.session.success = true;
-      res.redirect("/adminCoupon");
+        // Check if the expiration date is in the past
+        const expirationDate = new Date(databody.expireAt);
+        const today = new Date();
+        if (expirationDate < today) {
+            return res.status(400).json({ message: "Expiration date cannot be in the past!" });
+        }
+
+        // Check if a coupon with the same code already exists
+        const existingCoupon = await couponModel.findOne({ code: databody.code });
+        if (existingCoupon) {
+            return res.status(400).json({ message: "Coupon code already exists!" });
+        }
+
+        await couponModel.collection.insertOne({
+            code: databody.code,
+            value: Number(databody.value),
+            expiresAt: expirationDate,
+            min_purchase: databody.min_purchase,
+            isDeleted: false,
+        });
+
+        req.session.success = true;
+        res.status(200).json({ message: "Coupon added successfully!" });
     } catch (error) {
-      console.log(error);
-      next(error)
+        console.log(error);
+        next(error);
     }
-  }
+};
+
+
   const deleteCoupon = async (req, res,next) => {
     try {
       const couponId = req.params.id;
@@ -851,7 +1246,7 @@ const getEditCoupon = async (req, res) => {
     try {
         console.log(req.params.id);
         const coupon = await couponModel.findById(req.params.id); // Find coupon by ID
-        const categories = await categoryModel.find(); // Fetch categories if needed
+        const categories = await categoryModel.find(); 
         res.render('admin/editCoupon', { coupon, categories }); // Render the edit form with the coupon data
     } catch (err) {
         console.log(error.message);
@@ -859,19 +1254,50 @@ const getEditCoupon = async (req, res) => {
 }
 
 // Route to update the coupon in the database
-const postEditCoupon= async (req, res) => {
+const postEditCoupon = async (req, res) => {
     try {
-        const coupon = await couponModel.findByIdAndUpdate(req.params.id, {
-            code: req.body.code,
-            value: req.body.value,
-            expiresAt: req.body.expiresAt,
-            min_purchase: req.body.min_purchase,
-        }, { new: true });
-        res.redirect('/adminCoupon'); // Redirect to the coupon list after editing
-    } catch (err) {
-        res.status(500).send("Error updating coupon");
+        const { code, value, expireAt, min_purchase } = req.body;
+
+        // Check if value is greater than 99
+        if (value > 99) {
+            return res.status(400).json({ message: "Coupon value cannot exceed 99%" });
+        }
+
+        // Check if min_purchase is 0
+        if (min_purchase <= 0) {
+            return res.status(400).json({ message: "Minimum purchase should not be 0" });
+        }
+
+        // Validate expiration date
+        const currentDate = new Date();
+        const expirationDate = new Date(expireAt);
+        if (expirationDate <= currentDate) {
+            return res.status(400).json({ message: " Expiration date cannot be in the past!" });
+        }
+        
+        // Check if another coupon with the same code already exists
+        const existingCoupon = await couponModel.findOne({ code, _id: { $ne: req.params.id } });
+        if (existingCoupon) {
+            return res.status(400).json({ message: "Coupon code already exists!" });
+        }
+
+        // Find and update the coupon
+        await couponModel.findByIdAndUpdate(req.params.id, {
+            code,
+            value,
+            expiresAt: expirationDate,
+            min_purchase
+        });
+
+        // Send success response
+        res.status(200).json({ message: "Coupon updated successfully!" });
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({ message: "Server Error" });
     }
-}
+};
+
+
 
 const addCatOffer = async (req,res)=>{
     const { id } = req.params;
@@ -886,7 +1312,7 @@ const addCatOffer = async (req,res)=>{
 
         const updatedCategory = await categoryModel.findByIdAndUpdate(
             id,
-            { categoryOffer: offerValue }, // Assuming categoryOffer is the field for storing offer value
+            { categoryOffer: offerValue },
             { new: true }
         );
 
@@ -930,36 +1356,98 @@ const removeCatOffer = async (req,res)=>{
 
 const changeOrderStatus = async (req, res) => {
     try {
-        const { orderId, newStatus } = req.body;
-        console.log(req.body);
-
-        // Find the order by ID
-        const order = await orderModel.findById(orderId);
+        const { orderId, newStatus ,productId} = req.body;
+        console.log(req.body,"this is changing orderPage");
+        const order_id=new ObjectId(orderId);
+        const order = await orderModel.findById(order_id);
         
         if (!order) {
             return res.status(404).json({ success: false, message: 'Order not found' });
         }
 
-        // Update the order status
-        await orderModel.updateOne({ _id: orderId }, { $set: { orderStatus: newStatus, isCanceled: true } });
-
-        // If the order is cancelled, increment the quantity of the products
-        if (newStatus === 'cancelled') {
-            // Loop through each product in the order and update the product quantities
-            for (const item of order.productsDetails) {
-                const productId = item.productId; // Assuming each item has a productId field
-                const quantityToAdd = item.quantity; // Get the quantity to add back
-
-                // Update the product's quantity in the product model
-                await productModel.updateOne(
-                    { _id: productId },
-                    { $inc: { quantity: quantityToAdd } } // Increment the quantity
-                );
+        
+        await orderModel.updateOne(
+            { _id: order_id, "productsDetails.productId": new ObjectId(productId) }, 
+            { 
+                $set: { 
+                    "productsDetails.$.productOrderStatus": newStatus // Use the positional $ operator to update the correct product
+                } 
             }
-
-            // Logic to update wallet can go here if needed
-            // await updateWallet(order.userId, order.grandTotal);
+        );
+        
+        if (newStatus.trim() === 'Cancelled' || newStatus.trim() === 'Return') {
+            const product = order.productsDetails.find(p => p.productId.toString() === productId.toString());
+        
+            const refundAmount = product.price - (product.appliedOffer || 0) - (product.couponDiscount || 0);
+        
+            // Update the product's order status and refund amount
+            await orderModel.updateOne(
+                { _id: order_id, "productsDetails.productId": new ObjectId(productId) }, 
+                { 
+                    $set: { 
+                        "productsDetails.$.productOrderStatus": newStatus.trim(), // Set the status as Cancelled or Return
+                        "productsDetails.$.isCanceled": newStatus.trim() === 'Cancelled', // Mark the product as canceled if status is 'Cancelled'
+                        "productsDetails.$.isReturned": newStatus.trim() === 'Return',   // Mark the product as returned if status is 'Return'
+                        "productsDetails.$.refundAmount": refundAmount // Set the refund amount for the product
+                    } 
+                }
+            );
+        
+            // Update product quantities in the inventory
+            const updatePromises = order.productsDetails.map(async (item) => {
+                const productId = new ObjectId(item.productId);
+                const quantityToAdd = item.quantity;
+        
+                // Log for debugging
+                console.log(`Updating product ${productId} with quantity ${quantityToAdd}`);
+        
+                return productModel.updateOne(
+                    { _id: productId },
+                    { $inc: { quantity: quantityToAdd } } // Increment the quantity back to stock
+                );
+            });
+        
+            await Promise.all(updatePromises);
+            console.log("All product quantities updated successfully.");
+        
+            // Handle refund logic for Razorpay or Wallet payment methods
+            if (order.paymentDetails.method === 'razorpay' || order.paymentDetails.method === 'wallet') {
+                const existUser = await walletModel.findOne({ userId: order.userId });
+        
+                if (!existUser) {
+                    // Create a new wallet for the user if one doesn't exist
+                    await walletModel.create({
+                        userId: order.userId,
+                        balance: refundAmount, // Add the refund amount to the wallet balance
+                        transactionDetails: [{
+                            orderId: order._id,
+                            paymentType: 'credit',
+                            date: new Date(),
+                            amount: refundAmount
+                        }],
+                    });
+                } else {
+                    // Update the existing wallet with the refund amount
+                    await walletModel.updateOne(
+                        { userId: order.userId },
+                        {
+                            $inc: { balance: refundAmount }, // Increment wallet balance by refund amount
+                            $push: {
+                                transactionDetails: {
+                                    orderId: order._id,
+                                    paymentType: 'credit',
+                                    date: new Date(),
+                                    amount: refundAmount
+                                }
+                            }
+                        }
+                    );
+                }
+        
+                console.log(`Refund of ${refundAmount} credited to wallet for user ${order.userId}`);
+            }
         }
+        
 
         res.json({ success: true, message: 'Order status updated successfully' });
     } catch (error) {
@@ -969,208 +1457,350 @@ const changeOrderStatus = async (req, res) => {
 };
 
 
-const updateRefund = async (req, res) => {
-    try {
-        const { orderId } = req.body;
+// const updateRefund = async (req, res) => {
+//     try {
+//         const { orderId } = req.body;
 
-        // Find the order and get the amount to be refunded
-        const order = await orderModel.findById(orderId); // No need for ObjectId wrapper
-        if (!order) {
-            return res.status(404).json({ success: false, message: 'Order not found' });
-        }
-         if(order.paymentDetails.method ==='razorpay' ||order.paymentDetails.method ==="wallet"){
-
+//         // Find the order and get the amount to be refunded
+//         const order = await orderModel.findById(orderId); // No need for ObjectId wrapper
+//         if (!order) {
+//             return res.status(404).json({ success: false, message: 'Order not found' });
+//         }
+//          if(order.paymentDetails.method ==='razorpay' ||order.paymentDetails.method ==="wallet"){
+           
          
-        const amountToRefund = order.grandTotal; // Assuming grandTotal is the amount to refund
-        // Find the wallet by userId
-        const existUser = await walletModel.findOne({ userId: order.userId });
+//         const amountToRefund = order.grandTotal;
+//         // Find the wallet by userId
+//         const existUser = await walletModel.findOne({ userId: order.userId });
          
-        if (!existUser) {
-            // If no wallet exists for the user, create a new wallet
-            await walletModel.create({
-                userId: order.userId,
-                balance: amountToRefund, // Initial balance is the refund amount
-                transactionDetails: [{
-                    orderId:order.paymentDetails.orderId,
-                    paymentType: 'Credit',
-                    date: new Date(),
-                    amount: amountToRefund
-                }],
-            });
-        } else {
-            // If wallet exists, update the balance and add to transactionDetails array
-            await walletModel.updateOne(
-                { userId: order.userId },
-                {
-                    $inc: { balance: amountToRefund }, // Increment balance by refund amount
-                    $push: {
-                        transactionDetails: {
-                            orderId:order.paymentDetails.orderId,
+//         if (!existUser) {
+//             // If no wallet exists for the user, create a new wallet
+//             await walletModel.create({
+//                 userId: order.userId,
+//                 balance: amountToRefund, // Initial balance is the refund amount
+//                 transactionDetails: [{
+//                     orderId:order.paymentDetails.orderId,
+//                     paymentType: 'Credit',
+//                     date: new Date(),
+//                     amount: amountToRefund
+//                 }],
+//             });
+//         } else {
+//             // If wallet exists, update the balance and add to transactionDetails array
+//             await walletModel.updateOne(
+//                 { userId: order.userId },
+//                 {
+//                     $inc: { balance: amountToRefund }, // Increment balance by refund amount
+//                     $push: {
+//                         transactionDetails: {
+//                             orderId:order.paymentDetails.orderId,
 
-                            paymentType: 'credit',
-                            date: new Date(),
-                            amount: amountToRefund
-                        }
-                    }
-                }
-            );
-        }
+//                             paymentType: 'credit',
+//                             date: new Date(),
+//                             amount: amountToRefund
+//                         }
+//                     }
+//                 }
+//             );
+//         }
 
-        res.json({ success: true, message: 'Wallet updated successfully' });
-    }
-    } catch (error) {
-        console.error('Error updating wallet:', error);
-        res.status(500).json({ success: false, message: 'Internal server error' });
-    }
-};
-
+//         res.json({ success: true, message: 'Wallet updated successfully' });
+//     }
+//     } catch (error) {
+//         console.error('Error updating wallet:', error);
+//         res.status(500).json({ success: false, message: 'Internal server error' });
+//     }
+// };
 const getDashboardData = async (req, res) => {
     try {
         const { reportType, startDate, endDate } = req.body;
 
-        let query = {   orderStatus: { $nin: ['cancelled', 'payment pending'] } }; // Only include confirmed orders
+        // Initialize the query for orders
+        const query = [
+            {
+                $unwind: "$productsDetails" 
+            },
+            {
+                $match: {
+                    "productsDetails.productOrderStatus": "Delivered" 
+                }
+            },
+            {
+                $group: {
+                    _id: "$_id"
+                }
+            }
+        ];        
         const today = new Date();
-        let datePeriod = ""; // Variable to store the date period
+        let datePeriod = "";
         const formatDate = (date) => {
-            const day = String(date.getDate()).padStart(2, '0'); // Ensure two-digit day
-            const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-indexed
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
             const year = date.getFullYear();
-            return `${day}-${month}-${year}`; // Return formatted date
+            return `${day}-${month}-${year}`;
         };
-        
-        if (reportType === 'daily') {
-            const start = new Date();
-            start.setUTCHours(0, 0, 0, 0); // Start of the day in UTC
-            const end = new Date();
-            end.setUTCHours(23, 59, 59, 999); // End of the day in UTC
-        
-            query.placedAt = { $gte: start, $lte: end };
-            datePeriod = `Date: ${formatDate(start)}`; // Use formatted date
-        } else if (reportType === 'weekly') {
-            const start = new Date(today);
-            start.setDate(today.getDate() - today.getDay()); // Sunday of the current week
-            start.setHours(0, 0, 0, 0);
-        
-            const end = new Date(start);
-            end.setDate(start.getDate() + 6); // Saturday of the current week
-            end.setHours(23, 59, 59, 999);
-        
-            query.placedAt = { $gte: start, $lte: end };
-            datePeriod = `Week: ${formatDate(start)} - ${formatDate(end)}`; // Use formatted dates
-        } else if (reportType === 'monthly') {
-            const start = new Date(today.getFullYear(), today.getMonth(), 1);
-            const end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-            query.placedAt = { $gte: start, $lte: end };
-            datePeriod = `Month: ${formatDate(start)} - ${formatDate(end)}`; // Use formatted dates
-        } else if (reportType === 'yearly') {
-            const start = new Date(today.getFullYear(), 0, 1);
-            const end = new Date(today.getFullYear() + 1, 0, 0);
-            query.placedAt = { $gte: start, $lte: end };
-            datePeriod = `Year: ${start.getFullYear()}`; // Year remains the same
-        } else if (reportType === 'custom' && startDate && endDate) {
-            query.placedAt = { $gte: new Date(startDate), $lte: new Date(endDate) };
-            datePeriod = `Custom Range: ${formatDate(new Date(startDate))} - ${formatDate(new Date(endDate))}`; // Use formatted dates
+
+        // Determine the date range based on the report type
+        switch (reportType) {
+            case 'daily':
+                const startDay = new Date();
+                startDay.setUTCHours(0, 0, 0, 0);
+                const endDay = new Date();
+                endDay.setUTCHours(23, 59, 59, 999);
+                query.placedAt = { $gte: startDay, $lte: endDay };
+                datePeriod = `Date: ${formatDate(startDay)}`;
+                break;
+
+            case 'weekly':
+                const startWeek = new Date(today);
+                startWeek.setDate(today.getDate() - today.getDay());
+                startWeek.setUTCHours(0, 0, 0, 0);
+                const endWeek = new Date(startWeek);
+                endWeek.setDate(startWeek.getDate() + 6);
+                endWeek.setUTCHours(23, 59, 59, 999);
+                query.placedAt = { $gte: startWeek, $lte: endWeek };
+                datePeriod = `Week: ${formatDate(startWeek)} - ${formatDate(endWeek)}`;
+                break;
+
+            case 'monthly':
+                const startMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                const endMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                query.placedAt = { $gte: startMonth, $lte: endMonth };
+                datePeriod = `Month: ${formatDate(startMonth)} - ${formatDate(endMonth)}`;
+                break;
+
+            case 'yearly':
+                const startYear = new Date(today.getFullYear(), 0, 1);
+                const endYear = new Date(today.getFullYear() + 1, 0, 0);
+                query.placedAt = { $gte: startYear, $lte: endYear };
+                datePeriod = `Year: ${startYear.getFullYear()}`;
+                break;
+
+            case 'custom':
+                if (startDate && endDate) {
+                    query.placedAt = { $gte: new Date(startDate), $lte: new Date(endDate) };
+                    datePeriod = `Custom Range: ${formatDate(new Date(startDate))} - ${formatDate(new Date(endDate))}`;
+                }
+                break;
+
+            default:
+                break;
         }
-        
 
         // Count total orders matching the query
-        const totalOrders = await orderModel.countDocuments(query);
-        console.log('Total Orders:', totalOrders);
+        // const totalOrders = await orderModel.countDocuments(query);
+        // console.log('Total Orders:', totalOrders);
 
         // Aggregate total sales for the sales graph based on reportType
         let groupByFormat;
         switch (reportType) {
             case 'daily':
-                groupByFormat = { $dateToString: { format: "%Y-%m-%d", date: "$placedAt" } }; // Group by day
+                groupByFormat = { $dateToString: { format: "%Y-%m-%d", date: "$placedAt" } };
                 break;
             case 'weekly':
-                groupByFormat = { $isoWeek: "$placedAt" }; // Group by ISO week
+                groupByFormat = { $isoWeek: "$placedAt" };
                 break;
             case 'monthly':
-                groupByFormat = { $dateToString: { format: "%Y-%m", date: "$placedAt" } }; // Group by month
+                groupByFormat = { $dateToString: { format: "%Y-%m", date: "$placedAt" } };
                 break;
             case 'yearly':
-                groupByFormat = { $dateToString: { format: "%Y", date: "$placedAt" } }; // Group by year
+                groupByFormat = { $dateToString: { format: "%Y", date: "$placedAt" } };
                 break;
             default:
-                groupByFormat = { $dateToString: { format: "%Y-%m-%d", date: "$placedAt" } }; // Default to daily
+                groupByFormat = { $dateToString: { format: "%Y-%m-%d", date: "$placedAt" } };
                 break;
         }
-
+        
+        // Aggregate sales data
         const salesData = await orderModel.aggregate([
-            { $match: query }, // Match the orders based on the selected date range and status
+            {
+                $unwind: "$productsDetails"
+            },
+            {
+                $match: {
+                    "productsDetails.productOrderStatus": "Delivered", // Match only delivered products
+                    placedAt: query.placedAt // Ensure the date filter is applied
+                 }
+            },
             {
                 $group: {
-                    _id: groupByFormat, // Group by the selected time format (day, week, month, year)
-                    totalSales: { $sum: { $toDouble: "$grandTotal" } }, // Sum the grandTotal for each period
-                    totalOrders: { $sum: 1 } // Count the number of orders for each period
+                    _id: groupByFormat,
+                    totalSales: { 
+                        $sum: {
+                            $toDouble: { $ifNull: ["$productsDetails.offerPrice", 0] } 
+                        } 
+                    },
+                    totalOrders: { $sum: 1 },
+                    totalCouponDiscount: { 
+                        $sum: { 
+                            $toDouble: { $ifNull: ["$productsDetails.couponDiscount", 0] } 
+                        } 
+                    },
+                    totalOfferDiscount: { 
+                        $sum: { 
+                            $toDouble: { $ifNull: ["$productsDetails.appliedOffer", 0] } // Assuming appliedOffer is equivalent to offerDiscount
+                        } 
+                    }
                 }
             },
-            { $sort: { _id: 1 } } // Sort by the date in ascending order
+            { $sort: { _id: 1 } }
         ]);
+        
+        
+        console.log('Sales Data:', salesData);
+        const firstEntry = salesData[0];
 
+        // Destructuring to get values
+        const { _id, totalSales, totalOrders, totalCouponDiscount, totalOfferDiscount } = firstEntry;
         // Aggregate total sales and discount for overall metrics
         const totalSalesMetrics = await orderModel.aggregate([
             {
-                $match: { orderStatus: { $nin: ['cancelled', 'payment pending'] } }
+                $unwind: "$productsDetails"
+            },
+            {
+                $match: {
+                    "productsDetails.productOrderStatus": "Delivered"
+                }
             },
             {
                 $group: {
                     _id: null,
                     totalGrandTotal: { $sum: { $toDouble: "$grandTotal" } },
                     totalDiscount: { $sum: { $toDouble: "$couponDiscount" } },
-                    totalOfferAmount: { $sum: { $toDouble: "$offerDiscount" } } // Sum of offerDiscount
+                    totalOfferAmount: { $sum: { $toDouble: "$offerDiscount" } }
                 }
             }
         ]);
-
-        // Access the total metrics
-        const { totalGrandTotal, totalDiscount, totalOfferAmount } = totalSalesMetrics[0] || { totalGrandTotal: 0, totalDiscount: 0, totalOfferAmount: 0 };
- 
         
-          
-        // Get active users dynamically from user model
+        const {  totalGrandTotal, totalDiscount, totalOfferAmount } = totalSalesMetrics[0] || { totalGrandTotal: 0, totalDiscount: 0, totalOfferAmount: 0 };
+
         const activeUsers = await userModel.countDocuments({ is_active: true });
 
-        // Format the sales data for the graph
+        const totalSalesCount = salesData.reduce((acc, item) => acc + item.totalSales, 0);
+        const totalOrdersCount = salesData.reduce((acc, item) => acc + item.totalOrders, 0);
+
+        const profit = totalGrandTotal - totalDiscount;
+        const profitPercentage = ((profit / totalGrandTotal) * 100).toFixed(2) || 0;
+        const salesPercentage = ((totalSalesCount / totalGrandTotal) * 100).toFixed(2) || 0;
+        const visitsPercentage = ((totalOrdersCount / activeUsers) * 100).toFixed(2) || 0;
+        const customersPercentage = ((activeUsers / totalOrdersCount) * 100).toFixed(2) || 0;
+
         const formattedSalesData = salesData.map(item => ({
-            label: item._id, // The date (daily, weekly, monthly, etc.)
-            totalSales: item.totalSales // Total sales for that period
+            label: item._id,
+            totalSales: item.totalSales,
+            totalOrders: item.totalOrders,
         }));
+        const sales = formattedSalesData.map(item => item.totalSales);
+        const offerDiscount = salesData.map(item => item.totalOfferDiscount);
+        const couponDiscount = salesData.map(item => item.totalCouponDiscount);
+
+        // Filter orderDetails based on the same date range
+        const orderDetails = await orderModel.aggregate([
+            {
+                $unwind: "$productsDetails"
+            },
+            {
+                $match: {
+                    "productsDetails.productOrderStatus": "Delivered",
+                    placedAt: query.placedAt // Apply date filter
+                }
+            },
+            {
+                $lookup: {
+                    from: "products",
+                    localField: "productsDetails.productId",
+                    foreignField: "_id",
+                    as: "productInfo"
+                }
+            },
+            {
+                $unwind: "$productInfo"
+            },
+            {
+                $lookup: {
+                    from: "addresses",
+                    localField: "deliveryAddress",
+                    foreignField: "_id",
+                    as: "addressInfo"
+                }
+            },
+            {
+                $unwind: "$addressInfo"
+            },
+            {
+                $project: {
+                    order_id: "$_id",
+
+                    product_name: "$productInfo.pname",
+                    productDescription:"$productInfo.description",
+                    price:"$productsDetails.price",
+                    appliedOffer:"$productsDetails.appliedOffer",
+
+                    image: "$productInfo.image",
+                    quantity: "$productsDetails.quantity",
+                    productStatus: "$productsDetails.productOrderStatus",
+                    offerPrice: "$productsDetails.offerPrice",
+                    couponDiscount: "$productsDetails.couponDiscount",
+                    shippingAddress: "$addressInfo",
+                    paymentMethod: "$paymentDetails.method",
+                    orderId:"$paymentDetails.orderId"
+
+                }
+            },
+            {
+                $sort: { placedAt: -1 }
+            }
+        ]).exec();
+
+        console.log('Order Details:', orderDetails);
 
         // Send the response back to the client with all required data
         res.json({
+            totalSales,
+            totalCouponDiscount,
+            totalOfferDiscount,
             totalGrandTotal,
             totalOrders,
             totalDiscount,
-            totalOfferAmount, // Include total offer amount in the response
-            activeUsers,
-            salesData: formattedSalesData,
-            datePeriod , 
             
+            totalOfferAmount,
+            activeUsers,
+            salesData,
+            couponDiscount,
+            offerDiscount,
+            sales,
+            orders: orderDetails,
+            datePeriod,
+            percentages: {
+                profit: profitPercentage,
+                sales: salesPercentage,
+                visits: visitsPercentage,
+                customers: customersPercentage
+            }
         });
 
     } catch (error) {
         console.error('Error:', error);
         res.status(500).json({ message: 'Server error' });
     }
-}
+};
 
 
 
 
-// controllers/dashboardController.js
+
+
+
 
 
 const getSalesData = async (reportType, startDate, endDate) => {
-    let query = { orderStatus: { $ne: 'cancelled' } }; // Only include confirmed orders
+    let query = { orderStatus: { $ne: ' Cancelled' } }; 
 
-    // Handle different report types
     if (reportType === 'daily') {
         const start = new Date();
         start.setUTCHours(0, 0, 0, 0); // Start of the day in UTC
         const end = new Date();
-        end.setUTCHours(23, 59, 59, 999); // End of the day in UTC
+        end.setUTCHours(23, 59, 59, 999); 
 
         query.placedAt = { $gte: start, $lte: end };
     } else if (reportType === 'weekly') {
@@ -1198,7 +1828,6 @@ const getSalesData = async (reportType, startDate, endDate) => {
         query.placedAt = { $gte: new Date(startDate), $lte: new Date(endDate) };
     }
 
-    // Fetch sales data from the database
     const salesData = await orderModel.aggregate([
         { $match: query },
         {
@@ -1207,7 +1836,7 @@ const getSalesData = async (reportType, startDate, endDate) => {
                 totalSales: { $sum: { $toDouble: "$grandTotal" } }
             }
         },
-        { $sort: { _id: 1 } } // Sort by date in ascending order
+        { $sort: { _id: 1 } }
     ]);
 
     return salesData;
@@ -1226,7 +1855,7 @@ const addProductOffer = async (req,res)=>{
 
         const updatedProduct = await productModel.findByIdAndUpdate(
             id,
-            { productOffer: offerValue }, // Assuming categoryOffer is the field for storing offer value
+            { productOffer: offerValue }, 
             { new: true }
         );
 
@@ -1267,55 +1896,81 @@ const removeProductOffer = async (req,res)=>{
 }
 
 const getDownloadPdf = async (req, res) => {
-    const { reportType, startDate, endDate } = req.query;
-
+    const reportType = req.query.reportType;
+    const startDate = req.query.startDate;
+    const endDate = req.query.endDate;
+    const orders = JSON.parse(req.query.orders || '[]')
+    .filter(order => order.orderStatus !== 'payment pending' && order.orderStatus !== 'cancelled');
+      console.log(req.query);
     try {
-        // Fetch the sales data from your database based on the report type
         const salesData = await getSalesData(reportType, startDate, endDate);
         
-        // Fetch the overall metrics
         const totalMetrics = await getTotalMetrics(reportType, startDate, endDate);
 
-        // Create a new PDF document
+        // Creating  new PDF document
         const doc = new PDFDocument();
-        let filename = `Sales_Report_${Date.now()}.pdf`;
+        const filename = `Sales_Report_${Date.now()}.pdf`;
         res.setHeader('Content-disposition', `attachment; filename="${filename}"`);
         res.setHeader('Content-type', 'application/pdf');
 
         doc.pipe(res); // Stream PDF to response
 
         // Title
-        doc.fontSize(30).font('Helvetica-Bold').text('Sales Report', { align: 'center' });
+        doc.fontSize(24).font('Helvetica').text('Sales Report', { align: 'center' });
         doc.moveDown(0.5);
 
         // Overall Metrics
-        doc.fontSize(18).font('Helvetica-Bold').text('Overall Metrics', { underline: true });
+        doc.fontSize(16).font('Helvetica-Bold').text('Overall Metrics', { underline: true });
         doc.moveDown(0.5);
-        doc.fontSize(16).font('Helvetica').text(`Total Sales: ₹${totalMetrics.totalGrandTotal.toFixed(2)}`);
+        doc.fontSize(12).font('Helvetica').text(`Total Sales: ₹${totalMetrics.totalGrandTotal.toFixed(2)}`);
         doc.text(`Total Orders: ${totalMetrics.totalOrders}`);
         doc.text(`Total Discount: ₹${totalMetrics.totalDiscount.toFixed(2)}`);
         doc.moveDown(1);
 
-        // Sales Data Header
-        doc.fontSize(18).font('Helvetica-Bold').text('Sales Data', { underline: true });
+        // Sales Data Section
+        doc.fontSize(16).font('Helvetica-Bold').text('Sales Data', { underline: true });
         doc.moveDown(0.5);
 
-        // Table Header
-        doc.fontSize(14).font('Helvetica-Bold');
-        doc.text('Date', { width: 200, align: 'left' });
-        doc.text('Total Sales', { width: 200, align: 'right' });
-        doc.moveDown(0.5);
-
-        // Add a separator line
-        doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
-        doc.moveDown(0.5);
-
-        // Sales Data
-        doc.fontSize(14).font('Helvetica');
+        // Draw Sales Data as a list
         salesData.forEach(data => {
-            doc.text(data._id, { width: 200, align: 'left' });
-            doc.text(`₹${data.totalSales.toFixed(2)}`, { width: 200, align: 'right' });
-            doc.moveDown(0.5);
+            doc.fontSize(10).font('Helvetica').text(`Date: ${data._id} | Total Sales: ₹${data.totalSales.toFixed(2)}`);
+            doc.moveDown(0.2);
+        });
+
+        // Order Details Section
+        doc.moveDown(1);
+        doc.fontSize(16).font('Helvetica-Bold').text('Order Details', { underline: true });
+        doc.moveDown(0.5);
+
+        // Draw the table
+        const startX = 50;
+        const startY = doc.y;
+        const rowHeight = 20; // Decreased row height for compactness
+        const columnWidths = [190, 80, 80, 80]; // Increased width for Order ID column, removed Customer Name
+        const headers = ['Order ID', 'Product Name', 'Quantity', 'Total'];
+
+        // Draw table header
+        headers.forEach((header, index) => {
+            doc.rect(startX + index * columnWidths[index], startY, columnWidths[index], rowHeight).fillAndStroke('lightgrey', 'black');
+            doc.fillColor('black').fontSize(10).font('Helvetica-Bold').text(header, startX + index * columnWidths[index] + 5, startY + 5); // Adjusted font size
+        });
+
+        // Draw each order as a row in the table
+        orders.forEach((order, index) => {
+            const rowY = startY + (index + 1) * rowHeight + 20; // Adjust row position
+
+            // Draw each cell
+            doc.rect(startX, rowY, columnWidths[0], rowHeight).stroke();
+            doc.text(order.orderId, startX + 5, rowY + 5); // Add a slight offset for text
+
+            doc.rect(startX + columnWidths[0], rowY, columnWidths[1], rowHeight).stroke();
+            doc.text(order.productName, startX + columnWidths[0] + 5, rowY + 5);
+
+            doc.rect(startX + columnWidths[0] + columnWidths[1], rowY, columnWidths[2], rowHeight).stroke();
+            doc.text(order.quantity.toString(), startX + columnWidths[0] + columnWidths[1] + 5, rowY + 5);
+
+            doc.rect(startX + columnWidths[0] + columnWidths[1] + columnWidths[2], rowY, columnWidths[3], rowHeight).stroke();
+            doc.text(`₹${parseFloat(order.total.replace(/₹/, '').replace(/,/g, '')).toFixed(2)}`, startX + columnWidths[0] + columnWidths[1] + columnWidths[2] + 5, rowY + 5);
         });
 
         // Finalize the PDF
@@ -1326,10 +1981,31 @@ const getDownloadPdf = async (req, res) => {
     }
 };
 
+const getOrderDetails = async (reportType, startDate, endDate) => {
+    const query = {
+        createdAt: {
+            $gte: new Date(startDate),
+            $lte: new Date(endDate)
+        }
+    };
+
+    if (reportType) {
+        query.reportType = reportType; 
+    }
+
+    try {
+        const orders = await orderModel.find(query).select('orderId productName quantity total createdAt'); // Select the fields you need
+        return orders;
+    } catch (error) {
+        console.error('Error fetching order details:', error);
+        throw error; 
+    }
+};
+
 
 // Implement a new function to get total metrics
 const getTotalMetrics = async (reportType, startDate, endDate) => {
-    let query = { orderStatus: { $ne: 'cancelled' } }; // Only include confirmed orders
+    let query = { orderStatus: { $ne: ' Cancelled' } }; // Only include confirmed orders
 
     // Modify the query for custom date range if provided
     if (reportType === 'custom' && startDate && endDate) {
@@ -1355,27 +2031,43 @@ const downloadExcel = async (req, res) => {
     const { reportType, startDate, endDate } = req.query;
 
     try {
-        // Fetch the sales data and overall metrics from your database
-        const salesData = await getSalesData(reportType, startDate, endDate); // Implement this function
-        const { totalOrders, totalDiscount, totalSales } = await getTotalMetrics(reportType, startDate, endDate); // Implement this function
+        // Fetch sales data and total metrics
+        const salesData = await getSalesData(reportType, startDate, endDate); // Fetch sales data based on report type and date range
+        const { totalOrders, totalDiscount, totalGrandTotal } = await getTotalMetrics(reportType, startDate, endDate); // Fetch total metrics
 
         // Create a new workbook
         const wb = XLSX.utils.book_new();
 
         // Prepare summary data
         const summaryData = [
-            { Metric: "Total Sales", Value: totalSales },
+            { Metric: "Total Sales", Value: `₹${totalGrandTotal.toFixed(2)}` },
             { Metric: "Total Orders", Value: totalOrders },
-            { Metric: "Total Discount", Value: totalDiscount }
+            { Metric: "Total Discount", Value: `₹${totalDiscount.toFixed(2)}` }
         ];
 
         // Create a worksheet for summary data and add it to the workbook
         const summarySheet = XLSX.utils.json_to_sheet(summaryData);
         XLSX.utils.book_append_sheet(wb, summarySheet, 'Summary');
 
-        // Create a worksheet for detailed sales data
-        const salesSheet = XLSX.utils.json_to_sheet(salesData);
+        // Create a worksheet for sales data
+        const salesDataSheet = salesData.map(data => ({
+            Date: data._id,                // Date
+            'Total Sales': `₹${data.totalSales.toFixed(2)}` // Total Sales formatted
+        }));
+        const salesSheet = XLSX.utils.json_to_sheet(salesDataSheet);
         XLSX.utils.book_append_sheet(wb, salesSheet, 'Sales Data');
+
+        // Prepare order details
+        const orders = await getOrderDetails(reportType, startDate, endDate); // Assume this function fetches the orders
+        const orderDetailsData = orders.map(order => ({
+            'Order ID': order.orderId,
+            'Product Name': order.productName,
+            'Quantity': order.quantity,
+            'Total': `₹${parseFloat(order.total.replace(/₹/, '').replace(/,/g, '')).toFixed(2)}`
+        }));
+
+        const orderDetailsSheet = XLSX.utils.json_to_sheet(orderDetailsData);
+        XLSX.utils.book_append_sheet(wb, orderDetailsSheet, 'Order Details');
 
         // Generate Excel file as a buffer
         const buffer = XLSX.write(wb, {
@@ -1395,6 +2087,7 @@ const downloadExcel = async (req, res) => {
         res.status(500).json({ message: 'Error generating Excel report' });
     }
 };
+
 
 
 module.exports ={
@@ -1419,6 +2112,8 @@ module.exports ={
     getEditCategory,
     // getEditUser,
     // updateUser,
+    categoryData,
+    paymentData,
     doAddCoupon,
     deleteCoupon,
     postEditCoupon,
@@ -1431,7 +2126,7 @@ module.exports ={
     viewOrders,
     getAdminOrderDetailpage,
     changeOrderStatus,
-    updateRefund,
+    // updateRefund,
     getDownloadPdf,
     downloadExcel,
     addCatOffer,

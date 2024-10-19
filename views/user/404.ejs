@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 Not Found</title>
+    <style>
+        body {
+            background-color: #000; /* Black background */
+            width: 100vw;
+            height: 100vh;
+            color: #fff; /* White text */
+            font-family: 'Arial Black', sans-serif;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            margin: 0;
+        }
+
+        .error-num {
+            font-size: 8em; /* Large font size for error number */
+            margin: 0;
+            color: #fff; /* White color for the number */
+        }
+
+        .eyes-container {
+            display: flex; /* Flexbox for arranging eyes */
+            justify-content: center; /* Center the eyes */
+            margin: 20px 0; /* Margin above and below eyes */
+        }
+
+        .eye {
+            background: #fff; /* White background for eyes */
+            border-radius: 50%;
+            height: 100px;
+            width: 100px;
+            position: relative;
+            margin: 0 10px; /* Space between eyes */
+        }
+
+        .eye::after {
+            background: #000; /* Black pupil */
+            border-radius: 50%;
+            bottom: 56.1px;
+            content: '';
+            height: 33px;
+            position: absolute;
+            right: 33px;
+            width: 33px;
+        }
+
+        p {
+            margin-bottom: 4em; /* Margin for paragraph */
+            font-size: 1.5em; /* Font size for subtext */
+        }
+
+        a {
+            color: #fff; /* White text for link */
+            text-decoration: none;
+            text-transform: uppercase; /* Uppercase text for link */
+            font-size: 1.2em; /* Font size for link */
+            background-color: #444; /* Dark grey button */
+            padding: 10px 20px; /* Padding for button */
+            border-radius: 5px; /* Rounded corners */
+            transition: background-color 0.3s ease; /* Smooth transition */
+        }
+
+        a:hover {
+            background-color: #666; /* Lighter grey on hover */
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <span class="error-num">404</span>
+        <div class="eyes-container">
+            <div class="eye"></div>
+            <div class="eye"></div>
+        </div>
+        <p class="sub-text">Oops! The page you're looking for cannot be found.</p>
+        <p>We're <i>looking</i> to see what happened.</p>
+        <a href="/userHome">Go back to Home</a>
+    </div>
+
+    <script>
+        // Eye tracking effect
+        document.body.addEventListener('mousemove', function(event) {
+            const eyes = document.querySelectorAll('.eye');
+            eyes.forEach(function(eye) {
+                const x = (eye.getBoundingClientRect().left) + (eye.clientWidth / 2);
+                const y = (eye.getBoundingClientRect().top) + (eye.clientHeight / 2);
+                const rad = Math.atan2(event.pageX - x, event.pageY - y);
+                const rot = (rad * (180 / Math.PI) * -1) + 180;
+                eye.style.transform = 'rotate(' + rot + 'deg)';
+            });
+        });
+    </script>
+</body>
+</html>

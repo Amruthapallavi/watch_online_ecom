@@ -22,9 +22,8 @@
   
     <!-- Wish List Content -->
     <div class="wishlist-container">
-        <h1>Your Orders</h1>
+        <h1 style="text-align: center;">Your Orders</h1>
         <div class="product-list">
-            <h3>Products</h3>
             <% orders.forEach(product => { %>
             <div class="product-card">
                 <img style="max-width: 120px" src="/<%=product.productInfo.image[0]%>" alt="something" />
@@ -42,7 +41,7 @@
                     
                     
     
-                    <p>Date: <%= product.placedAt %></p>
+                    <td><%= String(product.placedAt).split(' ').slice(0, 4).join(' ') %></td>
                 </div>
                 <div class="product-actions">
                     <form action="/my-orderDetailes/<%= product._id %>" method="POST">

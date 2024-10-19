@@ -2,12 +2,102 @@
 
 <link rel="stylesheet" href="/css/adminDashboard.css">
 <title>Admin Dashboard</title>
+<style>
+    /* styles.css */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f8f9fa;
+}
+
+.container {
+    max-width: 800px;
+    margin: auto;
+    padding: 20px;
+}
+
+canvas {
+    width: 100% !important; /* Make the canvas responsive */
+    height: auto !important; /* Maintain aspect ratio */
+}
+
+
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f8f8f8;
+        margin: 0;
+        padding: 20px;
+        color: black;
+    }
+    h1 {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .summary, .charts-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+    .card, .chart-box {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin: 10px;
+        padding: 15px;
+        flex: 1 1 calc(30% - 20px); /* Responsive card sizing */
+        min-width: 250px; /* Minimum width for smaller screens */
+    }
+    #salesChart, #categorySalesChart, #paymentMethodsChart {
+        max-width: 100%; /* Ensure charts are responsive */
+        height: 200px; /* Adjusted height for charts */
+    }
+    .container {
+    padding: 20px; /* Add padding for aesthetics */
+}
+
+.report-controls {
+    display: flex;                  /* Use flexbox to arrange items in a row */
+    align-items: center;           /* Center items vertically */
+    gap: 10px;                     /* Add space between items */
+}
+
+.report-controls label {
+    margin: 0;                     /* Remove default margin */
+}
+
+#customRange {
+    display: flex;                 /* Make custom range labels and inputs display inline */
+    gap: 5px;                      /* Space between labels and inputs */
+}
+.report-controls {
+    display: flex; /* Use flexbox layout */
+    align-items: center; /* Center align items vertically */
+    gap: 10px; /* Space between elements */
+}
+
+.custom-range {
+    display: flex; /* Flexbox for custom range fields */
+    gap: 10px; /* Space between date inputs */
+}
+
+label {
+    margin: 0; /* Remove margin for labels */
+}
+
+input[type="date"], select {
+    padding: 5px; /* Add padding for better touch targets */
+}
+
+</style>
 
 </head>
 <body>
 
 <main style="color: black;">
-    <h1>Dashboard</h1>
+
+    
     <div class="summary">
         <div class="card visits">
             <h2>Total Sales</h2>
@@ -17,90 +107,145 @@
             <h2>Orders</h2>
             <p id="overallOrders"><%=data.totalOrders%></p>
         </div>
-        <div class="card sales">
+        <!-- <div class="card sales">
             <h2>Discount</h2>
-            <p id="overallDiscount"><%= Math.round(data.totalAppliedOffers) %></p>
-        </div>
+            <p id="overallDiscount"><= data.totalAppliedOffers %></p>
+        </div> -->
         <div class="card visits">
             <h2>Coupon Discount</h2>
-            <p id="overallCoupon"><%=data.totalOfferDiscount%></p>
+            <p id="overallCoupon"><%=data.totalOfferDiscount.toFixed(2)%></p>
        </div>
         <div class="card products">
             <h2>Active Users</h2>
             <p id="allUser"><%=activeUsers%></p>
         </div>
     </div>
+   
     
-    <div class="container">
-        <!-- <h2>Sales Report</h2> -->
-        <div class="report-controls">
-            <!-- <label for="reportType">Report Type:</label> -->
-            <select id="reportType">
-                <option value="daily">Daily</option>
-                <option value="weekly">Weekly</option>
-                <option value="monthly">Monthly</option>
-                <option value="yearly">Yearly</option>
-                <option value="custom">Custom Range</option>
-            </select>
-
-            <div id="customRange" style="display: none;">
-                <label for="startDate">Start Date:</label>
-                <input type="date" id="startDate">
-                <label for="endDate">End Date:</label>
-                <input type="date" id="endDate">
+    
+    
+    
+   
+    <div class="order-list-container" style="max-width: 95%; background-color: white;max-height: 60%;">
+        <div class="container">
+            <div class="report-controls">
+                <label for="reportType">Report Type:</label>
+                <select id="reportType" style="max-width: 200px;">
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="yearly">Yearly</option>
+                    <option value="custom">Custom Range</option>
+                </select>
+        
+                <div id="customRange" style="display: none;" class="custom-range">
+                    <label for="startDate">Start Date:</label>
+                    <input type="date" id="startDate" />
+        
+                    <label for="endDate">End Date:</label>
+                    <input type="date" id="endDate" />
+                </div>
+        
+                <button class="generate-report-button" onclick="generateReport()">Generate Report</button>
             </div>
+        </div>
 
-            <button class="generate-report-button" onclick="generateReport()">Generate Report</button>
+        <div class="summary1" style="display: none;">
+            <div class="percentage-card">
+                <h2>Total Sales</h2>
+                <p id="totalSales">₹0</p>
+            </div>
+            <div class="percentage-card">
+                <h2>Orders</h2>
+                <p id="totalOrders">0</p>
+            </div>
+            <div class="percentage-card">
+                <h2>Coupon Discount</h2>
+                <p id="totalDiscount">₹0</p>
+            </div>
+            <div class="percentage-card">
+                <h2>Offer</h2>
+                <p id="newUsers">₹0</p>
+            </div>
+        </div>
+
+
+        <!-- Filter Section -->
+        <div class="order-filter">
+            <label for="orderFilter">Filter by:</label>
+            <select id="orderFilter" onchange="filterOrders()">
+                <option value="all">All</option>
+                <option value="pending">Pending</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="delivered">Delivered</option>
+                <option value="cancelled">Cancelled</option>
+            </select>
+        </div>
+    
+        <!-- Headline Row -->
+        <div class="order-headline">
+            <span class="order-id">Order ID</span>
+            <span class="image">Image</span>
+            <span class="productname">Product Name</span>
+            <span class="quantity">Quantity</span>
+            <span class="status">Status</span>
+            <span class="total">Total</span>
+            <span class="more">Options</span>
+        </div>
+    
+        <!-- Order Listing -->
+        <ul class="order-list" id="orderList">
+
+            <% orders.slice(0, 5).forEach(order => { %>
+                <li class="order-item">
+                <div class="order-header">
+                    <span class="order-id"><%= order.orderId %></span>
+                    <span class="image" style="max-width: 100px; max-height: 100px;"><img src="<%=order.image[0] %>" alt="<%= order.productName %>" class="product-image">
+                    </span>
+
+                    <span class="product-name"><%= order.product_name %></span>
+                    <span class="quantity"><%= order.quantity %></span>
+                    <span class="status"><%= order.productStatus %></span>
+                    <span class="total">₹<%= order.offerPrice - (order.couponDiscount || 0) %></span>
+                    <!-- More Button with Unique ID -->
+                    <button class="more-btn" onclick="toggleOrderDetails('<%= order.order_id %>')">More</button>
+                </div>
+                <!-- Order Details with Unique ID -->
+                <div class="order-details" id="details-<%= order.order_id %>" style="display: none;">
+                    <p><strong>Shipping Address:</strong> <%= order.shippingAddress.house_no %> ,<%= order.shippingAddress.street %></p>
+                    <p><%= order.shippingAddress.locality %>, <%= order.shippingAddress.city %> ,<%= order.shippingAddress.district %> </p>
+                    <p><%= order.shippingAddress.state %>, <%= order.shippingAddress.pincode %></p>
+                    <p><strong>Payment Method:</strong> <%= order.paymentMethod %></p>
+                    <button class="less-btn" onclick="toggleOrderDetails('<%= order.order_id %>')">Less</button>
+                </div>
+            </li>
+            <% }); %>
+        </ul>
+        <% if (orders.length > 5) { %>
+            <div id="more-orders" class="more-orders">
+                <button onclick="showMoreOrders()">Show More</button>
+            </div>
+        <% } %>
+    </div>
+    
+    <div class="charts-container">
+        <!-- Left Chart (Bar for Category Sales) -->
+        <div class="chart-box" style="max-height: 800px;">
+            <h2 class="chart-title">Category-wise Sales</h2>
+            <canvas id="categorySalesChart"></canvas>
+        </div>
+
+        <!-- Right Chart (Pie for Payment Methods) -->
+        <div class="chart-box" style="max-width: 500px; max-height: 600px;">
+            <h2 class="chart-title">Payment Methods Used</h2>
+            <canvas id="paymentMethodsChart" style="max-width: 400px; max-height: 400px; padding-left: 15%;"></canvas>
         </div>
     </div>
     
-    <div class="summary">
-        <div class="card visits" style="background-color: rgb(244, 239, 239); color: black;">
-            <h2>Total Sales</h2>
-            <p id="totalSales">₹0</p>
-        </div>
-        <div class="card revenue" style="background-color: rgb(249, 245, 245); color: black;">
-            <h2>Orders</h2>
-            <p id="totalOrders">0</p>
-        </div>
-        <div class="card sales" style="background-color: rgb(248, 246, 246); color: black;">
-            <h2>Discount</h2>
-            <p id="totalDiscount">₹0</p>
-        </div>
-        <div class="card products" style="background-color: rgb(246, 246, 246); color: black;">
-            <h2>Active Users</h2>
-            <p id="newUsers">0</p>
-        </div>
-    </div>
-
-    <!-- <div class="summary">
-        <div class="percentage-card">
-            <h2>Profit</h2>
-            <div class="percentage-circle profit" data-percentage="0"></div>
-        </div>
-        <div class="percentage-card">
-            <h2>No. of Visits</h2>
-            <div class="percentage-circle visits" data-percentage="0"></div>
-        </div>
-        <div class="percentage-card">
-            <h2>Customers</h2>
-            <div class="percentage-circle customers" data-percentage="0"></div>
-        </div>
-        <div class="percentage-card">
-            <h2>Sales</h2>
-            <div class="percentage-circle sales" data-percentage="0"></div>
-        </div>
-    </div> -->
-
-    <div class="sales-chart">
-        <h2>Total Sales</h2>
-        <canvas id="salesChart"></canvas>
-    </div>
-
+    
+    
+    
     <div class="dashboard-container">
-        <!-- Total Sales Chart -->
-       
-
         <!-- Top Selling Products -->
         <div class="top-selling-section">
             <h2>Top selling Products</h2>
@@ -110,12 +255,9 @@
                     <img src="<%= product.productDetails.image[0] %>" alt="<%= product.productName %>" class="product-image">
                     <div class="product-details">
                         <span class="product-name"><%= product.productDetails.pname %></span><br>
-                        <span class="product-stock">
-                            Sold Out: <%= product.totalQuantity %>
-                        </span><br>
+                        <span class="product-stock">Sold Out: <%= product.totalQuantity %></span><br>
                         <span class="product-mrp">MRP: ₹<%= product.productDetails.price %></span> <br>
                         <span class="product-color">Color: <%= product.productDetails.description %></span><br>
-
                     </div>
                 </li>
                 <% }); %>
@@ -129,8 +271,6 @@
                 <li class="product-item">
                     <div class="product-details">
                         <span class="product-name"><%= category.categoryName %></span><br>
-                        <span class="product-stock">
-                        </span><br>
                         <span class="product-color">Sold Out: <%= category.totalQuantity %></span><br>
                     </div>
                 </li>
@@ -156,49 +296,45 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+ function toggleOrderDetails(orderId) {
+    const detailsDiv = document.getElementById(`details-${orderId}`);
+    if (detailsDiv.style.display === 'none' || detailsDiv.style.display === '') {
+        detailsDiv.style.display = 'block';
+    } else {
+        detailsDiv.style.display = 'none';
+    }
+}
+
+
+function filterOrders() {
+    const filter = document.getElementById("orderFilter").value;
+    const orders = document.querySelectorAll(".order-item");
+
+    orders.forEach(order => {
+        const status = order.querySelector(".status").textContent.toLowerCase();
+        if (filter === "all" || status.includes(filter)) {
+            order.style.display = "block";
+        } else {
+            order.style.display = "none";
+        }
+    });
+}
+
+function toggleOrderDetails(orderId) {
+    const detailsDiv = document.getElementById(`details-${orderId}`);
+    if (detailsDiv.style.display === 'none') {
+        detailsDiv.style.display = 'block';
+    } else {
+        detailsDiv.style.display = 'none';
+    }
+}
+
+
+   </script>
 
 <script>
-    const ctx = document.getElementById('salesChart').getContext('2d');
-    let salesChart; // Declare salesChart variable globally
-
-    // Function to generate report and fetch data from the backend
-    function generateReport() {
-        const reportType = document.getElementById('reportType').value;
-        let startDate = null;
-        let endDate = null;
-
-        if (reportType === 'custom') {
-            startDate = document.getElementById('startDate').value;
-            endDate = document.getElementById('endDate').value;
-        }
-
-        // Fetch dashboard data from backend
-        fetch('/dashboard-data', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ reportType, startDate, endDate }),
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Update the dashboard metrics
-            updateDashboardData(
-                `₹${data.totalSales.toLocaleString()}`, 
-                data.totalOrders.toString(), 
-                `₹${data.totalDiscount.toLocaleString()}`, 
-                data.activeUsers.toString()
-            );
-
-            // Prepare the data for the chart
-            const labels = data.salesData.map(item => item.label); // Labels (e.g., dates)
-            const chartData = data.salesData.map(item => item.totalSales); // Sales totals
-
-            // Update chart with the new data
-            updateChart(labels, chartData);
-        })
-        .catch(error => console.error('Error fetching dashboard data:', error));
-    }
+   
 
     // Function to update dashboard totals
     function updateDashboardData(totalSales, totalOrders, totalDiscount, activeUsers) {
@@ -208,52 +344,14 @@
         document.getElementById('newUsers').innerText = activeUsers;
     }
 
-    // Function to update or create the sales chart
-    function updateChart(labels, data) {
-        if (salesChart) {
-            // If the chart already exists, just update it
-            salesChart.data.labels = labels;
-            salesChart.data.datasets[0].data = data;
-            salesChart.update();
-        } else {
-            // Create a new chart if one doesn't exist
-            salesChart = new Chart(ctx, {
-                type: 'line', // You can also use 'bar', 'pie', etc.
-                data: {
-                    labels: labels, // X-axis labels
-                    datasets: [{
-                        label: 'Total Sales',
-                        data: data, // Y-axis data
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        x: {
-                            beginAtZero: true
-                        },
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-        }
-    }
-    document.getElementById('reportType').addEventListener('change', function() {
-        const customRangeDiv = document.getElementById('customRange');
-        customRangeDiv.style.display = this.value === 'custom' ? 'block' : 'none';
-    });
+   
 
-  // Function to generate report and fetch data from the backend
-function generateReport() {
+    function generateReport() {
     const reportType = document.getElementById('reportType').value;
     let startDate = null;
     let endDate = null;
-
+    const summaryDiv = document.querySelector('.summary1');
+    summaryDiv.style.display = 'flex'; // Change to block to display it
     if (reportType === 'custom') {
         startDate = document.getElementById('startDate').value;
         endDate = document.getElementById('endDate').value;
@@ -269,68 +367,102 @@ function generateReport() {
     })
     .then(response => response.json())
     .then(data => {
+        console.log('Received report data:', data);
+
         // Update the dashboard metrics
         updateDashboardData(
-            `₹${data.totalGrandTotal.toLocaleString()}`, 
+            `₹${data.totalSales.toLocaleString()}`, 
             data.totalOrders.toString(), 
-            `₹${data.totalDiscount.toLocaleString()}`, 
-            data.activeUsers.toString()
+            `₹${data.totalCouponDiscount.toLocaleString()}`, 
+            parseFloat(data.totalOfferDiscount).toFixed(2) 
         );
 
-        // Prepare the data for the chart
-        const labels = data.salesData.map(item => item.label); // Labels (e.g., dates)
-        const chartData = data.salesData.map(item => item.totalSales); // Sales totals
-
-        // Update chart with the new data
-        updateChart(labels, chartData);
-
-        // Update percentage data for circles
-        updatePercentageCircles({
-            profit: data.profitPercentage,
-            visits: data.visitsPercentage,
-            customers: data.customersPercentage,
-            sales: data.salesPercentage
-        });
-    })
-    .catch(error => console.error('Error fetching dashboard data:', error));
-}
-
-// Function to update percentage circles dynamically
-function updatePercentageCircles(percentageData) {
-    Object.keys(percentageData).forEach(circleClass => {
-        const circleElement = document.querySelector(`.percentage-circle.${circleClass}`);
-        const percentage = percentageData[circleClass];
-        
-        // Update the circle's percentage and background dynamically
-        circleElement.style.background = `conic-gradient(${getCircleColor(circleClass)} 0% ${percentage}%, #f4f4f4 ${percentage}% 100%)`;
-        circleElement.setAttribute('data-percentage', percentage);
+        // Populate order details dynamically
+        renderOrderList(data.orders); // Assuming `data.orders` is the array of orders from the backend
     });
 }
 
-// Function to get the color for each circle
-function getCircleColor(circleClass) {
-    const circleColors = {
-        profit: '#3498db',
-        visits: '#e74c3c',
-        customers: '#2ecc71',
-        sales: '#f39c12'
-    };
-    return circleColors[circleClass] || '#000'; // Default to black if no match
+function renderOrderList(orders) {
+    const orderListContainer = document.querySelector('.order-list');
+    orderListContainer.innerHTML = ''; // Clear existing orders
+
+    // Loop through orders and generate HTML dynamically
+    orders.forEach(order => {
+        const orderItem = `
+        <li class="order-item">
+            <div class="order-header">
+                <span class="order-id">${order.orderId}</span>
+                 <span class="image"><img src="${order.image[0]}" alt="Product Image" class="product-image" />
+</span>
+
+                <span class="product-name">${order.product_name}</span>
+
+                <span class="quantity">${order.quantity}</span>
+                <span class="status">${order.productStatus}</span>
+<span class="total">₹${order.offerPrice - (order.couponDiscount || 0)}</span>
+                <button class="more-btn" onclick="toggleOrderDetails('${order._id}')">More</button>
+            </div>
+            <div class="order-details" id="details-${order._id}" style="display: none;">
+                <p><strong>Shipping Address:</strong> ${order.shippingAddress}</p>
+                <p><strong>Payment Method:</strong> ${order.paymentMethod}</p>
+                <button class="less-btn" onclick="toggleOrderDetails('${order._id}')">Less</button>
+            </div>
+        </li>
+        `;
+        orderListContainer.innerHTML += orderItem;
+    });
 }
 
+function toggleOrderDetails(orderId) {
+    const detailsDiv = document.getElementById(`details-${orderId}`);
+    const isVisible = detailsDiv.style.display === 'block';
+    detailsDiv.style.display = isVisible ? 'none' : 'block';
+}
+
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    //custom range
+    document.getElementById('reportType').addEventListener('change', function() {
+        const customRangeDiv = document.getElementById('customRange');
+        customRangeDiv.style.display = this.value === 'custom' ? 'block' : 'none';
+    });
     function downloadPDF() {
-        const reportType = document.getElementById('reportType').value;
-        let startDate = null;
-        let endDate = null;
+    const reportType = document.getElementById('reportType').value;
+    let startDate = null;
+    let endDate = null;
 
-        if (reportType === 'custom') {
-            startDate = document.getElementById('startDate').value;
-            endDate = document.getElementById('endDate').value;
-        }
-
-        // Redirect to the backend route for PDF generation
-        window.location.href = `/download/pdf?reportType=${reportType}&startDate=${startDate}&endDate=${endDate}`;
+    if (reportType === 'custom') {
+        startDate = document.getElementById('startDate').value;
+        endDate = document.getElementById('endDate').value;
     }
+
+    // Gather order details
+    const orderItems = Array.from(document.querySelectorAll('.order-item')).map(item => {
+        const orderId = item.querySelector('.order-id').textContent;
+        const productName = item.querySelector('.product-name').textContent;
+        const quantity = item.querySelector('.quantity').textContent;
+        const status = item.querySelector('.status').textContent;
+        const total = item.querySelector('.total').textContent;
+        const shippingAddress = item.querySelector('.order-details') ? 
+            item.querySelector('.order-details p strong').nextSibling.textContent : ''; // Extract shipping address
+        const paymentMethod = item.querySelector('.order-details') ? 
+            item.querySelector('.order-details p + p strong').nextSibling.textContent : ''; // Extract payment method
+
+        return {
+            orderId,
+            productName,
+            quantity,
+            status,
+            total,
+            shippingAddress,
+            paymentMethod
+        };
+    });
+
+    // Redirect to the backend route for PDF generation with order details
+    window.location.href = `/download/pdf?reportType=${reportType}&startDate=${startDate}&endDate=${endDate}&orders=${JSON.stringify(orderItems)}`;
+}
 
     function downloadExcel() {
         const reportType = document.getElementById('reportType').value;
@@ -347,100 +479,116 @@ function getCircleColor(circleClass) {
     }
 
 
-    document.addEventListener('DOMContentLoaded', function () {
-    // Define the data you want to apply to each circle dynamically (from backend or static)
-    const circleData = {
-        profit: { percentage: 22, color: '#3498db' },
-        visits: { percentage: 46, color: '#e74c3c' },
-        customers: { percentage: 84, color: '#2ecc71' },
-        sales: { percentage: 55, color: '#f39c12' }
-    };
+</script>
+<script>
+    const categorySalesData = <%- JSON.stringify(categorySales) %>;
+    const paymentMethodsData = <%- JSON.stringify(paymentMethods) %>;
 
-    // Loop through each circle and dynamically set the percentage and color
-    Object.keys(circleData).forEach(circleClass => {
-        const circleElement = document.querySelector(`.percentage-circle.${circleClass}`);
-        const { percentage, color } = circleData[circleClass];
-        
-        // Set the percentage and color dynamically
-        circleElement.style.setProperty('--percentage', `${percentage}%`);
-        circleElement.style.setProperty('--color', color);
-        circleElement.setAttribute('data-percentage', percentage);
-    });
-});
-async function fetchDashboardData() {
-            try {
-                // Fetch data from your backend API
-                const response = await fetch('/dashboard-data', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ reportType: 'monthly' }) // Example reportType
-                });
-                const data = await response.json();
+    const categoryNames = categorySalesData.map(item => item.cname); // Extract category names
+    const categorySales = categorySalesData.map(item => item.totalSales); // Extract total sales
 
-                // Destructure required fields from response
-                const { totalGrandTotal, totalOrders, totalDiscount, totalOfferAmount, salesData } = data;
+    // Extract data for Payment Methods Chart
+    const paymentMethods = paymentMethodsData.map(item => item.method); // Extract payment method names
+    const paymentCounts = paymentMethodsData.map(item => item.count); // Extract the count of each method used
 
-                // Prepare the data for the percentage chart
-                const totalSales = totalGrandTotal;
-                const discountPercentage = (totalDiscount / 60) * 100;
-                const offerPercentage = (totalOfferAmount / totalSales) * 100;
-                const salesPercentage = 100 - (discountPercentage + offerPercentage);
-
-                // Define labels and data for the chart
-                const labels = ['Sales', 'Discounts', 'Offers'];
-                const chartData = [salesPercentage, discountPercentage, offerPercentage];
-
-                // Create the percentage chart using Chart.js
-                const ctx = document.getElementById('salesPercentageChart').getContext('2d');
-                const myChart = new Chart(ctx, {
-                    type: 'pie', // Use pie chart to display percentages
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: 'Sales Distribution',
-                            data: chartData,
-                            backgroundColor: [
-                                'rgba(75, 192, 192, 0.2)',  // Sales color
-                                'rgba(255, 99, 132, 0.2)',  // Discount color
-                                'rgba(255, 206, 86, 0.2)',  // Offer color
-                            ],
-                            borderColor: [
-                                'rgba(75, 192, 192, 1)',
-                                'rgba(255, 99, 132, 1)',
-                                'rgba(255, 206, 86, 1)',
-                            ],
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            tooltip: {
-                                callbacks: {
-                                    label: function (context) {
-                                        const label = context.label || '';
-                                        const value = context.raw.toFixed(2);
-                                        return `${label}: ${value}%`;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-
-            } catch (error) {
-                console.error('Error fetching dashboard data:', error);
+    // Create Category Sales Chart
+    const categorySalesCtx = document.getElementById('categorySalesChart').getContext('2d');
+    new Chart(categorySalesCtx, {
+        type: 'bar', // Choose bar chart
+        data: {
+            labels: categoryNames, // X-axis labels
+            datasets: [{
+                label: 'Total Sales by Category',
+                data: categorySales, // Y-axis data
+                backgroundColor: 'rgba(54, 162, 235, 0.2)', // Bar color
+                borderColor: 'rgba(54, 162, 235, 1)', // Border color
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
             }
         }
+    });
 
-        // Call the function to fetch data and render the chart
-        fetchDashboardData();
+    // Create Payment Methods Chart
+    const paymentMethodsCtx = document.getElementById('paymentMethodsChart').getContext('2d');
+    new Chart(paymentMethodsCtx, {
+        type: 'pie', // Choose pie chart
+        data: {
+            labels: paymentMethods, // X-axis labels
+            datasets: [{
+                label: 'Payment Methods Used',
+                data: paymentCounts, // Y-axis data
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.2)',
+                    'rgba(54, 162, 235, 0.2)',
+                    'rgba(75, 192, 192, 0.2)',
+                    'rgba(153, 102, 255, 0.2)'
+                ], // Pie slice colors
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+        }
+    });
+
+
+
+
+    let currentOrderIndex = 5; // Start after the first 5 orders
+
+function showMoreOrders() {
+    const orderList = document.getElementById('orderList');
+    const orders = <%- JSON.stringify(orders) %>; // Pass orders to JavaScript
+    const moreOrdersCount = orders.length;
+
+    // Display the next set of orders
+    const endIndex = currentOrderIndex + 5; // Show 5 more orders
+    for (let i = currentOrderIndex; i < endIndex && i < moreOrdersCount; i++) {
+        const order = orders[i];
+        const orderItem = document.createElement('li');
+        orderItem.className = 'order-item';
+        orderItem.innerHTML = `
+            <div class="order-header">
+                <span class="order-id">${order._id}</span>
+                <span class="product-name">${order.product_name}</span>
+                <span class="quantity">${order.quantity}</span>
+                <span class="status">${order.orderStatus}</span>
+                <span class="total">₹${order.grandTotal}</span>
+                <button class="more-btn" onclick="toggleOrderDetails('${order.id}')">More</button>
+            </div>
+            <div class="order-details" id="details-${order.id}" style="display: none;">
+                <p><strong>Shipping Address:</strong> ${order.deliveryAddress}</p>
+                <p><strong>Payment Method:</strong> ${order.paymentMethod}</p>
+                <button class="less-btn" onclick="toggleOrderDetails('${order.id}')">Less</button>
+            </div>
+        `;
+        orderList.appendChild(orderItem);
+    }
+
+    currentOrderIndex += 5; // Update the index for the next batch
+
+    // Hide the button if there are no more orders to display
+    if (currentOrderIndex >= moreOrdersCount) {
+        document.getElementById('more-orders').style.display = 'none';
+    }
+}
+
 </script>
 
 </body>
 </html>
-
 
 

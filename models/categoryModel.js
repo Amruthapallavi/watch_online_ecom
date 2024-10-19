@@ -8,10 +8,7 @@ const categorySchema = new Schema({
     required: true 
   },
 
-  cimage: { 
-    type: String, 
-    required: true 
-  },
+
   categoryOffer: { type: Number, default: 0 }
 
 });

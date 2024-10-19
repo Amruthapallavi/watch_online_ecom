@@ -8,7 +8,6 @@ const auth = require('../middlewares/verifyUser');
 require('dotenv').config();
 const userModel= require("../models/userModel");
 const cartController = require('../controllers/cartController');
-const paymentController = require('../controllers/paymentController');
 const invoice = require("../controllers/invoice");
 router.use(bodyParser.json());
 router.use(session({
@@ -44,17 +43,15 @@ router.get('/filter',userController.getFilter);
 // router.post('/update-quantity/:id', cartController.updateQuantity);
 // router.post('/cart',userController.postCart)
 //filters
-
+router.post('/redeem-referral-code',userController.redeemReferralCode);
 router.get('/men',userController.getMenCategory);
 router.get('/women',userController.getWomenCategory);
 router.get('/unisex',userController.getUnisexCategory);
-router.get('/low-to-high',userController.lowToHigh);
 router.get('/my-orders',userController.myOrders);
 router.get('/removeFromWishlist/:id',userController.removeFromWishlist);
 router.post('/place-order',authMiddleware,userController.placeOrder);
 
 router.get("/coupons",userController.getCouponPage);
-// Route for verifying the Razorpay payment
 router.post('/verify-payment', authMiddleware, userController.verifyPayment);
 router.post('/my-orderDetailes/:id',userController.getOrderDetailPage);
 // router.post('/createOrder', paymentController.createOrder);
@@ -62,8 +59,9 @@ router.post('/my-orderDetailes/:id',userController.getOrderDetailPage);
 router.get('/order-success',userController.getOrderSuccess);
 
 router.get('/order-failed',userController.getOrderFailed);
+router.post("/cancel-order/:id",userController.getCancelForPending);
 router.post('/cancel-order',userController.userCancelOrder)
-router.post("/return-order",userController.userReturnReq);
+router.post("/return-product",userController.userReturnReq);
 router.get('/my-wallet',userController.getMyWallet);
 router.post('/add-money', userController.addMoney);
 
@@ -72,59 +70,84 @@ router.post('/apply-coupon',userController.postApplyCoupon);
 
 router.post('/download-invoice',invoice.downloadInvoice);
 router.post("/retry-order",userController.retryOrder);
+// router.get("/*",(req,res)=>{
+//   res.render("user/404");
+// })
 
 
+// router.get("/adminSample",async (req,res)=>{
+//   try {
+//     const overall = await orderModel.aggregate([
+//       {
+//           $match: {
+//               orderStatus: { $nin: ['cancelled', 'payment pending'] } // Exclude both cancelled and payment pending orders
+//           }
+//       },
+//       {
+//           $group: {
+//               _id: null, // No grouping by specific field, aggregate all matching documents
+//               totalGrandTotal: { $sum: { $toDouble: "$grandTotal" } }, // Sum of grandTotal
+//               totalOfferDiscount: { $sum: { $toDouble: "$couponDiscount" } }, // Sum of offerDiscount
+//               totalAppliedOffers: {
+//                   $sum: {
+//                       $reduce: {
+//                           input: "$productsDetails.appliedOffer", // Access appliedOffer inside productsDetails array
+//                           initialValue: 0,
+//                           in: { $add: ["$$value", { $toDouble: "$$this" }] } // Sum of appliedOffer in productsDetails
+//                       }
+//                   }
+//               },
+//               totalOrders: { $sum: 1 } // Total count of orders
+//           }
+//       }
+//   ]);
 
-router.get("/adminSample",async (req,res)=>{
-  try {
-    const overall = await orderModel.aggregate([
-      {
-          $match: {
-              orderStatus: { $nin: ['cancelled', 'payment pending'] } // Exclude both cancelled and payment pending orders
-          }
-      },
-      {
-          $group: {
-              _id: null, // No grouping by specific field, aggregate all matching documents
-              totalGrandTotal: { $sum: { $toDouble: "$grandTotal" } }, // Sum of grandTotal
-              totalOfferDiscount: { $sum: { $toDouble: "$couponDiscount" } }, // Sum of offerDiscount
-              totalAppliedOffers: {
-                  $sum: {
-                      $reduce: {
-                          input: "$productsDetails.appliedOffer", // Access appliedOffer inside productsDetails array
-                          initialValue: 0,
-                          in: { $add: ["$$value", { $toDouble: "$$this" }] } // Sum of appliedOffer in productsDetails
-                      }
-                  }
-              },
-              totalOrders: { $sum: 1 } // Total count of orders
-          }
-      }
-  ]);
+//   // Active users count
+//   const activeUsers = await userModel.countDocuments({ is_active: true });
+//   const donutData = [
+//     { value: 900, color: "#30a5ff", highlight: "#62b9fb", label: "Category A" },
+//     { value: 50, color: "#ffb53e", highlight: "#fac878", label: "Category B" },
+//     { value: 100, color: "#1ebfae", highlight: "#3cdfce", label: "Category C" },
+//     { value: 120, color: "#f9243f", highlight: "#f6495f", label: "Category D" }
+// ];
+//   // Fetch top selling products and categories
+//   // const topProducts = await getTopSellingProducts();
+//   // const topCategories = await getTopSellingCategories();
 
-  // Active users count
-  const activeUsers = await userModel.countDocuments({ is_active: true });
+//   // Log overall results
+//   console.log(overall[0]?.totalGrandTotal); // Added optional chaining for safety
 
-  // Fetch top selling products and categories
-  // const topProducts = await getTopSellingProducts();
-  // const topCategories = await getTopSellingCategories();
-
-  // Log overall results
-  console.log(overall[0]?.totalGrandTotal); // Added optional chaining for safety
-
-  // Render the admin dashboard with all data
-  res.render('include/index', {
-      title: 'admin_home',
-      data: overall[0], // Accessing the first element since we are using $group
-      activeUsers,
-      // topProducts,
-      // topCategories
-  });
+//   // Render the admin dashboard with all data
+//   res.render('admin/adminSample', {
+//       title: 'admin_home',
+//       data: overall[0], // Accessing the first element since we are using $group
+//       activeUsers,
+//       donutData,
+//       // topProducts,
+//       // topCategories
+//   });
     
+//   } catch (error) {
+//     console.log(error.message);
+//   }
+// })
+router.get('/500',(req,res)=>{
+  try {
+    res.render("user/500");
   } catch (error) {
-    console.log(error.message);
+    console.log(error);
   }
 })
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -151,34 +174,40 @@ router.post('/update-order-status', async (req, res) => {
 
 
 // Route to download the invoice
-router.post('/download-invoice', async (req, res) => {
-  try {
-      const { orderId } = req.body; // Ensure this gets the orderId from the request body
+// router.post('/download-invoice', async (req, res) => {
+//   try {
+//       const { orderId } = req.body; // Ensure this gets the orderId from the request body
 
-      // Check if orderId is provided
-      if (!orderId) {
-          return res.status(400).json({ message: 'Order ID is required' });
-      }
+//       // Check if orderId is provided
+//       if (!orderId) {
+//           return res.status(400).json({ message: 'Order ID is required' });
+//       }
 
-      // Find the order in the database
-      const order = await Order.findById(orderId).populate('user'); // Assuming order has a user relationship
-      if (!order) {
-          return res.status(404).json({ message: 'Order not found' });
-      }
+//       // Find the order in the database
+//       const order = await Order.findById(orderId).populate('user'); // Assuming order has a user relationship
+//       if (!order) {
+//           return res.status(404).json({ message: 'Order not found' });
+//       }
 
-      // Continue with invoice generation...
-  } catch (error) {
-      console.error('Error generating invoice:', error);
-      return res.status(500).json({ message: 'Internal server error' });
-  }
-});
-
-
+//       // Continue with invoice generation...
+//   } catch (error) {
+//       console.error('Error generating invoice:', error);
+//       return res.status(500).json({ message: 'Internal server error' });
+//   }
+// });
 
 
 
 
 
+
+router.get('/shop2', (req,res)=>{
+    try {
+        res.render("user/shop")
+    } catch (error) {
+       console.log(error.message); 
+    }
+})
 
 
 

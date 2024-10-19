@@ -56,7 +56,7 @@ const downloadInvoice = async (req, res) => {
                         <td>₹${product.price.toFixed(2)}</td>
                         <td>₹${(product.price - parseFloat(order.offerDiscount || 0)).toFixed(2)}</td>
                         <td>${product.quantity}</td>
-                        <td>₹${(product.price * product.quantity).toFixed(2)}</td>
+                        <td>₹${(product.price - parseFloat(order.offerDiscount || 0) * product.quantity).toFixed(2)}</td>
                     </tr>
                 `).join('')}
             </tbody>

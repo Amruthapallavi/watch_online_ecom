@@ -15,21 +15,13 @@ ADMIN LOGIN    </h1>
     <span style="color: black;" class="small-text">Let's get started!</span>
   </div>
   <div class="col login-form">
-         
-          <% 
-           
-            if(typeof message !=='undefined'){
-                %>
-                <button type="submit" value="verify"></button>
-
-               <%
-               
-            }
-          %>
-          <%
-          
-          
-          %>
+    
+      <% if (error) { %>
+             <p style="color: red;"> <%= error %> </p><!-- Display the error message -->
+      <% } %>
+      <!-- Your login form goes here -->
+  
+  
 
 
     <div class="avatar">

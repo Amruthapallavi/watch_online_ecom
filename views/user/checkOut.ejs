@@ -2,44 +2,116 @@
 
 <link rel="stylesheet" href="/css/checkOut.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.css">
+<style>
+    .product-summary-section {
+    margin-bottom: 20px;
+}
 
-<main>
-    <form action="/place-order" method="POST" class="form">
-        <section class="address-section">
-            <% addressData.forEach(data => { %>
-                <div class="address-card">
-                    <input type="radio" name="address" value="<%=data._id%>">
-                    <div class="address-details">
-                        <p> <%=data.name%>  <%=data.street%> <%=data.city%>, <%=data.locality %>, <%=data.city%>, <%=data.district%>, <%=data.pincode%></p>
-                        <p> Phone:<%=data.phone%>,<%=data.state%></p>
-                        <a href="/edit-address/<%=data._id%>" class="edit-address-btn" data-id="<%= data.id %>">Edit Address</a> 
+.product-summary-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.product-image {
+    flex: 1;
+}
+
+.product-details {
+    flex: 3;
+    padding-left: 10px;
+}
+
+.product-details p {
+    margin: 5px 0;
+}
+
+</style>
+<main class="checkout-container">
+    <form action="/place-order" method="POST" class="checkout-form">
+        <section class="checkout-content">
+            <div class="cart-section">
+                <div class="cart-details">
+                    <h3>Select Delivery Address</h3>
+                    <div class="address-section">
+                        <% addressData.forEach(data => { %>
+                            <div class="address-card">
+                                <input type="radio" name="address" value="<%=data._id%>" required>
+                                <div class="address-details">
+                                    <p><%=data.name%>, <%=data.street%>, <%=data.city%>, <%=data.locality %>, <%=data.district%>, <%=data.pincode%></p>
+                                    <p>Phone: <%=data.phone%>, <%=data.state%></p>
+                                    <a href="/edit-address/<%=data._id%>" class="edit-address-btn" data-id="<%= data.id %>">Edit Address</a>
+                                </div>
+                            </div>
+                        <% }) %>
+                        <button type="button" class="add-address-btn">
+                            <a href="/addresses" style="text-decoration: none; color: white;">Add new Address</a>
+                        </button>
                     </div>
                 </div>
-            <% }) %>
 
-            <button class="add-address-btn">
-                <a href="/addresses" style="text-decoration: none; color: white;">Add new Address</a>
-            </button>
-        </section>
 
-        <section class="order-summary">
-            <div class="summary-details">
-                <p>Subtotal: <%= grandTotal %>/-</p>
-                <p>coupon discount: -<%=couponDiscount%></p>
-                <p>Delivery charge: +<%= flat_rate%>/-</p>
-
-                <hr>
-                <h3>Total: ₹ <%= Math.round(grandTotal + 30 - couponDiscount) %></h3>
-                <input type="hidden" name="total" id="total" value="<%= Math.round(grandTotal + 30 - couponDiscount) %>">
+<!-- Order Summary -->
+<div class="summary-section" >
+    <div class="product-summary-section" >
+        <h3 style="text-align: center;">Product Summary</h3>
+        <% checkoutDetails.forEach(function(product) { %> <!-- Loop through the products -->
+        <div class="product-summary-item">
+            <div class="product-image">
+                <img src="/<%= product.image[0] %>" alt="<%= product.name %>" style="width: 80px; height: 80px;"> <!-- Product image -->
             </div>
+            <div class="product-details">
+                <p><strong><%= product.name %></strong></p>
+                <p>Quantity: <%= product.checkoutQuantity %></p>
+                <p>Price: ₹ <%= product.totalPrice %></p>
+                <% if (product.appliedOffer) { %>
+                    <p>Discounted Price: ₹ <%= product.price - product.appliedOffer %></p>
+                <% } %>
+            </div>
+        </div>
+        <hr> <!-- Optional separator -->
+        <% }); %>
+    </div>
+    <h3 style="text-align: center;">Order Summary</h3>
+    <div class="summary-details">
+        <p class="summary-item">
+            <span class="summary-label">Subtotal:</span> 
+            <span id="subtotal" class="summary-value">₹ <%= grandTotal %></span>
+        </p>
+        <p class="summary-item">
+            <span class="summary-label">Coupon discount:</span> 
+            <span id="discount" class="summary-value">-₹ <%= couponDiscount %></span>
+        </p>
+        <p class="summary-item">
+            <span class="summary-label">Delivery charge:</span> 
+            <span id="delivery-charge" class="summary-value">+₹ <%= flat_rate %></span>
+        </p>
+        <hr>
+        <h3 class="summary-item total">
+            <span class="summary-label">Total:</span>
+            <span id="totalAmount" class="summary-value">₹<%= Math.round(grandTotal + flat_rate - couponDiscount) %></span>
+        </h3>
+        <input type="hidden" name="total" id="total" value="<%= Math.round(grandTotal + flat_rate - couponDiscount) %>">
+    </div>
+</div>
+
+                
+</div>
         </section>
 
         <section class="payment-section">
-            <h2>Payment</h2>
-            <h3>Select payment method</h3>
+            <h3>Apply Coupon</h3>
+            <div class="coupon-section">
+                <input type="text" id="couponCode" placeholder="Enter code" class="coupon-input">
+                <button id="removeCouponBtn" class="styled-remove-coupon-btn" style="display: none; color: red;" onclick="removeCoupon()">REMOVE COUPON</button>
+                <button class="apply-coupon-btn" id="applyCouponBtn" onclick="applyCoupon()">APPLY</button>
+                
+                <button type="button"><a href="/coupons" style="text-decoration: none; color: white;">View Coupons</a></button>
+            </div>
+            <h3>Select Payment Method</h3>
             <div class="payment-option">
-                <input type="radio" name="payment" id="wallet" value="wallet">
-                <label for="wallet">Wallet - Available Amount: <span style="color: green;"><b><%=walletAmount%> /-</b></span></label>
+                <input type="radio" name="payment" id="wallet" value="wallet" required>
+                <label for="wallet">Wallet - Available Amount: <span style="color: green;"><b><%= walletAmount %> /-</b></span></label>
             </div>
             <div class="payment-option">
                 <input type="radio" name="payment" id="razorpay" value="razorpay">
@@ -53,22 +125,14 @@
                 <input type="radio" name="payment" id="cod" value="COD">
                 <label for="cod">Cash on Delivery / Pay on delivery</label>
             </div>
-            <button type="button" class="place-order-btn">Place Your Order</button>
+            <button type="submit" class="place-order-btn">Place Your Order</button>
         </section>
     </form>
 </main>
 
-<footer>
-    <div class="footer-content">
-        <div class="about">Tick-Tock</div>
-        <ul class="footer-links">
-            <li><a href="#">About Us</a></li>
-            <li><a href="#">Help Center</a></li>
-            <li><a href="#">Contact Us</a></li>
-            <li><a href="#">Blog</a></li>
-        </ul>
-    </div>
-</footer>
+
+
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.js"></script>
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
@@ -79,6 +143,10 @@ document.querySelector('.place-order-btn').addEventListener('click', (event) => 
     const addressSelected = document.querySelector('input[name="address"]:checked');
     const paymentSelected = document.querySelector('input[name="payment"]:checked');
     const totalAmount = document.getElementById('total').value;
+    
+    // Get coupon details
+    const couponCode = document.querySelector('.coupon-input').value.trim() || null; // Get coupon code or set to null if not applied
+    const couponDiscount = parseFloat(document.getElementById('discount').innerText) || 0; // Get discount amount or set to 0 if not applied
 
     if (!addressSelected) {
         swal("No Address Selected", "Please select a delivery address", "error");
@@ -95,10 +163,13 @@ document.querySelector('.place-order-btn').addEventListener('click', (event) => 
         return;
     }
 
+    // Prepare form data with coupon details
     const formData = {
         address: addressSelected.value,
         payment: paymentSelected.value,
-        total: totalAmount
+        total: totalAmount,
+        couponCode: couponCode,        // Include coupon code (null if not applied)
+        couponDiscount: couponDiscount  // Include discount (0 if not applied)
     };
 
     if (paymentSelected.value === 'razorpay') {
@@ -111,11 +182,10 @@ document.querySelector('.place-order-btn').addEventListener('click', (event) => 
         })
         .then(res => res.json())
         .then(data => {
-
             console.log('Razorpay Order Response:', data);
             if (data.success && data.order_id) {
                 const options = {
-                    key: 'rzp_test_AnrHnaf2vgMvpI', 
+                    key: data.key_id, 
                     amount: data.amount, 
                     currency: data.currency,
                     name: data.name,
@@ -133,7 +203,7 @@ document.querySelector('.place-order-btn').addEventListener('click', (event) => 
                                 razorpay_order_id: response.razorpay_order_id,
                                 razorpay_signature: response.razorpay_signature,
                                 address: addressSelected.value,
-                                orderId:data.orderId,
+                                orderId: data.orderId,
                             })
                         })
                         .then(res => res.json())
@@ -144,28 +214,37 @@ document.querySelector('.place-order-btn').addEventListener('click', (event) => 
                                     window.location.href = '/order-success'; // Redirect to order success page
                                 });
                             } else {
-                                swal("Payment Failed", "Payment verification failed. Your order status is pending.", "error")
-                                .then(() => {
-                                    window.location.href = '/my-orders'; // Redirect to orders page
-                                });
-                            }
+                            swal("Payment Failed", "Payment verification failed. Your order status is pending.", "error")
+                            .then(() => {
+                                window.location.href = '/my-orders'; // Redirect to orders page
+                            });
+                        }
+                    });
+                },
+                prefill: {
+                    name: data.name,
+                    email: data.email,
+                    contact: data.contact
+                },
+                theme: {
+                    color: '#F37254'
+                },
+                // If the payment modal is closed without completing the payment
+                modal: {
+                    ondismiss: function () {
+                        // Redirect to the order-failed page
+                        swal("Payment Incomplete", "You did not complete the payment. Your order could not be processed.", "error")
+                        .then(() => {
+                            window.location.href = '/order-failed'; // Redirect to order-failed page
                         });
-                    },
-                    prefill: {
-                        name: data.name,
-                        email: data.email,
-                        contact: data.contact
-                    },
-                    theme: {
-                        color: '#F37254'
                     }
-                };
+                }
+            };
 
-                // Open Razorpay payment modal
-                const rzp = new Razorpay(options);
-                rzp.open();
-               
-            }
+            // Open Razorpay payment modal
+            const rzp = new Razorpay(options);
+            rzp.open();
+        }
         });
     } else if (paymentSelected.value === 'wallet') {
         // Handle wallet payment
@@ -192,7 +271,8 @@ document.querySelector('.place-order-btn').addEventListener('click', (event) => 
         fetch('/place-order', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',            },
+                'Content-Type': 'application/json',
+            },
             body: JSON.stringify(formData)
         })
         .then(res => res.json())
@@ -201,7 +281,6 @@ document.querySelector('.place-order-btn').addEventListener('click', (event) => 
                 swal("Order Placed", `Your order has been placed successfully! Order ID: ${data.orderId}`, "success")
                 .then(() => {
                     window.location.href = '/order-success'; 
-                    
                 });
             } else {
                 swal("Order Failed", "There was an issue placing your order. Please try again.", "error");
@@ -209,6 +288,85 @@ document.querySelector('.place-order-btn').addEventListener('click', (event) => 
         });
     }
 });
-</script>
+
+//coupon
+
+
+async function applyCoupon() {
+    const couponCode = document.querySelector('.coupon-input').value;
+    const grandTotal = parseFloat(document.getElementById('subtotal').innerText.replace('₹ ', '').replace(',', '')); // Get subtotal value
+
+    if (!couponCode.trim()) {
+        swal('Error', 'Please enter a coupon code.', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch('/apply-coupon', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ couponCode, grandTotal }) // Send coupon code and grand total
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // Update the summary
+            updateSummary(data.discountAmount, grandTotal, data.flat_rate); // Pass flat rate if needed
+
+            // Show Remove Coupon button and hide Apply Coupon button
+            document.getElementById('removeCouponBtn').style.display = 'inline-block';
+            document.getElementById('applyCouponBtn').style.display = 'none';
+
+            swal('Success', data.message, 'success');
+        } else {
+            swal('Error', data.message, 'error');
+        }
+    } catch (error) {
+        console.error('Error applying coupon:', error);
+        swal('Error', 'There was an issue applying the coupon. Please try again later.', 'error');
+    }
+}
+function removeCoupon() {
+    // Reset the discount amount to 0
+    const discountAmount = 0; // Reset discount amount to 0
+    const flatRate = 30; // Assuming delivery charge is a constant
+
+    // Get the original grand total before any coupon was applied
+    const grandTotal = parseFloat(document.getElementById('subtotal').innerText.replace('₹ ', '').replace(',', '')); // Get the original subtotal value
+
+    // Update the summary to reflect the removal of the coupon
+    updateSummary(discountAmount, grandTotal, flatRate); // Update summary without discount
+
+    // Clear the coupon input field
+    document.querySelector('.coupon-input').value = ''; // Clear the input field
+
+    // Hide Remove Coupon button and show Apply Coupon button again
+    document.getElementById('removeCouponBtn').style.display = 'none'; // Hide remove button
+    document.getElementById('applyCouponBtn').style.display = 'inline-block'; // Show apply button
+
+    // Show success alert for removing coupon
+    swal('Success', 'Coupon has been removed.', 'success');
+}
+
+
+
+function updateSummary(discountAmount, grandTotal, flatRate) {
+    // Calculate the total amount based on discount and flat rate
+    const totalAmount = grandTotal - discountAmount + flatRate;
+
+    // Update the discount, grand total, and total amount in the summary section
+    document.getElementById('discount').innerText = discountAmount.toFixed(2);
+    document.getElementById('totalAmount').innerText = totalAmount.toFixed(2);
+    document.getElementById('total').value = totalAmount.toFixed(2); // Update hidden total input
+}
+
+
+
+
+ </script>
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 
 <%- include('../include/userFooter') %>

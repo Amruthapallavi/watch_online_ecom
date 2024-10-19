@@ -104,7 +104,6 @@
         display: none;
     }
 </style>
-
 <div class="container">
     <header>
         <h1>My Account</h1>
@@ -114,16 +113,10 @@
     </header>
 
     <section class="profile">
-        <!-- <div class="profile-icon">
-            <img src="" alt="User Icon">
-            <p class="email"></p>
-        </div> -->
         <div class="user-details">
             <h2>Name: <%= data.name %></h2>
             <h4>Email: <%= data.email %></h4>
             <h4>Contact No: <%= data.phone %></h4>
-            <p><%= address.house_no %>, <%= address.street %>, <%= address.locality %>, <%= address.city %>, <%= address.district %></p>
-            <p><%= address.pincode %>, <%= address.state %></p>
             <button id="edit-profile-btn">Edit Profile</button>
         </div>
     </section>
@@ -142,19 +135,123 @@
         </form>
     </section>
 
-    <section class="orders">
-        <h3>Your Orders</h3>
-        <div class="order">
-            <p>Order #12345 - <span class="status">Shipped</span></p>
+    <!-- <section class="orders">
+        <h3>Refer Your Friends and Get 100 RPs!</h3>
+        <div class="referral-code-container">
+            <span class="referral-text">Your Referral Code:</span>
+            <input type="text" id="referral-code" value="<= data.referralCode %>" readonly>
+            <button class="copy-btn" onclick="copyReferralCode()">Copy</button>
         </div>
-        <div class="order">
-            <p>Order #12346 - <span class="status">Delivered</span></p>
-        </div>
-        <div class="order">
-            <p>Order #12347 - <span class="status">Processing</span></p>
-        </div>
-    </section>
+    </section> -->
 </div>
+
+<!-- Add SweetAlert -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    function copyReferralCode() {
+        const referralCodeInput = document.getElementById('referral-code');
+        referralCodeInput.select();
+        referralCodeInput.setSelectionRange(0, 99999); // For mobile devices
+        
+        navigator.clipboard.writeText(referralCodeInput.value)
+            .then(() => {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Copied!',
+                    text: 'Referral code copied to clipboard.',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+            })
+            .catch(err => {
+                console.error('Failed to copy: ', err);
+            });
+    }
+</script>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 0;
+    }
+
+    .container {
+        max-width: 800px;
+        margin: 20px auto;
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    header h1 {
+        text-align: center;
+        color: #333;
+    }
+
+    .profile, .edit-profile-form, .orders {
+        margin-bottom: 20px;
+    }
+
+    .user-details h2, .user-details h4 {
+        color: #555;
+    }
+
+    #edit-profile-btn {
+        padding: 10px 15px;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    #edit-profile-btn:hover {
+        background-color: #0056b3;
+    }
+
+    .referral-code-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 10px;
+    }
+
+    .referral-text {
+        font-weight: bold;
+        margin-right: 10px;
+    }
+
+    #referral-code {
+        border: 1px solid #ccc;
+        padding: 10px;
+        border-radius: 5px;
+        width: 200px;
+        text-align: center;
+    }
+
+    .copy-btn {
+        padding: 10px 15px;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        margin-left: 10px;
+        cursor: pointer;
+    }
+
+    .copy-btn:hover {
+        background-color: #218838;
+    }
+
+    .error-message {
+        color: red;
+        display: none; /* Adjust this as needed */
+    }
+</style>
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     // Show/Hide Edit Profile Form

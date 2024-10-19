@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { redeemReferralCode } = require('../controllers/userController');
 const userSchema = new mongoose.Schema({
 
   name : {
@@ -38,7 +39,17 @@ const userSchema = new mongoose.Schema({
     type : mongoose.Schema.Types.ObjectId ,
   },
   
-  
+  referralCode:{
+    type:String,
+    unique:true,
+  },
+  redeemReferralCodeBy:{
+  type: mongoose.Schema.Types.ObjectId,
+  },
+  referralCodeRedeemed:{
+    type:Boolean,
+    default:false,
+  }
 });
 
 userSchema.methods.generateHash = function(password) {

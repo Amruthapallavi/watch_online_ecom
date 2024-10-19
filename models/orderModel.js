@@ -17,20 +17,56 @@ const orderSchema = new mongoose.Schema({
   orderStatus: {
     type: String,
     required: true,
-    enum: ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled']
+    enum: ['Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled','payment pending']
   },
-  productsDetails :[{
-    productId :{
-      type :  mongoose.Schema.Types.ObjectId,
-      required : true
+  productsDetails: [{
+    productId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true
     },
-
-
-    quantity : {
-      type : Number,
-      required : true
+    quantity: {
+      type: Number,
+      required: true
+    },
+    productOrderStatus:{
+      type:String,
+      required:true,
+    },
+    price:{
+      type:Number,
+      required:true,
+    },
+    appliedOffer:{
+      type:Number,
+      default:0,
+    },
+    offerPrice:{
+      type:Number,
+      required:true,
+    },
+    couponDiscount:{
+      type:Number,
+      default:0,
+    },
+    isCanceled: {
+      type: Boolean,
+      default: false
+    },
+    isReturned: {
+      type: Boolean,
+      default: false
+    },
+    cancellationReason: {
+      type: String
+    },
+    returnReason: {
+      type: String
     },
     
+    refundAmount: {
+      type: Number,
+      default: 0
+    },
   }],
 
   paymentDetails :{
@@ -88,6 +124,10 @@ const orderSchema = new mongoose.Schema({
     offerDiscount:{
    type:Number,
    default:0,
+    },
+    refundAmount:{
+      type:Number,
+      default:0,
     },
     placedAt: { type: Date, default: Date.now }
 

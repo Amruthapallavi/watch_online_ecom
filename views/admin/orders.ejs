@@ -39,7 +39,6 @@
     <% if (orders) { %>
       <% orders.forEach((item) => { %>
         <% if (item.cancelRequested === true) { %>
-          <div style="position: absolute; height: 10px; width: 10px;" class="rounded-circle bg-danger"></div>
         <% } %>
       <% }) %>
     <% } %>
@@ -62,15 +61,15 @@
     <tbody>
       <% orders.forEach((item) => { %>
         <tr>
-          <td style="text-transform: capitalize;"><%= item.user.name %></td>
-          <td><%= item.user.phone %></td>
-          <td><%= item.grandTotal %></td>
+          <td style="text-transform: capitalize;"><%= item.user_name %></td>
+          <td><%= item.user_phone %></td>
+          <td><%= item.offerPrice %></td>
           <td><%= String(item.placedAt).split(' ').slice(0, 4).join(' ') %></td>
-          <td class="<%= item.orderStatus === 'confirmed' ? 'text-success' : item.orderStatus === 'pending' ? 'text-warning' : item.orderStatus === 'cancelled' ? 'text-danger' : 'text-primary' %>">
-            <%= item.orderStatus %>
+          <td class="<%= item.productStatus === 'Confirmed' ? 'text-success' : item.productStatus === 'pending' ? 'text-warning' : item.productStatus === 'Cancelled' ? 'text-danger' : 'text-warning' %>">
+            <%= item.productStatus %>
           </td>
           <td class="d-flex">
-            <a href="/AdminOrderDetails/<%= item._id %>" style="text-decoration: none;">
+            <a href="/AdminOrderDetails?orderId=<%= item._id %>&productId=<%= item.productId %>" style="text-decoration: none;">
               <i class="fa-solid fa-circle-info ms-3">Edit</i>
             </a>
           </td>
