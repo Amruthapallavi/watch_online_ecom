@@ -16,8 +16,8 @@ const orderSchema = new mongoose.Schema({
 
   orderStatus: {
     type: String,
-    required: true,
-    enum: ['Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled','payment pending']
+  //   required: true,
+  //   enum: ['Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled','payment pending']
   },
   productsDetails: [{
     productId: {

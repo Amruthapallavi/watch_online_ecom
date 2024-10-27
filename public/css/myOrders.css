@@ -1,0 +1,67 @@
+    .status-delivered {
+    color: green;
+}
+.status-Confirmed {
+    color: green;
+}
+.status-cancelled {
+    color: red;
+}
+
+.status-other {
+    color: orange;
+}
+    .order-card {
+        border: 1px solid #ddd;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 10px;
+        background-color: #f9f9f9;
+    }
+
+    .order-info {
+        margin-bottom: 10px;
+        font-size: 1.1em;
+    }
+
+    .product-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid #ccc;
+        padding: 10px 0;
+    }
+
+    .product-details {
+        flex-grow: 1;
+        margin-left: 20px;
+    }
+
+    .product-details p {
+        margin: 0;
+        font-size: 0.9em;
+    }
+
+    .order-actions {
+        text-align: right;
+        margin-top: 10px;
+    }
+
+    .order-actions button {
+        padding: 10px 20px;
+        background-color: #333;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .order-actions button:hover {
+        background-color: #555;
+    }
+
+    .product-img {
+        max-width: 80px;
+        border-radius: 5px;
+    }
+

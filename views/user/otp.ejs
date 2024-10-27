@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTP Verification</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .otp-container {
+            background-color: #fff;
+            padding: 30px;
+            width: 100%;
+            max-width: 400px;
+            border-radius: 10px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        .otp-input {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .otp-input input {
+            width: 18%;
+            padding: 15px;
+            font-size: 24px;
+            text-align: center;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .otp-input input:focus {
+            border-color: #333;
+        }
+        .btn {
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #555;
+        }
+        .toggle-btn {
+            background: none;
+            border: none;
+            color: #007bff;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 14px;
+            text-decoration: underline;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+    <div class="otp-container">
+        <h2>OTP Verification</h2>
+        <button type="button" id="toggleOtp" class="toggle-btn">
+            <span id="eye-icon">👁️</span>
+        </button>
+        <br><br>
+        <br>
+        
+        <form id="otpForm" action="/postotp" method="post">
+            <div class="otp-input">
+                <input type="password" id="digit1" maxlength="1" name="otp[]" required>
+                <input type="password" id="digit2" maxlength="1" name="otp[]" required>
+                <input type="password" id="digit3" maxlength="1" name="otp[]" required>
+                <input type="password" id="digit4" maxlength="1" name="otp[]" required>
+            </div>
+            <button type="submit" class="btn">Verify OTP</button>
+           
+        </form>
+
+        <div class="mt-3">
+            <a id="resend-tag" class="link" href="/profileResendOTP" onclick="return false;">Resend OTP</a>
+            <span class="timer ms-2" id="countdown">120</span>
+        </div>
+
+        <div class="mt-3">
+            <small>By clicking continue, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></small>
+        </div>
+    </div>
+<script src="/js/otp.js"></script>
+</body>
+
+
+</html>

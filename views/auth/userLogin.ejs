@@ -20,7 +20,7 @@ welcome    </h1>
            
             if(typeof message !=='undefined'){
                 %>
-               <h4 style="color: red;"> <%= message %> </h4>
+               <h4 style="color: red;"> Please Login to continue </h4>
                <%
                
             }
@@ -28,6 +28,19 @@ welcome    </h1>
 
           
           %> 
+          <%
+           
+           if(typeof invalid !=='undefined'){
+               %>
+              <h4 style="color: red;"> <%=invalid%> </h4>
+              <%
+              
+           }
+         
+
+         
+         %> 
+
        
 
     <div class="avatar">

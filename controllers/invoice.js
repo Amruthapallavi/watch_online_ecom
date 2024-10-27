@@ -7,11 +7,50 @@ const downloadInvoice = async (req, res) => {
     
     // Extract order and user details from the request body
     const { order, user, address } = req.body;
-
+    console.log('Products:', order.products);
+    const subTotal = order.products.reduce((accumulator, product) => {
+        // Calculate the total price for the current product
+        const productTotal = product.offerPrice * product.quantity;
+        return accumulator + productTotal; // Accumulate the total price
+    }, 0); // Start with 0
+    
+    console.log('Subtotal:', subTotal);
+    const totalCouponDiscount = order.products.reduce((accumulator, product) => {
+        // Ensure the couponDiscount exists, otherwise treat as 0
+        const productCouponDiscount = product.couponDiscount || 0; 
+        return accumulator + productCouponDiscount; // Accumulate the coupon discounts
+    }, 0); // Start with 0
+    
+    console.log('Total Coupon Discount:', totalCouponDiscount);
+    
     if (!order || !user) {
         return res.status(400).json({ error: 'Order or user information is missing.' });
     }
+    const foundOrder = await orderModel.findOne({ 'paymentDetails.orderId': order.orderId });
 
+    if (!foundOrder) {
+        return res.status(404).json({ error: 'Order not found.' });
+    }
+
+    // Retrieve the product details from the found order
+    // const productDetails = foundOrder.products.filter(product => 
+    //     product.productOrderStatus !== 'Cancelled' && product.productOrderStatus !== 'Return'
+    // );
+
+    // Prepare the data for PDF generation
+    const invoiceData = {
+        orderId: foundOrder.paymentDetails.orderId,
+        userName: user.name,
+        userEmail: user.email,
+        address: address,
+        products: order.products,
+        grandTotal: subTotal,
+        deliveryCharges: 0, // Adjust if necessary
+        couponApplied: totalCouponDiscount || 'No Coupon Applied',
+        offerDiscount: Number(foundOrder.offerDiscount) || 0,
+        placedAt: foundOrder.placedAt
+    };
+  console.log(invoiceData,"dtaassss");
     // Prepare the HTML for the PDF using EJS
     const htmlContent = `
     <html>
@@ -36,7 +75,7 @@ const downloadInvoice = async (req, res) => {
         <p><strong>Order ID:</strong> ${order.orderId}</p>
         <p><strong>Customer Name:</strong> ${user.name}</p>
         <p><strong>Customer Email:</strong> ${user.email}</p>
-        <p><strong>Order Date:</strong> ${new Date(order.placedAt).toLocaleString()}</p>
+        <p><strong>Order Date:</strong> ${order.placedAt}</p>
         <p><strong>Delivery Address:</strong> H.No: ${address.house_no}, ${address.street}, ${address.city}, ${address.district} </p><p> ${address.state}, ${address.pincode}</p>
         
         <table>
@@ -50,13 +89,13 @@ const downloadInvoice = async (req, res) => {
                 </tr>
             </thead>
             <tbody>
-                ${order.products.map(product => `
+                ${invoiceData.products.map(product => `
                     <tr>
                         <td>${product.pname}</td>
                         <td>₹${product.price.toFixed(2)}</td>
-                        <td>₹${(product.price - parseFloat(order.offerDiscount || 0)).toFixed(2)}</td>
+                        <td>₹${(product.offerPrice)}</td>
                         <td>${product.quantity}</td>
-                        <td>₹${(product.price - parseFloat(order.offerDiscount || 0) * product.quantity).toFixed(2)}</td>
+                        <td>₹${(product.offerPrice * product.quantity).toFixed(2)}</td>
                     </tr>
                 `).join('')}
             </tbody>
@@ -65,19 +104,19 @@ const downloadInvoice = async (req, res) => {
         <table class="summary">
             <tr>
                 <td><strong>Subtotal:</strong></td>
-                <td>₹${(order.grandTotal - order.deliveryCharges).toFixed(2)}</td>
+                <td>₹${subTotal}</td>
             </tr>
             <tr>
                 <td><strong>Delivery Charges:</strong></td>
-                <td>₹${order.deliveryCharges.toFixed(2)}</td>
+                <td>₹${(order.deliveryCharges)}</td>
             </tr>
             <tr>
                 <td><strong>Coupon Applied:</strong></td>
-                <td>${order.couponApplied}</td>
+                <td>${totalCouponDiscount}</td>
             </tr>
             <tr class="total-row">
                 <td><strong>Total Amount:</strong></td>
-                <td>₹${order.grandTotal.toFixed(2)}</td>
+<td>₹${(Math.round((subTotal - totalCouponDiscount) * 100) / 100).toFixed(2)}</td>
             </tr>
         </table>
 

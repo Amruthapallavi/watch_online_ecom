@@ -568,3 +568,26 @@ hr {
     }
 }
 
+    .product-summary-section {
+    margin-bottom: 20px;
+}
+
+.product-summary-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.product-image {
+    flex: 1;
+}
+
+.product-details {
+    flex: 3;
+    padding-left: 10px;
+}
+
+.product-details p {
+    margin: 5px 0;
+}
+

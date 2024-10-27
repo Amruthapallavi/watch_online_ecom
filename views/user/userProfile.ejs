@@ -2,19 +2,42 @@
 
 <link rel="stylesheet" href="/css/userProfile.css">
 <style>
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Arial', sans-serif;
+        background-color: #fffefe;
+        color: #010101;
+    }
+
+    /* .banner {
+        width: 100%;
+        background-color: #333;
+        padding: 20px;
+        text-align: center;
+        color: white;
+        font-size: 1.5rem;
+        margin-bottom: 20px;
+        border-bottom: 2px solid white;
+    } */
+
     .container {
-        max-width: 800px;
+        max-width: 850px;
         margin: 0 auto;
         padding: 20px;
-        font-family: 'Arial', sans-serif;
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: 0 8px 15px rgba(4, 4, 4, 0.1);
+        color: rgb(7, 7, 7);
     }
-    
+
     header h1 {
-        font-size: 2.5rem;
-        color: #333;
+        font-size: 2rem;
         text-align: center;
         margin-bottom: 20px;
         text-transform: capitalize;
+        border-bottom: 1px solid #0b0b0b;
+        padding-bottom: 10px;
     }
 
     .profile {
@@ -28,56 +51,58 @@
         border-radius: 50%;
         margin-bottom: 10px;
         object-fit: cover;
-        border: 2px solid #ddd;
+        border: 3px solid #fff;
     }
 
     .user-details h2, .user-details h4 {
-        font-size: 1.3rem;
-        color: #555;
+        font-size: 1.2rem;
+        color: rgb(0, 0, 0);
         margin-bottom: 10px;
     }
 
-    .user-details p {
-        color: #777;
-        font-size: 1rem;
-    }
-
-    button {
-        background-color: #5cb85c;
-        color: white;
+    .user-details button {
+        background-color: black;
+        color: rgb(254, 254, 254);
         padding: 10px 20px;
         border: none;
-        border-radius: 5px;
+        border-radius: 6px;
         cursor: pointer;
         font-size: 1rem;
-        margin-top: 20px;
+        margin-top: 15px;
         transition: background-color 0.3s ease;
+
     }
 
-    button:hover {
-        background-color: #4cae4c;
+    .user-details button:hover {
+        background-color: #e9e9e9;
+        color: black;
+        
     }
 
     .edit-profile-form {
-        margin-top: 40px;
+        margin-top: 30px;
         padding: 20px;
-        border-radius: 8px;
-        background: #f9f9f9;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        border-radius: 12px;
+        background: #333;
+        color: white;
+        box-shadow: 0 8px 20px rgba(255, 255, 255, 0.1);
     }
 
     .edit-profile-form h3 {
         text-align: center;
         margin-bottom: 20px;
-        font-size: 1.8rem;
+        font-size: 1.5rem;
+        color: white;
     }
 
     .edit-profile-form input[type="text"], .edit-profile-form input[type="number"], .edit-profile-form input[type="email"] {
         width: 100%;
         padding: 10px;
         margin: 10px 0;
-        border: 1px solid #ccc;
-        border-radius: 4px;
+        border: 1px solid #555;
+        border-radius: 6px;
+        background-color: #000;
+        color: white;
     }
 
     .form-group {
@@ -85,17 +110,77 @@
     }
 
     .form-group input[type="submit"] {
-        background-color: #007bff;
-        color: white;
+        background-color: #fff;
+        color: black;
         padding: 10px 20px;
         border: none;
-        border-radius: 5px;
+        border-radius: 6px;
         cursor: pointer;
         font-size: 1rem;
     }
 
     .form-group input[type="submit"]:hover {
-        background-color: #0056b3;
+        background-color: #555;
+        color: white;
+    }
+
+    .change-password-btn {
+        background-color: #555;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 1rem;
+        margin-top: 15px;
+
+        transition: background-color 0.3s ease;
+    }
+
+    .change-password-btn:hover {
+        background-color: #fff;
+        color: rgb(17, 17, 17);
+    }
+
+    .referral-code-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 15px;
+        color: white;
+    }
+
+    .referral-text {
+        font-weight: bold;
+        margin-right: 10px;
+        color: black;
+    }
+
+    #referral-code {
+        border: 1px solid #555;
+        padding: 10px;
+        border-radius: 5px;
+        width: 200px;
+        text-align: center;
+        background-color: rgb(227, 225, 225);
+        color: black;
+    }
+
+    .copy-btn {
+        padding: 10px 15px;
+background: transparent;
+        color: black;
+        border: none;
+        border-radius: 5px;
+        margin-left: 10px;
+        cursor: pointer;
+        border: 1px solid black;
+        transition: background-color 0.3s ease;
+    }
+
+    .copy-btn:hover {
+        background-color: #555;
+        color: white;
     }
 
     .error-message {
@@ -103,13 +188,40 @@
         font-size: 0.9rem;
         display: none;
     }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .container {
+            padding: 15px;
+        }
+
+        header h1 {
+            font-size: 1.8rem;
+        }
+
+        .user-details h2, .user-details h4 {
+            font-size: 1rem;
+        }
+
+        .edit-profile-form h3 {
+            font-size: 1.3rem;
+        }
+
+        .referral-text {
+            font-size: 0.9rem;
+        }
+
+        #referral-code {
+            width: 150px;
+        }
+    }
 </style>
+
+
+
 <div class="container">
     <header>
         <h1>My Account</h1>
-        <!-- < if (typeof message !== 'undefined') { %>
-           <p style="color: red;"><= message %></p>
-        < } %> -->
     </header>
 
     <section class="profile">
@@ -118,6 +230,7 @@
             <h4>Email: <%= data.email %></h4>
             <h4>Contact No: <%= data.phone %></h4>
             <button id="edit-profile-btn">Edit Profile</button>
+            <button class="change-password-btn" id="change-password-btn">Change Password</button>
         </div>
     </section>
 
@@ -135,14 +248,14 @@
         </form>
     </section>
 
-    <!-- <section class="orders">
+    <section class="orders">
         <h3>Refer Your Friends and Get 100 RPs!</h3>
         <div class="referral-code-container">
             <span class="referral-text">Your Referral Code:</span>
-            <input type="text" id="referral-code" value="<= data.referralCode %>" readonly>
+            <input type="text" id="referral-code" value="<%= data.referralCode %>" readonly>
             <button class="copy-btn" onclick="copyReferralCode()">Copy</button>
         </div>
-    </section> -->
+    </section>
 </div>
 
 <!-- Add SweetAlert -->
@@ -151,8 +264,8 @@
     function copyReferralCode() {
         const referralCodeInput = document.getElementById('referral-code');
         referralCodeInput.select();
-        referralCodeInput.setSelectionRange(0, 99999); // For mobile devices
-        
+        referralCodeInput.setSelectionRange(0, 99999);
+
         navigator.clipboard.writeText(referralCodeInput.value)
             .then(() => {
                 Swal.fire({
@@ -167,93 +280,7 @@
                 console.error('Failed to copy: ', err);
             });
     }
-</script>
 
-<style>
-    body {
-        font-family: Arial, sans-serif;
-        background-color: #f4f4f4;
-        margin: 0;
-        padding: 0;
-    }
-
-    .container {
-        max-width: 800px;
-        margin: 20px auto;
-        background: #fff;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    }
-
-    header h1 {
-        text-align: center;
-        color: #333;
-    }
-
-    .profile, .edit-profile-form, .orders {
-        margin-bottom: 20px;
-    }
-
-    .user-details h2, .user-details h4 {
-        color: #555;
-    }
-
-    #edit-profile-btn {
-        padding: 10px 15px;
-        background-color: #007bff;
-        color: #fff;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-    }
-
-    #edit-profile-btn:hover {
-        background-color: #0056b3;
-    }
-
-    .referral-code-container {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-top: 10px;
-    }
-
-    .referral-text {
-        font-weight: bold;
-        margin-right: 10px;
-    }
-
-    #referral-code {
-        border: 1px solid #ccc;
-        padding: 10px;
-        border-radius: 5px;
-        width: 200px;
-        text-align: center;
-    }
-
-    .copy-btn {
-        padding: 10px 15px;
-        background-color: #28a745;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        margin-left: 10px;
-        cursor: pointer;
-    }
-
-    .copy-btn:hover {
-        background-color: #218838;
-    }
-
-    .error-message {
-        color: red;
-        display: none; /* Adjust this as needed */
-    }
-</style>
-
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
     // Show/Hide Edit Profile Form
     document.getElementById('edit-profile-btn').addEventListener('click', function() {
         const profileForm = document.getElementById('edit-profile-form');
@@ -263,7 +290,7 @@
     // Frontend Validation
     document.getElementById('profile-form').addEventListener('submit', function(event) {
         let isValid = true;
-        
+
         // Name Validation
         const nameInput = document.getElementById('edit-name');
         const nameError = document.getElementById('name-error');
@@ -285,40 +312,73 @@
         }
 
         if (!isValid) {
-            event.preventDefault(); // Prevent form submission if validation fails
+            event.preventDefault();
         }
     });
 
-    // Display SweetAlert if there is a message from the backend
-    <% if (typeof message !== 'undefined') { %>
-        const errorMessage = "<%= message %>";
-        const errorType = "<%= errorType %>";
-        
-        if (errorType === 'email') {
-            Swal.fire({
-                icon: 'error',
-                title: 'Oops...',
-                text: 'Email already exists!',
-            });
-        } else if (errorType === 'phone') {
-            Swal.fire({
-                icon: 'error',
-                title: 'Oops...',
-                text: 'Phone number already exists!',
-            });
+    document.getElementById('change-password-btn').addEventListener('click', function(event) {
+    event.preventDefault(); // Prevent the default anchor behavior
+
+    Swal.fire({
+        title: 'Enter Registered Email',
+        html: `
+            <input type="email" id="email-input" class="swal2-input" placeholder="Your email address" style="color: black;">
+            <div id="email-error" style="display:none; color: red; font-size: 0.9rem; margin-top: 5px;">Please enter a valid email.</div>
+        `,
+        background: '#fff', // White background
+        color: '#000', // Black text for contrast
+        confirmButtonText: 'Submit',
+        confirmButtonColor: '#000', // Black confirm button
+        cancelButtonColor: '#555', // Gray cancel button
+        cancelButtonText: 'Cancel',
+        showCancelButton: true,
+        customClass: {
+            popup: 'popup-class'
+        },
+        preConfirm: () => {
+            const email = document.getElementById('email-input').value;
+            const emailError = document.getElementById('email-error');
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+            if (!emailRegex.test(email)) {
+                emailError.style.display = 'block'; // Show error message
+                return false; // Prevent the form from submitting
+            } else {
+                emailError.style.display = 'none'; // Hide error message if valid
+
+                // Send email to backend to check if it's registered using fetch
+                return fetch('/verify-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email: email })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        return email; // If email is found
+                    } else {
+                        Swal.showValidationMessage('Email not registered');
+                        return false;
+                    }
+                })
+                .catch(error => {
+                    Swal.showValidationMessage('Error checking email');
+                    return false;
+                });
+            }
         }
-    <% } %>
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = '/newPassword';
 
-  
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('status') === 'success') {
-        Swal.fire({
-            icon: 'success',
-            title: 'Profile Updated',
-            text: 'Your profile has been successfully updated!',
-        });
-    }
-</script>
-
+                // Redirect to /newPassword after the SweetAlert is confirmed
+                // window.location.href = '/newPassword';
+        
+        }
+    });
+});
+  </script>
 
 <%- include('../include/userFooter.ejs') %>

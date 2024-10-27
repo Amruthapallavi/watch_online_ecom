@@ -56,7 +56,7 @@
 </style>
 <body>
   <main>
-    <section class="wallet-section">
+    <section class="wallet-section" style="min-height: 600px;">
       <h1>Wallet</h1>
   
       <div class="wallet-grid">
@@ -103,7 +103,7 @@
   
           <div class="current-balance">
             <p>Current Balance</p>
-            <span>₹<%= wallet.balance ? wallet.balance : 0 %></span>
+            <span>₹<%= (wallet.balance ? wallet.balance : 0).toFixed(2) %></span>
           </div>
           
           <!-- Referral Code Section -->
@@ -167,7 +167,7 @@
           if (data.orderId) {
             // Initialize Razorpay
             const options = {
-              key: '<%= process.env.RAZORPAY_ID_KEY %>', // Use Razorpay key from backend
+              key: '<%= process.env.RAZORPAY_ID_KEY %>', 
               amount: amount * 100, // Amount in paise
               currency: 'INR',
               name: 'Your Company',
@@ -176,7 +176,6 @@
               handler: function (response) {
                 const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = response;
 
-                // Send payment details to your server
                 fetch('/payment-success', {
                   method: 'POST',
                   headers: {
@@ -206,7 +205,6 @@
                 .catch(error => console.error('Error:', error));
               },
               prefill: {
-                // Optionally add user details here
               },
             };
 
@@ -225,7 +223,6 @@
   function redeemReferralCode() {
       const referralCode = document.getElementById('referralCodeInput').value.trim();
 
-      // Validation: Check if the input is empty
       if (!referralCode) {
           Swal.fire({
               icon: 'warning',
@@ -237,7 +234,6 @@
           return;
       }
 
-      // Send the referral code to the backend
       fetch('/redeem-referral-code', {
           method: 'POST',
           headers: {
@@ -255,7 +251,6 @@
                   showConfirmButton: false,
                   timer: 1500
               });
-              // Optionally refresh the wallet balance or user data
           } else {
               Swal.fire({
                   icon: 'error',
@@ -278,6 +273,4 @@
       });
   }
 </script>
-
-</body>
-</html>
+<%- include('../include/userFooter.ejs') %>

@@ -1,7 +1,21 @@
-<%- include('../include/adminHeader.ejs') %>
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="/css/adminDashboard.css">
 <title>Admin Dashboard</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+<link href="https://unpkg.com/cropperjs/dist/cropper.css" rel="stylesheet"/>
+
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+
 <style>
     /* styles.css */
 body {
@@ -27,7 +41,6 @@ canvas {
         font-family: Arial, sans-serif;
         background-color: #f8f8f8;
         margin: 0;
-        padding: 20px;
         color: black;
     }
     h1 {
@@ -95,17 +108,59 @@ input[type="date"], select {
 </head>
 <body>
 
+    <nav class="navbar navbar-expand-lg navbar-dark bg-black" style="min-height: 85px; margin-top: 0;" >
+        <div class = "container">
+            <a href="/" class="navbar-brand"><i class="fas fa-code me-2"></i>ADMIN-HOME</a>
+            <button class="navbar-toggler" data-bs-target="#my-nav"
+            data-bs-toggle="collapse" aria-controls="my-nav" aria-expanded="false"
+            aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div id="my-nav" style="padding-left: 360px;" class="collapse navbar-collapse">
+                <u1 class = "navbar-nav ms-auto">
+                    <li class="nav-item active">
+                        <a style="padding-left: 0; padding-right: 0;" class="nav-link" href="/adminHome"><i class = "fas fa-home me-i"></i>Home</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/users"><i class="fas fa-user-plus me-1"></i>Users</a>
+                    </li> 
+
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/products"><i class="fas fa-user-plus me-1"></i>Products</a>
+                    </li>
+                    <li class="nav-item active">
+                      <a class="nav-link" href="/orders"><i class="fas fa-user-plus me-1"></i>Orders</a>
+                  </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/category"><i class="fas fa-user-plus me-1"></i>Category</a>
+                    </li> 
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/adminCoupon"><i class="fas fa-user-plus me-1"></i>Offers</a>
+                    </li>
+                    <!-- <li class="nav-item active">
+                        <a class="nav-link" href="#"><i class="fas fa-globe me-1"></i>Cart</a>
+                    </li> -->
+                    <li class="nav-item active">
+                       <li> <a href="/adminLogout">
+   <button class="btn btn-light" style="width: 100px; height:35px; font-size:15px; font-weight:600" type="submit"> Log out</button>
+  </a></li>
+                    </li>
+                </u1>
+            </div>
+        </div>
+    </nav> 
+
 <main style="color: black;">
 
     
     <div class="summary">
         <div class="card visits">
             <h2>Total Sales</h2>
-            <p id="overallSales"><%=data.totalGrandTotal%></p>
+            <p id="overallSales"><%= data.totalGrandTotal || 0 %></p>
         </div>
         <div class="card revenue">
             <h2>Orders</h2>
-            <p id="overallOrders"><%=data.totalOrders%></p>
+            <p id="overallOrders"><%=data.totalOrders || 0%></p>
         </div>
         <!-- <div class="card sales">
             <h2>Discount</h2>
@@ -113,7 +168,7 @@ input[type="date"], select {
         </div> -->
         <div class="card visits">
             <h2>Coupon Discount</h2>
-            <p id="overallCoupon"><%=data.totalOfferDiscount.toFixed(2)%></p>
+            <p id="overallCoupon"><%=data.totalCouponDiscount.toFixed(2)%></p>
        </div>
         <div class="card products">
             <h2>Active Users</h2>
@@ -178,6 +233,8 @@ input[type="date"], select {
                 <option value="pending">Pending</option>
                 <option value="confirmed">Confirmed</option>
                 <option value="delivered">Delivered</option>
+                <option value="Return">Return</option>
+
                 <option value="cancelled">Cancelled</option>
             </select>
         </div>
@@ -194,38 +251,43 @@ input[type="date"], select {
         </div>
     
         <!-- Order Listing -->
-        <ul class="order-list" id="orderList">
+      <!-- Order Listing -->
+<ul class="order-list" id="orderList">
 
-            <% orders.slice(0, 5).forEach(order => { %>
-                <li class="order-item">
-                <div class="order-header">
-                    <span class="order-id"><%= order.orderId %></span>
-                    <span class="image" style="max-width: 100px; max-height: 100px;"><img src="<%=order.image[0] %>" alt="<%= order.productName %>" class="product-image">
-                    </span>
-
-                    <span class="product-name"><%= order.product_name %></span>
-                    <span class="quantity"><%= order.quantity %></span>
-                    <span class="status"><%= order.productStatus %></span>
-                    <span class="total">₹<%= order.offerPrice - (order.couponDiscount || 0) %></span>
-                    <!-- More Button with Unique ID -->
-                    <button class="more-btn" onclick="toggleOrderDetails('<%= order.order_id %>')">More</button>
-                </div>
-                <!-- Order Details with Unique ID -->
-                <div class="order-details" id="details-<%= order.order_id %>" style="display: none;">
-                    <p><strong>Shipping Address:</strong> <%= order.shippingAddress.house_no %> ,<%= order.shippingAddress.street %></p>
-                    <p><%= order.shippingAddress.locality %>, <%= order.shippingAddress.city %> ,<%= order.shippingAddress.district %> </p>
-                    <p><%= order.shippingAddress.state %>, <%= order.shippingAddress.pincode %></p>
-                    <p><strong>Payment Method:</strong> <%= order.paymentMethod %></p>
-                    <button class="less-btn" onclick="toggleOrderDetails('<%= order.order_id %>')">Less</button>
-                </div>
-            </li>
-            <% }); %>
-        </ul>
-        <% if (orders.length > 5) { %>
-            <div id="more-orders" class="more-orders">
-                <button onclick="showMoreOrders()">Show More</button>
+    <% orders.slice(0, 5).forEach(order => { %>
+        <li class="order-item">
+            <div class="order-header">
+                <span class="order-id"><%= order.orderId %></span>
+                
+                <span class="image" style="max-width: 100px; max-height: 100px;">
+                    <img src="<%= order.image[0] %>" alt="<%= order.product_name %>" class="product-image">
+                </span>
+                <span class="product-name"><%= order.product_name %></span>
+                <span class="quantity"><%= order.quantity %></span>
+                <span class="status"><%= order.productStatus %></span>
+                
+                <span class="total">₹<%= (Math.round((order.offerPrice - (order.couponDiscount || 0)) * 100) / 100).toFixed(2) %></span>
+                <!-- More Button with Unique ID -->
+                <button class="more-btn" onclick="toggleOrderDetails('<%= order.order_id %>')">More</button>
             </div>
-        <% } %>
+            <!-- Order Details with Unique ID -->
+            <div class="order-details" id="details-<%= order.order_id %>" style="display: none;">
+                <p><strong>Shipping Address:</strong> <%= order.shippingAddress.house_no %>, <%= order.shippingAddress.street %></p>
+                <p><%= order.shippingAddress.locality %>, <%= order.shippingAddress.city %>, <%= order.shippingAddress.district %></p>
+                <p><%= order.shippingAddress.state %>, <%= order.shippingAddress.pincode %></p>
+                <p><strong>Payment Method:</strong> <%= order.paymentMethod %></p>
+                <button class="less-btn" onclick="toggleOrderDetails('<%= order.order_id %>')">Less</button>
+            </div>
+        </li>
+    <% }); %>
+</ul>
+
+<% if (orders.length > 5) { %>
+    <div id="more-orders" class="more-orders">
+        <button onclick="showMoreOrders()">Show More</button>
+    </div>
+<% } %>
+
     </div>
     
     <div class="charts-container">
@@ -257,7 +319,7 @@ input[type="date"], select {
                         <span class="product-name"><%= product.productDetails.pname %></span><br>
                         <span class="product-stock">Sold Out: <%= product.totalQuantity %></span><br>
                         <span class="product-mrp">MRP: ₹<%= product.productDetails.price %></span> <br>
-                        <span class="product-color">Color: <%= product.productDetails.description %></span><br>
+                        <span class="product-color">Description: <%= product.productDetails.description %></span><br>
                     </div>
                 </li>
                 <% }); %>
@@ -276,6 +338,17 @@ input[type="date"], select {
                 </li>
                 <% }); %>
             </ul>
+            <h2>Top Selling Brands</h2>
+            <ul class="product-list">
+                <% topBrands.forEach(brand => { %>
+                <li class="product-item">
+                    <div class="product-details">
+                        <span class="product-name"><%= brand.brand %></span><br>
+                        <span class="product-color">Sold Out: <%= brand.totalQuantity %></span><br>
+                    </div>
+                </li>
+                <% }); %>
+            </ul>
         </div>
     </div>
     <div class="download-options">
@@ -287,7 +360,7 @@ input[type="date"], select {
     
 
 
-<footer>
+<footer style="background-color: black;">
     <p>Tick-Tock</p>
     <p>About Us | Category | Blog</p>
     <div>
@@ -306,20 +379,21 @@ input[type="date"], select {
     }
 }
 
-
 function filterOrders() {
-    const filter = document.getElementById("orderFilter").value;
+    const filter = document.getElementById("orderFilter").value.toLowerCase(); // Convert filter to lowercase
     const orders = document.querySelectorAll(".order-item");
 
     orders.forEach(order => {
-        const status = order.querySelector(".status").textContent.toLowerCase();
-        if (filter === "all" || status.includes(filter)) {
-            order.style.display = "block";
+        const status = order.querySelector(".status").textContent.toLowerCase(); // Get status and convert to lowercase
+        // Check if the status matches the filter
+        if (filter === "all" || status === filter) {
+            order.style.display = "block"; // Show the order
         } else {
-            order.style.display = "none";
+            order.style.display = "none"; // Hide the order
         }
     });
 }
+
 
 function toggleOrderDetails(orderId) {
     const detailsDiv = document.getElementById(`details-${orderId}`);
@@ -399,7 +473,7 @@ function renderOrderList(orders) {
 
                 <span class="quantity">${order.quantity}</span>
                 <span class="status">${order.productStatus}</span>
-<span class="total">₹${order.offerPrice - (order.couponDiscount || 0)}</span>
+<span class="total">₹${order.offerPrice - (order.couponDiscount || 0).toFixed(2)}</span>
                 <button class="more-btn" onclick="toggleOrderDetails('${order._id}')">More</button>
             </div>
             <div class="order-details" id="details-${order._id}" style="display: none;">
@@ -420,7 +494,6 @@ function toggleOrderDetails(orderId) {
 }
 
 </script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     //custom range
     document.getElementById('reportType').addEventListener('change', function() {
@@ -428,6 +501,43 @@ function toggleOrderDetails(orderId) {
         customRangeDiv.style.display = this.value === 'custom' ? 'block' : 'none';
     });
     function downloadPDF() {
+    const reportType = document.getElementById('reportType').value;
+    let startDate = null;
+    let endDate = null;
+
+    if (reportType === 'custom') {
+        startDate = document.getElementById('startDate').value;
+        endDate = document.getElementById('endDate').value;
+    }
+
+    //  order details
+    const orderItems = Array.from(document.querySelectorAll('.order-item')).map(item => {
+        const orderId = item.querySelector('.order-id').textContent;
+        const productId= item.querySelector('.product-id')
+        const productName = item.querySelector('.product-name').textContent;
+        const quantity = item.querySelector('.quantity').textContent;
+        const status = item.querySelector('.status').textContent;
+        const total = item.querySelector('.total').textContent;
+        const shippingAddress = item.querySelector('.order-details') ? 
+            item.querySelector('.order-details p strong').nextSibling.textContent : ''; // Extract shipping address
+        const paymentMethod = item.querySelector('.order-details') ? 
+            item.querySelector('.order-details p + p strong').nextSibling.textContent : ''; // Extract payment method
+
+        return {
+            orderId,
+            productName,
+            quantity,
+            status,
+            total,
+            shippingAddress,
+            paymentMethod
+        };
+    });
+
+    window.location.href = `/download/pdf?reportType=${reportType}&startDate=${startDate}&endDate=${endDate}&orders=${JSON.stringify(orderItems)}`;
+}
+
+function downloadExcel() {
     const reportType = document.getElementById('reportType').value;
     let startDate = null;
     let endDate = null;
@@ -460,24 +570,8 @@ function toggleOrderDetails(orderId) {
         };
     });
 
-    // Redirect to the backend route for PDF generation with order details
-    window.location.href = `/download/pdf?reportType=${reportType}&startDate=${startDate}&endDate=${endDate}&orders=${JSON.stringify(orderItems)}`;
+    window.location.href = `/download/excel?reportType=${reportType}&startDate=${startDate}&endDate=${endDate}&orders=${JSON.stringify(orderItems)}`;
 }
-
-    function downloadExcel() {
-        const reportType = document.getElementById('reportType').value;
-        let startDate = null;
-        let endDate = null;
-
-        if (reportType === 'custom') {
-            startDate = document.getElementById('startDate').value;
-            endDate = document.getElementById('endDate').value;
-        }
-
-        // Redirect to the backend route for Excel generation
-        window.location.href = `/download/excel?reportType=${reportType}&startDate=${startDate}&endDate=${endDate}`;
-    }
-
 
 </script>
 <script>
@@ -545,8 +639,6 @@ function toggleOrderDetails(orderId) {
     });
 
 
-
-
     let currentOrderIndex = 5; // Start after the first 5 orders
 
 function showMoreOrders() {
@@ -562,17 +654,22 @@ function showMoreOrders() {
         orderItem.className = 'order-item';
         orderItem.innerHTML = `
             <div class="order-header">
-                <span class="order-id">${order._id}</span>
+                <span class="order-id">${order.orderId}</span>
+                <span class="image" style="max-width: 100px; max-height: 100px;">
+                    <img src="${order.image[0]}" alt="${order.product_name}" class="product-image">
+                </span>
                 <span class="product-name">${order.product_name}</span>
                 <span class="quantity">${order.quantity}</span>
-                <span class="status">${order.orderStatus}</span>
-                <span class="total">₹${order.grandTotal}</span>
-                <button class="more-btn" onclick="toggleOrderDetails('${order.id}')">More</button>
+                <span class="status">${order.productStatus}</span>
+                <span class="total">₹${(order.offerPrice - (order.couponDiscount || 0)).toFixed(2)}</span>
+                <button class="more-btn" onclick="toggleOrderDetails('${order.order_id}')">More</button>
             </div>
-            <div class="order-details" id="details-${order.id}" style="display: none;">
-                <p><strong>Shipping Address:</strong> ${order.deliveryAddress}</p>
+            <div class="order-details" id="details-${order.order_id}" style="display: none;">
+                <p><strong>Shipping Address:</strong> ${order.shippingAddress.house_no}, ${order.shippingAddress.street}</p>
+                <p>${order.shippingAddress.locality}, ${order.shippingAddress.city}, ${order.shippingAddress.district}</p>
+                <p>${order.shippingAddress.state}, ${order.shippingAddress.pincode}</p>
                 <p><strong>Payment Method:</strong> ${order.paymentMethod}</p>
-                <button class="less-btn" onclick="toggleOrderDetails('${order.id}')">Less</button>
+                <button class="less-btn" onclick="toggleOrderDetails('${order.order_id}')">Less</button>
             </div>
         `;
         orderList.appendChild(orderItem);
@@ -587,8 +684,43 @@ function showMoreOrders() {
 }
 
 </script>
+<script>
+    const expand_btn = document.querySelector(".expand-btn");
 
+let activeIndex;
+
+expand_btn.addEventListener("click", () => {
+  document.body.classList.toggle("collapsed");
+});
+
+const current = window.location.href;
+
+const allLinks = document.querySelectorAll(".sidebar-links a");
+
+allLinks.forEach((elem) => {
+  elem.addEventListener("click", function () {
+    const hrefLinkClick = elem.href;
+
+    allLinks.forEach((link) => {
+      if (link.href == hrefLinkClick) {
+        link.classList.add("active");
+      } else {
+        link.classList.remove("active");
+      }
+    });
+  });
+});
+
+const searchInput = document.querySelector(".search__wrapper input");
+
+searchInput.addEventListener("focus", (e) => {
+  document.body.classList.remove("collapsed");
+});
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script src="/js/adminDashboard.js"></script>
 </body>
 </html>
-
 

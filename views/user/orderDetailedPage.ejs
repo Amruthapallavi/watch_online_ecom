@@ -9,6 +9,52 @@
         padding: 0;
         background-color: #fff;
     }
+    .reason-form {
+    background-color: #f9f9f9; /* Light background for the form */
+    padding: 20px; /* Padding around the form */
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    margin: 20px 0; /* Margin between forms and other elements */
+}
+
+.reason-form h3 {
+    margin-bottom: 15px; /* Spacing below the heading */
+    color: #333; /* Dark color for the heading */
+}
+
+.radio-group {
+    margin-bottom: 15px; /* Spacing below radio group */
+}
+
+.radio-group label {
+    display: block; /* Make each label a block element */
+    margin-bottom: 10px; /* Spacing between radio options */
+    font-weight: 500; /* Slightly bolder text */
+    color: #555; /* Gray color for text */
+}
+
+.other-reason-input {
+    margin-top: 5px; /* Spacing above the input for other reason */
+    width: 100%; /* Full width for input */
+    padding: 8px; /* Padding inside the input */
+    border: 1px solid #ccc; /* Light border */
+    border-radius: 4px; /* Rounded corners */
+}
+
+.submit-btn {
+    background-color: #007bff; /* Bootstrap primary color */
+    color: white; /* White text */
+    border: none; /* No border */
+    padding: 10px 15px; /* Padding for button */
+    border-radius: 5px; /* Rounded corners */
+    cursor: pointer; /* Pointer cursor on hover */
+    transition: background-color 0.3s; /* Smooth transition for hover effect */
+}
+
+.submit-btn:hover {
+    background-color: #0056b3; /* Darker shade on hover */
+}
+
 </style>
 <div class="container" style="background-color: rgb(239, 237, 237);">
     <div class="order-details">
@@ -55,12 +101,16 @@
                     <% } %>
                 </p>
                 <p>Quantity: <%= product.quantity %></p>
+                <p>MRP: ₹<%= product.price %></p>
+
                 <p>
                     Offer Price: <span style="color: green;">
-                    <%= order.offerDiscount ? '₹' + Math.round(product.price - product.appliedOffer) : '₹' + product.price.toFixed(2) %></span>
+                    <%= order.offerDiscount ? '₹' + Math.round(product.price - product.appliedOffer) : '₹' + product.price %></span>
                 </p>
-                <p>MRP: ₹<%= product.price %></p>
-                <p style="color:
+                <p>Total: 
+                    <%= Math.round(product.offerPrice - (product.couponDiscount || 0)) %>
+                </p>
+                                <p style="color:
                 <% if (product.productOrderStatus === 'Confirmed') { %> 
                     green;
                 <% } else if (product.productOrderStatus === 'pending') { %> 
@@ -79,7 +129,7 @@
                 <div class="product-actions">
                     <% if (product.productOrderStatus === 'Confirmed' || product.productOrderStatus === 'Shipped') { %>
                         <button class="cancel-product-btn">Cancel Product</button>
-                    <% } else if (product.productOrderStatus === 'Delivered') { %>
+                    <% } else if (product.productOrderStatus === 'Delivered') { %> 
                         <button class="return-product-btn">Return Product</button>
                     <% } %>
                 </div>
@@ -88,49 +138,53 @@
         <% }) %>
     </ul>
 
-    <div id="cancelReasonForm" style="display: none;">
+    <div id="cancelReasonForm" class="reason-form" style="display: none;">
         <h3>Select a Reason for Cancellation</h3>
         <form id="reasonSelection">
-            <label>
-                <input type="radio" name="reason" value="Changed my mind" required> Changed my mind
-            </label>
-            <label>
-                <input type="radio" name="reason" value="Found a better price"> Found a better price
-            </label>
-            <label>
-                <input type="radio" name="reason" value="Product not needed"> Product not needed
-            </label>
-            <label>
-                <input type="radio" name="reason" value="Other"> Other
-                <input type="text" name="otherReason" placeholder="Specify if other">
-            </label>
+            <div class="radio-group">
+                <label>
+                    <input type="radio" name="reason" value="Changed my mind" required> Changed my mind
+                </label>
+                <label>
+                    <input type="radio" name="reason" value="Found a better price"> Found a better price
+                </label>
+                <label>
+                    <input type="radio" name="reason" value="Product not needed"> Product not needed
+                </label>
+                <label>
+                    <input type="radio" name="reason" value="Other"> Other
+                    <input type="text" name="otherReason" placeholder="Specify if other" class="other-reason-input">
+                </label>
+            </div>
             <input type="hidden" name="orderId" id="orderId" value="<%= orderId %>">
-
-            <button type="submit">Continue</button>
+            <button type="submit" class="submit-btn">Continue</button>
         </form>
     </div>
 
-    <div id="returnReasonForm" style="display: none;">
+    <div id="returnReasonForm" class="reason-form" style="display: none;">
         <h3>Select a Reason for Return</h3>
         <form id="returnReasonSelection">
-            <label>
-                <input type="radio" name="reason" value="Damaged product" required> Damaged product
-            </label>
-            <label>
-                <input type="radio" name="reason" value="Defective" required> Defective
-            </label>
-            <label>
-                <input type="radio" name="reason" value="Wrong item sent" required> Wrong item sent
-            </label>
-            <label>
-                <input type="radio" name="reason" value="Changed my mind" required> Changed my mind
-            </label>
-            <input type="hidden" name="orderId" id="returnOrderId" value="<%= orderId %>"> <!-- Hidden input for orderId -->
-            <input type="hidden" name="productId" id="returnProductId" value=""> <!-- Hidden input for productId -->
-            <button type="submit">Submit Return Request</button>
+            <div class="radio-group">
+                <label>
+                    <input type="radio" name="reason" value="Damaged product" required> Damaged product
+                </label>
+                <label>
+                    <input type="radio" name="reason" value="Defective" required> Defective
+                </label>
+                <label>
+                    <input type="radio" name="reason" value="Wrong item sent" required> Wrong item sent
+                </label>
+                <label>
+                    <input type="radio" name="reason" value="Changed my mind" required> Changed my mind
+                </label>
+                <input type="hidden" name="orderId" id="returnOrderId" value="<%= orderId %>">
+                <input type="hidden" name="productId" id="returnProductId" value="">
+            </div>
+            <button type="submit" class="submit-btn">Submit Return Request</button>
         </form>
     </div>
 </div>
+
 
     
 
@@ -151,10 +205,20 @@
         <div class="payment-info">
             <h4>Payment Information</h4>
             <p>Payment Method: <%= order.paymentDetails.method %></p>
-            <p>Payment ID: <%= order.paymentDetails.paymentId %></p>
+<p>Payment ID: 
+  <% if (order.paymentDetails && order.paymentDetails.paymentId) { %>
+    <%= order.paymentDetails.paymentId %>
+  <% } else { %>
+    N/A
+  <% } %>
+</p>
             <p>Coupon Applied: <%= order.couponDiscount ? '₹' + order.couponDiscount : 'No' %></p>
             <p>Total: ₹<%= order.grandTotal %></p>
-        </div>
+            <% if (order.refundAmount && order.refundAmount > 0) { %>
+                <p>Refund Amount: ₹<%= order.refundAmount %></p>
+              <% } %>
+                          <p>Final Amount: ₹<%= (order.grandTotal - (order.refundAmount || 0)).toFixed(2) %></p>
+                    </div>
         <% 
         // Check if at least one product in the order has 'Delivered' status
         const atLeastOneDelivered = order.products.some(product => product.productOrderStatus === 'Delivered');
@@ -250,66 +314,60 @@
 
 <!-- Handle Invoice Download -->
 <script>
-    function toggleCheckboxes() {
-        const checkboxes = document.querySelectorAll('.product-checkbox');
-        checkboxes.forEach(checkbox => {
-            checkbox.style.display = checkbox.style.display === 'none' ? 'inline' : 'none'; // Toggle visibility
-        });
-    }
-document.getElementById('downloadInvoiceBtn').addEventListener('click', function() {
-    // Get order details to send to the backend
-    const orderData = {
-        order: {
-            orderId: '<%= order.paymentDetails.orderId %>',
-            placedAt: '<%= order.placedAt %>',
-            products: <%- JSON.stringify(order.products) %>,
-            grandTotal: <%= order.grandTotal %>,
-            deliveryCharges: +30, // Add delivery charges
-            couponApplied: '<%= order.couponDiscount || "No Coupon Applied" %>', // Include coupon applied status
-            offerDiscount : '<%= Number(order.offerDiscount) ||0 %>'
-        },
-        user: {
-            name: '<%= user.name %>',
-            email: '<%= user.email %>'
-        },
-        address:{
-            street:'<%=order.deliveryAddress.street%>',
-            house_no:'<%=order.deliveryAddress.house_no%>',
-            city:'<%=order.deliveryAddress.city%>',
-            pincode:'<%=order.deliveryAddress.pincode%>',
-            district:'<%=order.deliveryAddress.district%>',
-            state:'<%=order.deliveryAddress.state%>'
-    },
-    };
+    document.getElementById('downloadInvoiceBtn').addEventListener('click', function() {
+        // Get order details to send to the backend
+        const orderData = {
+            order: {
+                orderId: '<%= order.paymentDetails.orderId %>',
+                placedAt: '<%= order.placedAt %>',
+                products: <%- JSON.stringify(order.products.filter(product => product.productOrderStatus !== 'Cancelled' && product.productOrderStatus !== 'Return')) %>, // Exclude canceled and returned products
+                grandTotal: <%= order.grandTotal %>, // This should reflect the total amount excluding any canceled or returned products
+                deliveryCharges: 0, // Set delivery charges to 0
+                couponApplied: '<%= order.couponDiscount || "No Coupon Applied" %>',
+                offerDiscount: '<%= Number(order.offerDiscount) || 0 %>'
+            },
+            user: {
+                name: '<%= user.name %>',
+                email: '<%= user.email %>'
+            },
+            address: {
+                street: '<%= order.deliveryAddress.street %>',
+                house_no: '<%= order.deliveryAddress.house_no %>',
+                city: '<%= order.deliveryAddress.city %>',
+                pincode: '<%= order.deliveryAddress.pincode %>',
+                district: '<%= order.deliveryAddress.district %>',
+                state: '<%= order.deliveryAddress.state %>'
+            }
+        };
 
-    // Send a POST request to download the invoice
-    fetch('/download-invoice', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(orderData)
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.blob(); // Get the PDF as a Blob
-    })
-    .then(blob => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `invoice_${orderData.order.orderId}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-    })
-    .catch(error => {
-        Swal.fire('Error!', 'There was an error downloading the invoice. Please try again.', 'error');
-        console.error('Error downloading invoice:', error);
+        // Send a POST request to download the invoice
+        fetch('/download-invoice', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(orderData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.blob(); // Get the PDF as a Blob
+        })
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `invoice_${orderData.order.orderId}.pdf`; // Set the filename for the download
+            document.body.appendChild(a);
+            a.click();
+            a.remove(); // Remove the anchor element after clicking
+        })
+        .catch(error => {
+            Swal.fire('Error!', 'There was an error downloading the invoice. Please try again.', 'error');
+            console.error('Error downloading invoice:', error);
+        });
     });
-});
 </script>
 
 
@@ -490,7 +548,6 @@ function confirmCancelOrder(orderId) {
     });
 }
 
-// Function to send the cancellation request to the server
 async function cancelOrder(orderId) {
     try {
         const response = await fetch(`/cancel-order/${orderId}`, {
@@ -503,7 +560,6 @@ async function cancelOrder(orderId) {
 
         if (response.ok) {
             Swal.fire('Cancelled!', 'Your order has been cancelled.', 'success');
-            // Optionally, refresh the page or update the UI to reflect the cancellation
             location.reload(); // Reloads the current page
         } else {
             Swal.fire('Error!', 'Failed to cancel the order. Please try again.', 'error');

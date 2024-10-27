@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const userModel = require("../models/userModel");
 const bcrypt = require('bcrypt');
 const nodemailer = require("nodemailer");
 const productModel = require("../models/productModel");
@@ -11,7 +10,8 @@ const bodyParser= require('body-parser');
 const jwt = require('jsonwebtoken');
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
-const {ObjectId} = require('mongodb');
+const sendEmail= require('../helpers/nodemailer');
+
 const walletModel = require('../models/walletModel');
 require('dotenv').config()
 const moment = require("moment");
@@ -20,10 +20,14 @@ const formatDate = (date) => {
     if (!date) return '';
     return moment(date).format('MMMM Do YYYY'); 
 };
+const userModel = require('../models/userModel');
+const { ObjectId } = require('mongodb');
+
 const tokenVerification = require('../helpers/token');
 const orderModel = require("../models/orderModel");
 const { title } = require("process");
 const couponModel = require("../models/couponModel");
+const { resendOTP } = require("./authController");
 const razorpay = new Razorpay({
   key_id:process.env.RAZORPAY_ID_KEY, 
   key_secret: process.env.RAZORPAY_SECRET_KEY,  
@@ -44,6 +48,41 @@ function generateOrderId() {
 
 
 
+const getTopSellingProducts = async () => {
+  return await orderModel.aggregate([
+      { $unwind: '$productsDetails' },
+      {
+          $match: { 
+              'productsDetails.productOrderStatus': 'Delivered' 
+          }
+      },
+      {
+          $group: {
+              _id: '$productsDetails.productId',
+              totalQuantity: { $sum: '$productsDetails.quantity' } 
+          }
+      },
+      {
+          $lookup: {
+              from: 'products', 
+              localField: '_id', 
+              foreignField: '_id',
+              as: 'productDetails' 
+          }
+      },
+      { $unwind: '$productDetails' }, 
+      {
+          $project: {
+              productId: '$_id', 
+              productDetails: 1, 
+              totalQuantity: 1 
+          }
+      },
+      { $sort: { totalQuantity: -1 } }, 
+      { $limit: 10 } 
+  ]);
+};
+
 
 
 
@@ -55,12 +94,99 @@ module.exports ={
          const data= await productModel.find().limit(4);
         //  const user = await userModel.find({_id:req.session.userId});
         const token  = req.cookies.UserToken;
-        // console.log(token);
         const result = jwt.verify(token,'secretKey');
+        const userData= tokenVerification(token);
+        console.log(userData,"data of user");
+        const userId= new ObjectId(userData._id);
         // console.log(result.userData);
+        
+        const cartData = await cartModel.aggregate([
+          { $match: { userId: userId } },
+          { $unwind: '$products' },
+          {
+              $lookup: {
+                  from: 'products',
+                  localField: 'products.productId',
+                  foreignField: '_id',
+                  as: 'cartProducts'
+              }
+          },
+          { $unwind: '$cartProducts' },
+          {
+              $lookup: {
+                  from: 'categories',
+                  localField: 'cartProducts.category',
+                  foreignField: '_id',
+                  as: 'categoryInfo'
+              }
+          },
+          { $unwind: { path: '$categoryInfo', preserveNullAndEmptyArrays: true } },
+          {
+              $addFields: {
+                  offerPrice: {
+                      $cond: [
+                          { $gt: ['$cartProducts.productOffer', 0] },
+                          {
+                              $subtract: [
+                                  { $toDouble: '$cartProducts.price' }, // Convert price to numeric
+                                  {
+                                      $multiply: [
+                                          { $toDouble: '$cartProducts.price' }, // Convert price to numeric
+                                          { $divide: [{ $toDouble: '$cartProducts.productOffer' }, 100] } // Convert offer to numeric
+                                      ]
+                                  }
+                              ]
+                          },
+                          {
+                              $cond: [
+                                  { $gt: ['$categoryInfo.categoryOffer', 0] },
+                                  {
+                                      $subtract: [
+                                          { $toDouble: '$cartProducts.price' }, // Convert price to numeric
+                                          {
+                                              $multiply: [
+                                                  { $toDouble: '$cartProducts.price' }, // Convert price to numeric
+                                                  { $divide: [{ $toDouble: '$categoryInfo.categoryOffer' }, 100] } // Convert offer to numeric
+                                              ]
+                                          }
+                                      ]
+                                  },
+                                  { $toDouble: '$cartProducts.price' } 
+                              ]
+                          }
+                      ]
+                  },
+                  stock: '$cartProducts.quantity' 
+              }
+          }
+      ]);
+      const cart = await cartModel.findOne({ userId });
+      const productCount = cart?.products?.length || 0;
+        cartData.forEach(item => {
+          if (item.stock < item.products.quantity) {
+              item.products.quantity = item.stock; 
+          }
+
+          if (item.stock < 5) {
+              item.products.quantity = item.stock;
+          }
+      });
+
+
+        const topProducts = await getTopSellingProducts();
+        let topSelling;
+        if(topProducts.length>=4){
+          topSelling=topProducts;
+        }else{
+          topSelling= await productModel.find({}).limit(4);
+        }
          res.render('user/userHome',{
              title:'userHome',
              data:data,
+             topProducts:topSelling,
+             cartData,
+             productCount
+
          });
        
         } catch (error) {
@@ -83,7 +209,10 @@ getProductDetails: async (req, res) => {
       const product = await productModel.findById(productId).populate('category');
       const catId = new ObjectId(product.category);
       const category = await categoryModel.findOne({ _id: catId });
+      const token = req.cookies.UserToken;
 
+      const userData= tokenVerification(token);
+      const userId = new ObjectId(userData._id);
       if (!product) {
           return res.status(404).send("Product not found");
       }
@@ -95,7 +224,14 @@ getProductDetails: async (req, res) => {
       } else if (category && category.categoryOffer > 0) {
           offerPrice = product.price - (product.price * category.categoryOffer / 100);
       }
+// Fetch all categories with offers greater than 0
+const categories = await categoryModel.find({ categoryOffer: { $ne: '0' } });
 
+// Create a map of categories for easier access
+const categoryMap = {};
+categories.forEach(category => {
+    categoryMap[category._id] = category.categoryOffer;
+});
       // Fetch related products
       let relatedData = await productModel.find({ _id: { $ne: productId } }).limit(4).populate('category');
 
@@ -112,15 +248,19 @@ getProductDetails: async (req, res) => {
               offerPrice: relatedOfferPrice // Attach the calculated offer price
           };
       });
-
+      
+      const wishlistItems  = await wishlistModel.find({ userId: userId })
+      const wishlistProductIds = wishlistItems.map(item => item.productId.toString());
       // Render the product details page with related products including offerPrice
       res.render('user/productDetails', {
           title: product.pname,
           product,
+          wishlistProductIds,
           offerPrice, // Main product offer price
           relatedData, // Related products with offerPrice
           error: "",
-          category
+          category,
+          categoryMap,
       });
   } catch (error) {
       console.log(error.message);
@@ -153,36 +293,50 @@ getShop: async (req, res) => {
           .skip((perPage * page) - perPage)
           .limit(perPage);
 
-      // Fetch all categories with offers greater than 0
-      const categories = await categoryModel.find({ categoryOffer: { $ne: '0' } });
+// Fetch all categories with offers greater than 0
+const categories = await categoryModel.find({ categoryOffer: { $ne: '0' } });
 
-      // Create a map of categories for easier access
-      const categoryMap = {};
-      categories.forEach(category => {
-          categoryMap[category._id] = category.categoryOffer;
-      });
+// Create a map of categories for easier access
+const categoryMap = {};
+categories.forEach(category => {
+    categoryMap[category._id] = category.categoryOffer;
+});
 
-      // Calculate offerPrice for each product
-      const productsWithOfferPrice = products.map(product => {
-          let offerPrice = product.price; // Default to original price
+// Calculate offerPrice for each product
+const productsWithOfferPrice = products.map(product => {
+    let offerPrice = product.price; // Default to original price
+    let maxDiscount = 0; // Initialize to track the maximum discount
 
-          // Check for productOffer
-          if (product.productOffer) {
-              offerPrice = product.price - (product.price * product.productOffer / 100);
-          } 
-          // Check for categoryOffer
-          else if (product.category && categoryMap[product.category._id]) {
-              const categoryOffer = categoryMap[product.category._id];
-              offerPrice = product.price - (product.price * categoryOffer / 100);
-          }
+    // Check for productOffer
+    if (product.productOffer) {
+        maxDiscount = product.productOffer; // Store product offer for comparison
+    } 
+    
+    // Check for categoryOffer
+    if (product.category && categoryMap[product.category._id]) {
+        const categoryOffer = categoryMap[product.category._id];
+        // Compare with the category offer
+        if (categoryOffer > maxDiscount) {
+            maxDiscount = categoryOffer; // Update maxDiscount to category offer
+        }
+    }
 
-          return {
-              ...product.toObject(), // Convert to plain object
-              offerPrice: offerPrice.toFixed(2) // Format offerPrice to 2 decimal places
-          };
-      });
+    // Calculate the final offerPrice using the maximum discount
+    if (maxDiscount > 0) {
+        offerPrice = product.price - (product.price * maxDiscount / 100);
+    }
 
-      console.log("Products with offer prices:", productsWithOfferPrice);
+    return {
+        ...product.toObject(), // Convert to plain object
+        offerPrice: offerPrice.toFixed(2) // Format offerPrice to 2 decimal places
+    };
+});
+
+console.log("Products with offer prices:", productsWithOfferPrice);
+
+console.log("Products with offer prices:", productsWithOfferPrice);
+
+
 
       // Count total number of products
       const count = await productModel.countDocuments();
@@ -197,7 +351,7 @@ getShop: async (req, res) => {
 
       // Render the products page
       res.render('user/products', {
-          data: productsWithOfferPrice, // Use the modified products array
+          data: productsWithOfferPrice, 
           wishlistMessage: showWishlistMessage || null, // Pass message if exists
           cartMessage: req.session.cartMessage || null, // Assuming you set this elsewhere
           title: 'Shop',
@@ -213,59 +367,69 @@ getShop: async (req, res) => {
   }
 },
 
+getUserAccount : async (req, res) => {
+  try {
+    const token = req.cookies.UserToken;
+    const userData = tokenVerification(token);
 
-getUserAccount : async (req,res)=>{
-          try {
-            const token= req.cookies.UserToken;
+    const userModel = require("../models/userModel");
+    const user = await userModel.findOne({ _id: new ObjectId(userData._id) });
+    const address = await addressModel.findOne({ userId: new ObjectId(userData._id) });
 
-                const userData= tokenVerification(token);
-                const user = await userModel.findOne({_id:new ObjectId(userData._id)})
-                const address = await addressModel.collection.findOne({userId:new ObjectId(userData._id)})
-                // console.log(address);
-                res.render('user/userProfile',{
-                    data: user,
-                    address:address,
-                    title:'my_account',
-                   
-                });
-            
-            
-          }catch (error) {
-            console.log(error.message);
-            res.status(500).redirect('/500');
-          }
+    // Render the user profile page
+    res.render('user/userProfile', {
+      data: user,
+      address: address,
+      title: 'my_account',
+    });
+
+  } catch (error) {
+    console.log(error.message);
+    // res.status(500).redirect('/500'); // Optionally handle error
+  }
+},
+
+doAddAddress: async (req, res ) => {
+  try {
+    const token = req.cookies.UserToken;
+    const userData = tokenVerification(token);
+
+    const { name, phone, house_no, street, locality, city, pincode, district, state } = req.body;
+
+    if (!name || !phone || !house_no || !city || !pincode || !district || !state) {
+      return res.status(400).render('user/addresses', {
+        message: 'All required fields must be filled',
+        data: req.body, 
+      });
+    }
+
+    const newAddress = await addressModel.collection.insertOne({
+      userId: new ObjectId(userData._id),
+      name,
+      phone,
+      house_no,
+      street,
+      locality,
+      city,
+      pincode,
+      district,
+      state,
+    });
+
+    console.log('Address added successfully:', newAddress);
+
+  // res.json({ success: true, message: "Address added successfully." });
+
+
+    res.redirect(`/addresses`);
+
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).redirect('/500');
+  }
 },
 
 
-doAddAddress: async (req, res ) => {
-    try {
-      const token= req.cookies.UserToken;
-
-      const userData= tokenVerification(token);
-      // console.log('inside address page');
-      // console.log(req.body);
-      const { userId, name, phone, house_no, street, locality, city, pincode, district, state } = req.body;
-
-      const newAddress = await  addressModel.collection.insertOne({
-          userId:new ObjectId(userData._id),
-          name,
-          phone,
-          house_no,
-          street,
-          locality,
-          city,
-          pincode,
-          district,
-          state
-      });
-
-      // console.log(req.body);
-        
-      res.redirect(`/addresses`);
-      console.log('success');
-    } catch (error) {
-      res.status(500).redirect('/500');    }
-  },
   getCart: async (req, res) => {
     try {
         const token = req.cookies.UserToken;
@@ -354,9 +518,9 @@ doAddAddress: async (req, res ) => {
         res.render('user/cart', {
             products: cartData,
             subtotal: grandTotal,
-            flat_rate: 30.00,
+            flat_rate: 0,
             discountAmount,
-            grandTotal: grandTotal + 30.00 // Include flat rate in grand total
+            grandTotal: grandTotal // Include flat rate in grand total
         });
     } catch (error) {
         console.log("Error fetching cart:", error.message);
@@ -501,6 +665,7 @@ doEditAddress: async (req, res, next) => {
     res.redirect(`/addresses`);
   } catch (error) {
     console.log(error);
+    res.status(500).redirect('/500'); 
     next(error)
   }    
 },
@@ -560,6 +725,16 @@ try {
 }
 },
 
+postCheckout: async (req,res)=>{
+
+try {
+  req.session.cartData=req.body;
+  req.session.grandTotal=req.body.subtotal;
+  res.redirect('/checkout');
+} catch (error) {
+  console.log(error);
+}
+},
 removeFromWishlist :async( req,res)=>{
   try {
     const productId = new ObjectId(req.params.id); 
@@ -586,7 +761,7 @@ try {
   console.log('inside checkOut page');
   // const discount= req.session.discount;
   const data=req.session.cartData;
-  const flat_rate=30;
+  const flat_rate=0;
   const couponDiscount=data.couponDiscount ||0;
   // console.log(discount);
     const totals=req.session.data;
@@ -638,49 +813,96 @@ try {
 
 
 },
-searchProduct: async (req,res)=>{
+
+searchProduct: async (req, res) => {
   try {
-      
-      const search=req.body.String;
-      
-      const count = await productModel.countDocuments({
-        $or: [
-          {name: { $regex: search, $options: "i" } },
-          {description: { $regex: search, $options: "i" } },
-       
-        ],
-      });
-      const perPage = 8;
-      const page = req.query.page || 1;
-  
+    const search = req.body.String; // Get the search string from the request body
+    const token = req.cookies.UserToken;
+    const userData = tokenVerification(token);
     
-      const result = await productModel.find({
-        $or: [
-          {name: { $regex: search, $options: "i" } },
-          {description: { $regex: search, $options: "i" } },
-       
-        ],
-      })
-              .skip((perPage * page) - perPage)
-              .limit(perPage);
-  
-  
-          res.render('user/searchResult', {
-              products: result,
-              currentPage: parseInt(page),
-              totalPages: Math.ceil(count / perPage)
-          });
-      // res.render('user/searchResult',{
-      //   title:'search result',
-      //   products:result
-      // })
-    } catch (error) {
-      console.log(error);
+
+    const perPage = 8; // Number of products per page
+    const page = parseInt(req.query.page) || 1; // Current page
+    const sortOption = req.query.sort || ''; // Get sort option from query params
+
+    // Count total matching products
+    const count = await productModel.countDocuments({
+      $or: [
+        { name: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+      ],
+    });
+    let sortCriteria = {};
+    if (sortOption === 'low_to_high') {
+      sortCriteria = { price: 1 }; // Sort by price ascending
+    } else if (sortOption === 'high_to_low') {
+      sortCriteria = { price: -1 }; // Sort by price descending
     }
+    // Fetch matching products with pagination and sorting
+    const result = await productModel.find({
+      $or: [
+        { name: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+      ],
+    })
+      .sort(sortCriteria) // Apply sorting
+      .skip((perPage * page) - perPage) // Pagination
+      .limit(perPage); // Limit results
 
-  
+    // Fetch categories with offers
+    const categories = await categoryModel.find({ categoryOffer: { $ne: '0' } });
 
-} ,
+    // Create a map of categories for easier access
+    const categoryMap = {};
+    categories.forEach(category => {
+      categoryMap[category._id] = category.categoryOffer;
+    });
+
+    // Calculate offerPrice for each product
+    const productsWithOfferPrice = result.map(product => {
+      let offerPrice = product.price; // Default to original price
+
+      // Check for productOffer
+      if (product.productOffer) {
+        offerPrice = product.price - (product.price * product.productOffer / 100);
+      }
+      // Check for categoryOffer
+      else if (product.category && categoryMap[product.category._id]) {
+        const categoryOffer = categoryMap[product.category._id];
+        offerPrice = product.price - (product.price * categoryOffer / 100);
+      }
+
+      return {
+        ...product.toObject(), // Convert to plain object
+        offerPrice: offerPrice.toFixed(2) // Format offerPrice to 2 decimal places
+      };
+    });
+    const wishlistItems  = await wishlistModel.find({ userId: new ObjectId(userData._id) })
+    const wishlistProductIds = wishlistItems.map(item => item.productId.toString());
+
+
+    // Check for any messages to show
+    const showWishlistMessage = req.session.message;
+    // Render the filtered results
+    req.session.data=productsWithOfferPrice;
+    res.render('user/searchResult', {
+      data: productsWithOfferPrice, // Pass the products with offer prices
+      currentPage: page,
+      categoryMap,
+      image:"",
+      title: 'search_result',
+          wishlistMessage: showWishlistMessage || null, // Pass message if exists
+          wishlistProductIds: wishlistProductIds,
+
+      totalPages: Math.ceil(count / perPage),
+      sortOption // Include sort option in the response
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).redirect('/500'); // Handle errors
+  }
+},
+
 
 getAddresses: async (req,res)=>{
   try {
@@ -710,33 +932,68 @@ getAccountPage : async (req,res)=>{
   }
 },
 
-getWishlist: async( req,res)=>{
-  try {
-    const productId = req.params.id;
-  console.log("ho",productId);
-  const token= req.cookies.UserToken;
-  const userData= tokenVerification(token);
-      const productData = await productModel.findOne({_id:productId});
-      const userId  = new ObjectId(userData._id)
+// getWishlist: async( req,res)=>{
+//   try {
+//     const productId = req.params.id;
+//   const token= req.cookies.UserToken;
+//   const userData= tokenVerification(token);
+//       const productData = await productModel.findOne({_id:productId});
+//       const userId  = new ObjectId(userData._id)
      
       
-  //  console.log(req.body.quantity);
-  //  console.log(productData.pname);
-      const data = await  wishlistModel.collection.insertOne({
-          userId:userId,
-          productId:productData._id,
+//   //  console.log(req.body.quantity);
+//   //  console.log(productData.pname);
+//       const data = await  wishlistModel.collection.insertOne({
+//           userId:userId,
+//           productId:productData._id,
           
           
           
+//       });
+//       console.log(data);
+//       req.session.wishlistMessage='successfully added';
+//       res.redirect('/shop')
+//   } catch (error) {
+//     res.status(500).redirect('/500');  }
+// },
+
+getWishlist: async (req, res) => {
+  try {
+      const productId = req.params.id; // Assuming this comes from the route
+      const token = req.cookies.UserToken;
+
+      // Verify the token
+      const userData = tokenVerification(token);
+      if (!userData) {
+          return res.status(401).redirect('/login'); // Redirect if not authenticated
+      }
+
+      const userId = new ObjectId(userData._id);
+      const productData = await productModel.findOne({ _id: productId });
+
+      // Check if product exists
+      if (!productData) {
+          req.session.wishlistMessage = 'Product not found.';
+          return res.redirect('/shop'); // Redirect with message
+      }
+
+      // Insert into wishlist
+      const data = await wishlistModel.collection.insertOne({
+          userId: userId,
+          productId: productData._id,
       });
+
       console.log(data);
-      req.session.wishlistMessage='successfully added';
-      res.redirect('/shop')
+      req.session.wishlistMessage = 'Successfully added to wishlist!';
+      // res.redirect('/shop'); // Redirect after successful addition
+      res.json({ success: true, message: 'Successfully added to wishlist!' });
+
   } catch (error) {
-    res.status(500).redirect('/500');  }
+      console.error('Error adding to wishlist:', error);
+      req.session.wishlistMessage = 'An error occurred while adding to the wishlist.';
+      res.status(500).redirect('/500'); // Redirect to custom error page
+  }
 },
-
-
 
 getWishlistPage: async (req, res) => {
   try {
@@ -890,25 +1147,175 @@ getMyWallet: async (req, res) => {
         });
       }
   
-      await userModel.updateOne({ _id: userId }, { $set: { name, email, phone } });
-  
-      return res.redirect(`/user-account?status=success`);
+      req.session.updateData=req.body;
+      const otp= sendEmail.sendEmail(req.body.email)
+      console.log(otp);
+      req.session.otp = otp;
+      res.redirect('/otp');
+      // return res.redirect(`/user-account?status=success`);
   
     } catch (error) {
       console.log(error.message);
       res.status(500).redirect('/500');    }
   },
-  
-  
+
+  loadotp:async (req,res)=>{
+    try {
+      res.render("user/otp");
+    } catch (error) {
+      console.log(error);
+    }
+  },
 
 
+
+  verifyOTP: async (req, res) => {
+    try {
+      const token = req.cookies.UserToken;
+      const userData = tokenVerification(token);
+      const data = req.session.updateData;
+      const { otp } = req.body;
   
+      if (req.session.otp === Number(otp)) {
+        await userModel.updateOne(
+          { _id: new ObjectId(userData._id) },
+          {
+            $set: {
+              name: data.name,
+              email: data.email,
+              phone: data.phone,
+            },
+          }
+        );
+  
+  
+        res.json({ success: true });
+      } else {
+        res.status(400).json({ success: false, message: 'Invalid OTP. Please try again.' });
+        // return res.redirect('/verifyOTP');
+      }
+    } catch (error) {
+      console.log(error.message);
+      res.status(500).send('Internal Server Error'); 
+    }
+  },
+  
+resendOTP: async (req,res)=>{
+  try {
+    
+    const email=req.session.updateData.email;
+    if (!req.session.updateData || !email) {
+      req.session.message = "No user data found. Please try registering again.";
+      return res.redirect('/user-account');
+  }
+  const otp= sendEmail.sendEmail(email)
+  console.log(otp,"resend otp");
+  req.session.otp = otp;
+  req.session.message = "OTP has been resent to your updated email.";
+
+  return res.status(200).json({ success: true, message: req.session.message });
+} catch (error) {
+  console.log("Error resending OTP:", error);
+  req.session.message = "Error resending OTP. Please try again.";
+  res.redirect("/verifyOTP");
+}
+},
+verifyEmail: async (req, res) => {
+  const email = req.body.email;
+  req.session.email = email;
+  const token = req.cookies.UserToken;
+  const userData = tokenVerification(token); // Assuming this function verifies the token and returns user data
+
+  try {
+      // Check if the entered email exists in the database
+      const enteredEmail = await userModel.findOne({ email });
+      if (!enteredEmail) {
+          return res.status(404).json({ success: false, message: 'Email not found. Please enter your registered email.' });
+      }
+
+      // Check if the entered email matches the logged-in user's email
+      const sameUser = await userModel.findOne({ email: userData.email });
+      if (!sameUser) {
+          return res.status(401).json({ success: false, message: 'User not found. Please log in again.' });
+      }
+
+      // Compare the entered email with the logged-in user's email
+      if (enteredEmail.email !== sameUser.email) {
+          return res.status(400).json({ success: false, message: 'Email not matching. Please enter your registered email.' });
+      }
+
+      // If the emails match, redirect to /newPassword
+      return res.status(200).json({ success: true, message: 'Emails match.', redirect: '/newPassword' });
+
+  } catch (error) {
+      console.error(error.message);
+      return res.status(500).json({ success: false, message: 'Server error. Please try again later.' });
+  }
+},
+
+
+newPassword:  async (req,res)=>{
+  try {
+    console.log("new passwe");
+    res.render("user/newPassword",{
+      title:"change password"
+    })
+  } catch (error) {
+    console.log(error.message);
+  }
+},
+updatePassword: async (req, res) => {
+  console.log(req.body);
+  const token = req.cookies.UserToken;
+  const userData = tokenVerification(token);
+  const { currentPassword, newPassword, confirmNewPassword } = req.body;
+
+  try {
+      // Fetch the user from the database
+      const user = await userModel.findOne({ email: userData.email });
+
+      if (!user) {
+          return res.status(404).json({ message: 'User not found' });
+      }
+
+      console.log("Received Current Password: ", currentPassword);
+      console.log("Stored Hashed Password: ", user.password);
+
+      // Check if the current password matches the hashed password
+      const isMatch = await bcrypt.compare(currentPassword, user.password);
+      console.log("Password Match Result: ", isMatch); // Log the result of the comparison
+      if (!isMatch) {
+          return res.status(400).json({ message: 'Current password is incorrect' });
+      }
+
+      // Check if new password and confirm password match
+      if (newPassword !== confirmNewPassword) {
+          return res.status(400).json({ message: 'New password and confirm password do not match' });
+      }
+
+      // Hash the new password
+      const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+      // Update the user's password in the database
+      user.password = hashedNewPassword;
+      await user.save();
+
+      // Send success response
+      return res.status(200).json({ message: 'Password updated successfully' });
+      
+  } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: 'Internal server error' });
+  }
+},
+
+
  placeOrder : async (req, res) => {
   try {
     const checkOutData = req.body;
     const data = req.session.cartData;
     req.session.grandTotal = req.body.total;
-    
+    console.log(checkOutData,"check data");
     // Verify user authentication
     const token = req.cookies.UserToken;
     const userData = tokenVerification(token);
@@ -928,24 +1335,25 @@ getMyWallet: async (req, res) => {
     let totalOfferDiscount = 0; // Initialize total offer discount
     const coupon = checkOutData.couponCode ? await couponModel.findOne({ code: checkOutData.couponCode }) : null;
     const couponValue = coupon ? parseFloat(coupon.value) : 0; // Get coupon value if present
-  
-    // Prepare product details and calculate applied offers and coupon discounts
+     
     const productDetails = await Promise.all(data.products.map(async (productId, index) => {
       const product = await productModel.findById(new ObjectId(productId));
       const quantity = parseInt(data.quantities[index]);
       const priceFromGrandTotal = parseFloat(data.prices[index]);
       const calculatedPrice = priceFromGrandTotal / quantity;
+
   
       let appliedOffer = 0;
       if (product.price !== calculatedPrice) {
         appliedOffer = product.price - calculatedPrice; // Calculate applied offer
         totalOfferDiscount += appliedOffer * quantity; // Accumulate the total offer discount
       }
-     let offerPrice = product.price-appliedOffer;
-      // Calculate individual coupon discount for this product
+     let offerPrice = priceFromGrandTotal;
       let couponDiscount = 0;
+      const orderTotal= checkOutData.total + couponDiscount;
+      console.log(calculatedPrice,"checiocds");
       if (coupon) {
-        couponDiscount = (calculatedPrice * quantity * couponValue) / 100; // Calculate coupon discount per product
+        couponDiscount =Number((offerPrice * quantity) /orderTotal )* checkOutData.couponDiscount; // Calculate coupon discount per product
       }
   
       return {
@@ -962,14 +1370,20 @@ getMyWallet: async (req, res) => {
     console.log("Product Details with Discounts:", productDetails);
       // console.log('Product Details with Offers:', productDetails);
       // console.log('Total Offer Discount:', totalOfferDiscount);
-  
+      function generatePaymentId() {
+        const prefix = "pay_";
+        const randomString = Math.random().toString(36).substr(2, 16); // Generates a random alphanumeric string
+        return prefix + randomString;
+    }
+    
       // Wallet Payment Logic
       if (req.body.payment === 'wallet') {
         const walletData = await walletModel.findOne({ userId: userId });
         if (!walletData) {
           return res.status(400).json({ success: false, message: 'No wallet found for the user.' });
         }
-  
+        const paymentId = generatePaymentId();
+
         const walletBalance = walletData.balance;
   
         if (walletBalance >= totalAmount) {
@@ -989,12 +1403,13 @@ getMyWallet: async (req, res) => {
             paymentDetails: {
               method: req.body.payment,
               orderId: orderId,
+              paymentId:paymentId,
+              productOrderStatus:"Confirmed"
             },
             couponDiscount: checkOutData.couponDiscount,
             couponCode: checkOutData.couponCode,
             offerDiscount: totalOfferDiscount,
             grandTotal: totalAmount,
-            orderStatus: 'Confirmed',
             placedAt: new Date(),
           });
   
@@ -1042,11 +1457,15 @@ getMyWallet: async (req, res) => {
         const razorpayOrder = await razorpay.orders.create(options);
   
         const orderId = generateOrderId();
-  
+        const updatedProductDetails = productDetails.map(product => ({
+          ...product,
+          productOrderStatus: 'payment pending',  // Add this field to each product
+        }));
+        
        const orderData= await orderModel.collection.insertOne({
           userId: userId,
           deliveryAddress: new ObjectId(req.body.address),
-          productsDetails: productDetails,
+          productsDetails: updatedProductDetails,
           paymentDetails: {
             method: req.body.payment,
             orderId: razorpayOrder.id,
@@ -1070,7 +1489,7 @@ getMyWallet: async (req, res) => {
           { userId: userId },
           { $set: { products: [] } }
         );
-  
+        req.session.checkOutData=checkOutData;
         return res.json({
           success: true,
           key_id: process.env.RAZORPAY_KEY_ID,
@@ -1097,12 +1516,13 @@ getMyWallet: async (req, res) => {
           paymentDetails: {
             method: req.body.payment,
             orderId: orderId,
+            productOrderStatus:"Confirmed"
           },
           couponDiscount: checkOutData.couponDiscount,
           couponCode: checkOutData.couponCode,
           offerDiscount: totalOfferDiscount,
           grandTotal: totalAmount,
-          orderStatus: 'Confirmed',
+          // orderStatus: 'Confirmed',
           placedAt: new Date(),
         });
   
@@ -1166,7 +1586,8 @@ getMyWallet: async (req, res) => {
       if (!userData) {
         return res.status(401).json({ success: false, message: 'User not authenticated' });
       }
-  
+      const userId = new ObjectId(userData._id);
+       const checkOutData= req.session.checkOutData;
       // Fetch order details from the database
       const order = await orderModel.findOne({ _id: new ObjectId(orderId) });
       if (!order) {
@@ -1182,11 +1603,21 @@ getMyWallet: async (req, res) => {
           $set: {
             orderStatus: 'Confirmed',
             placedAt: new Date(),
+            "paymentDetails.paymentId":razorpay_payment_id,
             "productsDetails.$[].productOrderStatus": 'Confirmed', // Update productOrderStatus for each product in the array
           },
         }
       );
   
+      if (checkOutData.couponCode) {
+        const coupon = await couponModel.findOne({ code: checkOutData.couponCode });
+
+        if (coupon && !coupon.redeemedBy.includes(userId)) {
+          coupon.redeemedBy.push(userId);
+          await coupon.save();
+        }
+      }
+
       // Reduce stock for each product in the order
       for (const product of productDetails) {
         const productId = new ObjectId(product.productId); // Ensure productId is ObjectId
@@ -1203,7 +1634,7 @@ getMyWallet: async (req, res) => {
       }
 
       // If everything is successful, return the response
-      return res.json({ success: true, message: 'Payment verified successfully', orderId });
+      return res.json({ success: true, message: 'Payment verified successfully', id:razorpay_order_id });
     } catch (error) {
       console.error(error.message);
       return res.status(500).json({ success: false, message: 'Internal Server Error' });
@@ -1283,12 +1714,13 @@ getOrderFailed : async(req,res)=>{
 
 getMenCategory: async (req, res) => {
   try {
-      const data = await categoryModel.find({ cname: 'Men' }, { _id: 1 });
-      const categoryId = data.length ? data[0]._id : null; // Get the category ID
+    const data = await categoryModel.find({ cname: { $regex: /^men$/i } }, { _id: 1 });
+    const categoryId = data.length ? data[0]._id : null; // Get the category ID
       const perPage = 8;
       const page = parseInt(req.query.page) || 1;
       const sortOption = req.query.sort || ''; // Get sort option from query params
-
+      const token = req.cookies.UserToken;
+      const userData = tokenVerification(token);
       // Determine sorting criteria based on sortOption
       let sortCriteria = {};
       if (sortOption === 'low_to_high') {
@@ -1331,12 +1763,23 @@ getMenCategory: async (req, res) => {
               offerPrice: offerPrice.toFixed(2) // Format offerPrice to 2 decimal places
           };
       });
+      const wishlistItems  = await wishlistModel.find({ userId: new ObjectId(userData._id) })
+      const wishlistProductIds = wishlistItems.map(item => item.productId.toString());
 
+      const image="/assets/images/collection/next.jpg";
+
+      // Check for any messages to show
+      const showWishlistMessage = req.session.message;
       const count = await productModel.countDocuments({ category: categoryId });
       
       res.render('user/filter', {
           data: productsWithOfferPrice,
           categoryMap,
+          title: 'Men_category',
+          wishlistMessage: showWishlistMessage || null, // Pass message if exists
+          image,
+          wishlistProductIds: wishlistProductIds,
+
           sortOption, // Pass sortOption to the view
           currentPage: page,
           totalPages: Math.ceil(count / perPage)
@@ -1349,19 +1792,20 @@ getMenCategory: async (req, res) => {
 
 getWomenCategory: async (req, res) => {
   try {
-      const data = await categoryModel.find({ cname: 'Women' }, { _id: 1 });
-      const categoryId = data.length ? data[0]._id : null; // Get the category ID
+    const data = await categoryModel.find({ cname: { $regex: /^women$/i } }, { _id: 1 });
+    const categoryId = data.length ? data[0]._id : null; // Get the category ID
       const perPage = 8;
       const page = parseInt(req.query.page) || 1;
       const sortOption = req.query.sort || ''; // Get sort option from query params
-
+      const token = req.cookies.UserToken;
+      const userData = tokenVerification(token);
       let sortCriteria = {};
       if (sortOption === 'low_to_high') {
           sortCriteria = { price: 1 };  // Sort by price ascending
       } else if (sortOption === 'high_to_low') {
           sortCriteria = { price: -1 }; // Sort by price descending
       }
-
+  const image="/assets/images/collection/watch-collection-banner.jpg";
       // Fetch products with pagination, sorting, and populate the category
       const products = await productModel.find({ category: categoryId }) // Filter by the women category
           .populate('category')
@@ -1396,12 +1840,21 @@ getWomenCategory: async (req, res) => {
               offerPrice: offerPrice.toFixed(2) // Format offerPrice to 2 decimal places
           };
       });
+      const wishlistItems  = await wishlistModel.find({ userId: new ObjectId(userData._id) })
+      const wishlistProductIds = wishlistItems.map(item => item.productId.toString());
 
+
+      // Check for any messages to show
+      const showWishlistMessage = req.session.message;
       const count = await productModel.countDocuments({ category: categoryId });
       
       res.render('user/filter', {
           data: productsWithOfferPrice,
           categoryMap,
+          title: 'Women_category',
+          wishlistMessage: showWishlistMessage || null, // Pass message if exists
+          wishlistProductIds: wishlistProductIds,
+          image,
           sortOption,
           currentPage: page,
           totalPages: Math.ceil(count / perPage)
@@ -1413,12 +1866,13 @@ getWomenCategory: async (req, res) => {
 
   getUnisexCategory: async (req,res)=>{
     try {
-      const data = await categoryModel.find({ cname: 'Unisex' }, { _id: 1 });
+      const data = await categoryModel.find({ cname: { $regex: /^unisex$/i } }, { _id: 1 });
       const categoryId = data.length ? data[0]._id : null; // Get the category ID
       const perPage = 8;
       const page = parseInt(req.query.page) || 1;
       const sortOption = req.query.sort || ''; // Get sort option from query params
-
+      const token = req.cookies.UserToken;
+      const userData = tokenVerification(token);
       let sortCriteria = {};
       if (sortOption === 'low_to_high') {
           sortCriteria = { price: 1 };  // Sort by price ascending
@@ -1460,12 +1914,23 @@ getWomenCategory: async (req, res) => {
               offerPrice: offerPrice.toFixed(2) // Format offerPrice to 2 decimal places
           };
       });
+      const wishlistItems  = await wishlistModel.find({ userId: new ObjectId(userData._id) })
+      const wishlistProductIds = wishlistItems.map(item => item.productId.toString());
 
+
+      // Check for any messages to show
+      const showWishlistMessage = req.session.message;
       const count = await productModel.countDocuments({ category: categoryId });
-      
+      const image="/assets/images/collection/next2.jpg";
+
       res.render('user/filter', {
           data: productsWithOfferPrice,
           categoryMap,
+          image,
+          title: 'Unisex_category',
+          wishlistMessage: showWishlistMessage || null, // Pass message if exists
+          wishlistProductIds: wishlistProductIds,
+
           sortOption,
           currentPage: page,
           totalPages: Math.ceil(count / perPage)
@@ -1490,7 +1955,7 @@ getFilter : async (req, res) => {
   
   try {
     // Fetch products from the database with sorting
-    const products = await Product.find().sort(sortQuery);
+    const products = await productModel.find().sort(sortQuery);
     
     // Pass the 'sort' query parameter to the EJS template
     res.render('user/filter', {
@@ -1505,6 +1970,74 @@ getFilter : async (req, res) => {
   }
 },
   
+searchSort: async (req, res) => {
+  try {
+      const { page = 1, sort = 'default' } = req.query;
+      const data = req.session.data; // Retrieve search results stored in the session
+      const limit = 10; // Set the number of products per page
+      const skip = (page - 1) * limit; // Calculate the number of products to skip
+      const token = req.cookies.UserToken;
+      const userData = tokenVerification(token);
+
+      if (!data || data.length === 0) {
+          // If no search data is stored in the session, redirect to an empty search result or error page
+          return res.redirect('/search');
+      }
+
+      // Define sorting criteria based on user selection
+      let sortCriteria;
+      switch (sort) {
+          case 'low_to_high':
+              sortCriteria = { offerPrice: 1 }; // Ascending order by offer price
+              break;
+          case 'high_to_low':
+              sortCriteria = { offerPrice: -1 }; // Descending order by offer price
+              break;
+          default:
+              sortCriteria = { createdAt: -1 }; // Default sorting (newest first)
+      }
+
+      // Sort and paginate the search results
+      const sortedData = data.sort((a, b) => {
+          if (sortCriteria.offerPrice) {
+              return sortCriteria.offerPrice * (a.offerPrice - b.offerPrice);
+          }
+          return 0;
+      }).slice(skip, skip + limit);
+
+      // Calculate total pages for pagination
+      const totalPages = Math.ceil(data.length / limit);
+      const categories = await categoryModel.find({ categoryOffer: { $ne: '0' } });
+
+      // Create a map of categories for easier access
+      const categoryMap = {};
+      categories.forEach(category => {
+        categoryMap[category._id] = category.categoryOffer;
+      });
+      // Check for any wishlist items
+      const wishlistItems = await wishlistModel.find({ userId: new ObjectId(userData._id) });
+      const wishlistProductIds = wishlistItems.map(item => item.productId.toString());
+
+      // Render the sorted search results
+      res.render('user/searchResult', {
+          data: sortedData,
+          currentPage: page,
+          totalPages,
+          wishlistProductIds,
+          categoryMap,
+          sortOption: sort // Pass the current sort option for UI highlighting
+      });
+  } catch (error) {
+      console.error('Error fetching sorted search results:', error);
+      res.status(500).json({
+          success: false,
+          message: 'Server error',
+      });
+  }
+},
+
+
+
 
 myOrders : async (req,res)=>{
   try {
@@ -1513,30 +2046,53 @@ myOrders : async (req,res)=>{
    
     const perPage = 8;
     const page = req.query.page || 1;
-    const orders = await orderModel.aggregate ([{
-      $match : {
-        userId : new ObjectId(userData._id)
+    const orders = await orderModel.aggregate([
+      {
+        $match: {
+          userId: new ObjectId(userData._id)
+        }
+      },
+      {
+        $unwind: "$productsDetails"
+      },
+      {
+        $lookup: {
+          from: "products",
+          localField: "productsDetails.productId",
+          foreignField: "_id",
+          as: "productInfo"
+        }
+      },
+      {
+        $unwind: "$productInfo"
+      },
+      {
+        $lookup: {
+          from: "addresses",
+          localField: "deliveryAddress",
+          foreignField: "_id",
+          as: "address"
+        }
+      },
+      {
+        $unwind: "$address"
+      },
+      {
+        $project: {
+          _id: 1,
+          placedAt: 1,
+          "productsDetails.productOrderStatus": 1,  // Include productOrderStatus
+          "productsDetails.quantity":1,
+          'productsDetails.offerPrice':1,
+          "productInfo": 1,  // Include all product information
+          "address": 1 , // Include address details
+          "paymentDetails":1,
+        }
+      },
+      {
+        $sort: { placedAt: -1 }
       }
-    },{$unwind : "$productsDetails"},
-    {$lookup:{
-      from : "products",
-      localField : "productsDetails.productId",
-      foreignField : "_id",
-      as : "productInfo"
-    }},{$unwind : "$productInfo"},
-    {$lookup:{
-      from : "addresses",
-      localField : "deliveryAddress",
-      foreignField : "_id",
-      as : "address",
-
-    }},{$unwind : "$address"},
-
-    {
-      $sort: { placedAt: -1 } 
-    }
-
-  ])
+    ])
     .skip((perPage * page) - perPage)
             .limit(perPage);
             orders.sort((a, b) => new Date(b.placedAt) - new Date(a.placedAt));
@@ -1768,7 +2324,7 @@ userCancelOrder: async (req, res) => {
               orderId: order._id,
               paymentType: 'credit',
               date: new Date(),
-              amount: totalRefundAmount
+              amount: Math.round(totalRefundAmount)
             }],
           });
         } else {
@@ -1782,7 +2338,7 @@ userCancelOrder: async (req, res) => {
                   orderId: order._id,
                   paymentType: 'credit',
                   date: new Date(),
-                  amount: totalRefundAmount
+                  amount: Math.round(totalRefundAmount)
                 }
               }
             }
@@ -2009,9 +2565,17 @@ postApplyCoupon: async (req, res) => {
           return res.status(400).json({ message: `Minimum purchase of ₹${coupon.min_purchase} is required to use this coupon.` });
       }
 
-      const flat_rate = 30; // Delivery charge
-      const discountPercentage = coupon.value; // Use coupon's value as a percentage
-      const discountAmount = (grandTotal * discountPercentage) / 100; // Calculate the discount amount
+      
+
+      const flat_rate = 0; // Delivery charge
+      const discountPercentage = coupon.value; 
+      let discount = (grandTotal * discountPercentage) / 100; 
+      if(coupon.max_discount>=discount){
+        discountAmount=discount;
+      }else{
+        discountAmount=coupon.max_discount;
+      }
+      console.log(discountAmount,"amount");
       const totalWithDiscount = grandTotal - discountAmount + flat_rate; // Calculate total after applying the coupon
 
       // Store the coupon information in the session if needed
@@ -2134,110 +2698,41 @@ if (!refferaluserExists) {
     console.log(error.message);
     res.status(500).json({ message: "An error occurred during referral redemption" });
   }
-}
+},
 
 
-
-
-  
-
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// addToCart : async (req,res)=>{
-  
-//   const cart= await cartModel.find(req.session.cartId );
-//   if (!cart) {
-//    // If no cart exists, create a new one
-//    const newCart = new cartModel({
-//        products: []
-//    });
-//    await newCart.save();
-//    req.session.cartId = newCart._id;
-//    cart = newCart;
-// }
-//   const productId = req.params.id;
-//   const product = await productModel.findById(productId);
-  
-//   const itemIndex = cart.products.findIndex(p => p.productId == productId);
-
-//   if (itemIndex > -1) {
-//       cart.products[itemIndex].quantity += 1;
-//   } else {
-//       cart.products.push({ productId: productId, quantity: 1 });
-//   }
-
-//   await cart.save();
-//   req.session.cartId = cart._id;
-//   res.redirect('/cart');
-
-
-
-
-// placeOrder: async(req, res) => {
-//   try {
-//     console.log(req.body.payment);
-//     const token = req.cookies.UserToken;
-//     const userData = tokenVerification(token);  
-//     const cartData = await cartModel.findOne({ userId: new ObjectId(userData._id) });
+get404 :(req,res)=>{
+  try {
     
-//     if (!cartData || cartData.products.length === 0) {
-//       return res.status(400).send('Cart is empty. Cannot place order.');
-//     }
+  res.status(404).render('user/404');
 
-//     // Mapping product details from the cart
-//     const productDetails = cartData.products.map((product) => {
-//       return {
-//         productId: new ObjectId(product.productId),
-//         quantity: product.quantity
-//       };
-//     });
-//     if(req.body.payment)
-//     // Insert the order into the database
-//     await orderModel.collection.insertOne({
-//       userId: new ObjectId(userData._id),
-//       deliveryAddress: new ObjectId(req.body.address),
-//       productsDetails: productDetails,
-//       paymentMethod: req.body.payment,
-//       grandTotal: req.session.grandTotal,
-//       orderStatus: 'confirm',
-//       placedAt: new Date().toDateString()
-//     });
+  } catch (error) {
+    console.log(error);
+  }
+},
 
-//     // Decrease product quantities in the productModel
-//     for (const product of productDetails) {
-//       await productModel.updateOne(
-//         { _id: product.productId },
-//         { $inc: { quantity: -Number(product.quantity) } } // Decrease product quantity
-//       );
-//     }
 
-//     // Clear the user's cart
-//     await cartModel.updateOne(
-//       { userId: new ObjectId(userData._id) },
-//       { $set: { products: [] } }
-//     );
 
-//     // Render order successful page
-//     res.render('user/orderSuccessfull');
-//   } catch (error) {
-//     console.log(error.message);
-//     res.status(500).send('Error placing order');
-//   }
-// },
+
+
+
+
+  
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

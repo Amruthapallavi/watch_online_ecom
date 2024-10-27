@@ -65,8 +65,7 @@ body {
 
 .nav-item:hover,
 .nav-item.active {
-    background-color: white; /* White background on hover/active */
-    color: black; /* Black text for active/hovered item */
+    color: orange; /* Black text for active/hovered item */
     border-radius: 5px;
 }
 
@@ -117,6 +116,6 @@ body {
 
 .logout:hover {
     background-color: black; /* Black background on hover */
-    color: white; /* White text on hover */
+    color: orange; /* White text on hover */
     border: 1px solid white; /* White border on hover */
 }

@@ -93,6 +93,7 @@
           <th>Code</th>
           <th>Discount Value (%)</th>
           <th>Min Purchase</th>
+          <th>Max_Discount</th>
           <th>Expires At</th>
           <th>Action</th>
         </tr>
@@ -103,6 +104,7 @@
             <td><%= coupon.code %></td>
             <td><%= coupon.value %></td>
             <td><%= coupon.min_purchase %></td>
+            <td><%= coupon.max_discount%></td>
             <td><%= coupon.expiresAt.toISOString().split('T')[0] %></td>
             <td>
               <button class="copy-btn" data-code="<%= coupon.code %>">Copy</button>

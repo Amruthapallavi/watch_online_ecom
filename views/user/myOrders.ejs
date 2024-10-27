@@ -1,96 +1,150 @@
-<%- include('../include/userHeader.ejs') %>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <link rel="stylesheet" href="/css/wishlist.css">
-<style>
-    .status-delivered {
-    color: green;
-}
-.status-Confirmed {
-    color: green;
-}
-.status-cancelled {
-    color: red;
-}
+    
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>TickTrack</title>
+      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 
-.status-other {
-    color: orange;
-}
+      <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+      <link rel="stylesheet" href="/css/wishlist.css">
+      <link rel="stylesheet" href="/css/myOrders.css">
+     <style>
+        /* Custom styles for the navbar */
+        .navbar {
+          background-color: black;
+          min-height: 90px;
+        }
+        .navbar-brand {
+          font-size: 1.5rem;
+          font-weight: bold;
+        }
+        .nav-link {
+          font-size: 1.1rem;
+          transition: color 0.3s ease;
+        }
+        .nav-link:hover {
+          color: #FFD700; /* Gold color on hover */
+        }
+        .dropdown-menu {
+          background-color: #333; /* Darker background for dropdown */
+        }
+        .dropdown-item {
+          color: #fff; /* White text */
+        }
+        .dropdown-item:hover {
+          background-color: #444; /* Slightly lighter on hover */
+        }
+      </style>
+    </head>
+    <body>
+      <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="/userHome">TickTrack</a>
+          
+          <!-- Toggle button for mobile view -->
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          
+          <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+              <li class="nav-item">
+                <a href="/userHome" class="nav-link">Home</a>
+              </li>
+              <li class="nav-item">
+                <a href="/shop" class="nav-link">Shop</a>
+              </li>
+              <li class="nav-item dropdown">
+                <a href="#" class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  My Account
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a href="/account" class="dropdown-item">Account</a></li>
 
-</style>
-<body>
+                  <li><a href="/user-account" class="dropdown-item">Profile</a></li>
+                  <li><a href="#settings" class="dropdown-item">Settings</a></li>
+                </ul>
+              </li>
+              <li class="nav-item">
+                <a href="/wishlist" class="nav-link">❤️</a>
+              </li>
+              <li class="nav-item">
+                <a href="/cart" class="nav-link">🛒</a>
+              </li>
+              <li class="nav-item">
+                <a href="/userLogout" class="nav-link">Logout</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    
+      <!-- Bootstrap JS bundle -->
+  
+    
+
   
     <!-- Wish List Content -->
     <div class="wishlist-container">
         <h1 style="text-align: center;">Your Orders</h1>
-        <div class="product-list">
-            <% orders.forEach(product => { %>
-            <div class="product-card">
-                <img style="max-width: 120px" src="/<%=product.productInfo.image[0]%>" alt="something" />
-                <div class="product-details">
-                    <p>Product Name: <%= product.productInfo.pname %></p>
-                    <p>MRP: <%= product.grandTotal %></p>
-    
-                    <!-- Conditional Styling for Order Status -->
-                    <p>Status: 
-                        <span class="order-status" data-status="<%= product.orderStatus %>">
-                            <%= product.orderStatus %>
-                        </span>
-                    </p>
-                    
-                    
-                    
-    
-                    <td><%= String(product.placedAt).split(' ').slice(0, 4).join(' ') %></td>
+        <div class="order-list">
+            <% 
+            // Group products by their order ID
+            const ordersGroupedByOrderId = {};
+            orders.forEach(product => {
+                if (!ordersGroupedByOrderId[product._id]) {
+                    ordersGroupedByOrderId[product._id] = [];
+                }
+                ordersGroupedByOrderId[product._id].push(product);
+            });
+        
+            // Loop over the grouped orders and display products for each order
+            Object.keys(ordersGroupedByOrderId).forEach(orderId => {
+                const orderProducts = ordersGroupedByOrderId[orderId];
+            %>
+                <div class="order-card">
+                    <!-- Order Information -->
+                    <div class="order-info">
+                        <h5><b>Order ID: <%= orderProducts[0].paymentDetails?.orderId || 'N/A' %></b></h5>
+                        <p>Placed At: <%= new Date(orderProducts[0].placedAt).toLocaleDateString() %></p>
+                    </div>
+        
+                    <!-- Products Information -->
+                    <% orderProducts.forEach(product => { %>
+                        <div class="product-item">
+                            <!-- Product Image -->
+                            <img class="product-img" src="/<%= product.productInfo.image[0] %>" alt="<%= product.productInfo.pname %>" />
+        
+                            <!-- Product Details -->
+                            <div class="product-details">
+                                <p><strong>Product Name:</strong> <%= product.productInfo.pname %></p>
+                                <p><strong>MRP:</strong> ₹<%= product.productInfo.price %></p>
+                                <p><strong>Offer Price:</strong> ₹<%= product.productsDetails.offerPrice %></p>
+                                <p><strong>Quantity:</strong> <%= product.productsDetails.quantity %></p>
+                                <p><strong>Status:</strong> 
+                                    <span class="order-status" data-status="<%= product.productsDetails.productOrderStatus %>">
+                                        <%= product.productsDetails.productOrderStatus %>
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                    <% }); %>
+        
+                    <!-- Status Button -->
+                    <div class="order-actions">
+                        <form action="/my-orderDetailes/<%= orderProducts[0]._id %>" method="POST">
+                            <button class="btn btn-dark remove-btn">View Status</button>
+                        </form>
+                    </div>
                 </div>
-                <div class="product-actions">
-                    <form action="/my-orderDetailes/<%= product._id %>" method="POST">
-                        <button class="btn btn-dark remove-btn">Status</button>
-                    </form>
-                </div>
-            </div>
             <% }); %>
         </div>
+        
     </div>
-    
-
-    <!-- Footer -->
-    <!-- <footer class="footer">
-        <div class="footer-content">
-            <div class="footer-section about">
-                <h3>Tick-Tock</h3>
-                <ul class="socials">
-                    <li><a href="#">Facebook</a></li>
-                    <li><a href="#">Instagram</a></li>
-                    <li><a href="#">LinkedIn</a></li>
-                </ul>
-            </div>
-            <div class="footer-section links">
-                <h4>About</h4>
-                <ul>
-                    <li><a href="#">About Us</a></li>
-                    <li><a href="#">Category</a></li>
-                    <li><a href="#">Blog</a></li>
-                </ul>
-            </div>
-            <div class="footer-section links">
-                <h4>Information</h4>
-                <ul>
-                    <li><a href="#">Help Center</a></li>
-                    <li><a href="#">Contact Us</a></li>
-                </ul>
-            </div>
-            <div class="footer-section links">
-                <h4>Users</h4>
-                <ul>
-                    <li><a href="#">Login</a></li>
-                    <li><a href="#">Register</a></li>
-                    <li><a href="#">My Orders</a></li>
-                </ul>
-            </div>
-        </div>
-    </footer> -->
-    <div class="pagination">
+   <div class="pagination">
         <% if (currentPage > 1) { %>
         <a href="/my-orders?page=<%= currentPage - 1 %>">&laquo;</a>
         <% } %>
@@ -121,5 +175,7 @@
 });
 
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
     <%- include('../include/userFooter') %>
 

@@ -3,6 +3,8 @@ const adminModel = require("../models/adminModel");
 const productModel = require('../models/productModel');
 const bcrypt = require("bcrypt");
 const flash = require('connect-flash');
+const crypto = require('crypto');
+
 require('dotenv').config()
 const jwt = require('jsonwebtoken');
 const {generateHash,generateResetToken,validPassword} = require('../models/userModel')
@@ -102,6 +104,8 @@ const doUserSignup= async(req,res)=>{
       console.log(error.message);  
     }
 }
+
+
 const loadotp= async (req,res)=>{
     try {
         res.render('auth/verifyotp');
@@ -110,93 +114,65 @@ const loadotp= async (req,res)=>{
         console.log(error.message);
     }
 }
-// const sendOtp = async (req,res)=>{
-//     const { email } = req.body;
-//     async function sendOtp(email) {
-        
-    
-//         const randomotp = Math.floor(1000 + Math.random() * 9000);
-//         console.log(randomotp);
-//         const transporter = nodemailer.createTransport({
-//             service:'gmail',
-//             auth: {
-//                 user:process.env.USER_MAIL,
-//                 pass:process.env.NODEMAILER_PASS_KEY
-//             }
-//         });
-
-//         const mailOptions= {
-//             from :process.env.USER_MAIL,
-//             to:email,
-//             subject:'Email Verification',
-//             text:`your verification OTP is ${randomotp}`
-//         };
-        
-        
-      
-    
-//         try {
-//             let info = await transporter.sendMail(mailOptions);
-//             console.log('OTP sent: %s', info.messageId);
-//         } catch (error) {
-//             console.error('Error sending OTP:', error);
-//         }
-//     }
-    
-//     sendOtp();
 
 
-//         // req.session.otp = randomotp
 
-//         console.log(req.session.otp)
-//         setTimeout(() => {
-//             console.log('session ended')
-//         }, 30000);
+const resendOtp = async (req, res) => {
+    try {
+        console.log( req.session.userData ,"data in resend OTP");
+        if (!req.session.userData || !req.session.userData.email) {
+            req.session.message = "No user data found. Please try registering again.";
+            return res.redirect('/signUp');
+        }
+        const otp= sendEmail.sendEmail(req.session.userData.email)
+        console.log(otp,"resend otp");
+        req.session.otp = otp;
+        // Update session with new OTP
+        req.session.message = "OTP has been resent to your registered email.";
 
-//         req.session.otpTime = Date.now()
+        return res.status(200).json({ success: true, message: req.session.message });
+        // res.redirect("/verifyotp");
+    } catch (error) {
+        console.log("Error resending OTP:", error);
+        req.session.message = "Error resending OTP. Please try again.";
+        res.redirect("/verifyOTP");
+    }
+};
 
-//         res.render('auth/verifyotp', { message: '' })
-//     } 
-        
-const resendOtp= (req, res) => {
-    console.log(req.session.userData);
 
-    // const otp= sendEmail.sendEmail(req.body.email)
-    // req.session.message = "otp has resend to the registered email";
-    // req.session.otp = otp;
-    // res.redirect("/verifyOTP");
-  }
 
-  const crypto = require('crypto');
+const verifyOtp = async (req, res) => {
+    try {
+        const data = req.session.userData; 
+        const { otp } = req.body; 
 
-  const verifyOtp = async (req, res) => {
-      try {
-          const data = req.session.userData;
-          const hashedPassword = await bcrypt.hash(data.password, 10);
-          const { otp } = req.body; // Extract OTP from the request body
-  
-          if (req.session.otp === Number(otp)) {
-              // Generate a unique referral code
-              const referralCode = generateUniqueReferralCode();
-  
-              // Insert the new user into the database with the referral code
-              await userModel.collection.insertOne({
-                  name: data.name,
-                  email: data.email,
-                  phone: data.phone,
-                  password: hashedPassword,
-                  is_active: true,
-                  referralCode: referralCode // Save the generated referral code
-              });
-  
-              res.redirect('/login');
-          }
-      } catch (error) {
-          console.log(error.message);
-          res.redirect('/500');
-      }
-  }
-  
+        const enteredOtp = Number(otp);
+        const sessionOtp = req.session.otp; 
+
+        if (enteredOtp === sessionOtp) {
+            const hashedPassword = await bcrypt.hash(data.password, 10);
+            const referralCode = generateUniqueReferralCode();
+
+            await userModel.collection.insertOne({
+                name: data.name,
+                email: data.email,
+                phone: data.phone,
+                password: hashedPassword,
+                is_active: true,
+                referralCode: referralCode
+            });
+
+            // Respond with a success message
+            res.json({ success: true });
+        } else {
+            res.status(400).json({ success: false, message: 'Invalid OTP. Please try again.' });
+        }
+    } catch (error) {
+        console.log(error.message);
+        res.status(500).json({ message: 'Internal Server Error. Please try again later.' });
+    }
+}
+
   const generateUniqueReferralCode = () => {
       return crypto.randomBytes(4).toString('hex').toUpperCase(); 
   }
@@ -231,10 +207,10 @@ const doUserLogin = async (req, res) => {
 
                     res.redirect('/userHome');
                 } else {
-                    res.render('auth/userLogin', { message: 'Invalid credentials' });
+                    res.render('auth/userLogin', { invalid: 'Invalid credentials' });
                 }
             } else {
-                res.render('auth/userLogin', { message: 'You are currently blocked' });
+                res.render('auth/userLogin', { invalid: 'You are currently blocked' });
             }
         } else {
             res.render('auth/userLogin', { message: 'Invalid credentials' });
@@ -311,8 +287,7 @@ const adminLogout = (req, res) => {
             console.log('Error destroying session:', err);
             return res.redirect('/admin'); // Redirect to admin page in case of an error
         }
-        
-        res.redirect('/admin');
+        res.render('auth/adminLogin',{title:"admin_login",error:'successfully LoggedOut'});
     });
 };
 
@@ -330,6 +305,29 @@ const successGoogleLogin = (req , res) => {
 
 const failureGoogleLogin = (req , res) => { 
 	res.send("Error"); 
+}
+
+
+const resendOTP = async (req,res)=>{
+    try {
+        console.log(req.session.forgotPass,"check mail for forgot password")
+        if (!req.session.forgotPass || !req.session.forgotPass) {
+            req.session.message = "No user data found. Please try  again.";
+            return res.redirect('/forgot-password');
+        }
+        const otp= sendEmail.sendEmail(req.session.forgotPass)
+        console.log(otp,"resend otp");
+        req.session.otp = otp;
+        // Update session with new OTP
+        req.session.message = "OTP has been resent to your registered email.";
+
+        return res.status(200).json({ success: true, message: req.session.message });
+        // res.redirect("/verifyotp");
+    } catch (error) {
+        console.log("Error resending OTP:", error);
+        req.session.message = "Error resending OTP. Please try again.";
+        res.redirect("/getOtpPage");
+    }
 }
 
 
@@ -389,14 +387,16 @@ const getOtpPage = async (req,res)=>{
 const getNewPassword= (req, res) => {
     res.render("auth/newPassword", { title: "Change password" });
   }
+
+
 const doNewPasswordOtp= async (req, res) => {
     console.log(req.body.otp);
     console.log(req.session.otp);
     if (req.session.otp == req.body.otp) {
-      res.redirect("/newPass");
+res.json({ success: true, redirect: "/newPass" });
     } else {
       req.session.error=( "Invalid OTP");
-      res.redirect("/getotpPage");
+      res.status(400).json({ success: false, message: 'Invalid OTP. Please try again.' });
     }
   }
 // const resetPassword = async (req,res)=>{
@@ -478,6 +478,7 @@ getResetPass,
 postForgotPass,
 doNewPasswordOtp,
 doNewPassword,
+resendOTP,
 // resetPassword
 
 
@@ -489,6 +490,55 @@ doNewPassword,
 
 
 
+
+
+// const sendOtp = async (req,res)=>{
+//     const { email } = req.body;
+//     async function sendOtp(email) {
+        
+    
+//         const randomotp = Math.floor(1000 + Math.random() * 9000);
+//         console.log(randomotp);
+//         const transporter = nodemailer.createTransport({
+//             service:'gmail',
+//             auth: {
+//                 user:process.env.USER_MAIL,
+//                 pass:process.env.NODEMAILER_PASS_KEY
+//             }
+//         });
+
+//         const mailOptions= {
+//             from :process.env.USER_MAIL,
+//             to:email,
+//             subject:'Email Verification',
+//             text:`your verification OTP is ${randomotp}`
+//         };
+        
+        
+      
+    
+//         try {
+//             let info = await transporter.sendMail(mailOptions);
+//             console.log('OTP sent: %s', info.messageId);
+//         } catch (error) {
+//             console.error('Error sending OTP:', error);
+//         }
+//     }
+    
+//     sendOtp();
+
+
+//         // req.session.otp = randomotp
+
+//         console.log(req.session.otp)
+//         setTimeout(() => {
+//             console.log('session ended')
+//         }, 30000);
+
+//         req.session.otpTime = Date.now()
+
+//         res.render('auth/verifyotp', { message: '' })
+//     } 
 
 
 

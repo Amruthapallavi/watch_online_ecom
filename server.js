@@ -22,9 +22,9 @@ const bodyParser= require("body-parser");
 require('dotenv').config();
 const cors = require('cors');
 app.use(cors({
-    origin: 'http://your-frontend-domain.com', // Replace with your frontend URL
+    origin: 'http://your-frontend-domain.com', 
     methods: ['POST', 'GET'],
-    credentials: true // If you are sending cookies or using sessions
+    credentials: true // you are sending cookies or using sessions
 }));
 
 const userRouter= require('./routes/userRoutes');
@@ -46,25 +46,18 @@ app.use((req, res, next) => {
   next();
 });
 app.set('view engine','ejs');
-
-
-app.use('/',userRouter);
-app.use('/',authRouter);
-app.use('/',adminRouter);
 app.use(express.json());
 
 //for the static files.h
 app.use(express.static(path.join(__dirname,'public')));
 app.use(express.static(path.join(__dirname, 'uploadedImages')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploadedImages')));
 
-app.get('*', (req, res) => {
-  res.status(404).render('user/404'); // Renders the 404 page
-});
 
-app.use((err, req, res, next) => {
-  console.error(err.stack); // Log the error for debugging
-  res.status(500).render('user/500'); // Renders the 500 page
-});
+app.use('/',userRouter);
+app.use('/',authRouter);
+app.use('/',adminRouter);
+
 app.use(passport.initialize());
 app.use(passport.session());
 
