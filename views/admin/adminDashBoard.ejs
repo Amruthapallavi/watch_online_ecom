@@ -156,7 +156,7 @@ input[type="date"], select {
     <div class="summary">
         <div class="card visits">
             <h2>Total Sales</h2>
-            <p id="overallSales"><%= data.totalGrandTotal || 0 %></p>
+            <p id="overallSales"><%= (data.totalGrandTotal || 0).toFixed(2) %></p>
         </div>
         <div class="card revenue">
             <h2>Orders</h2>

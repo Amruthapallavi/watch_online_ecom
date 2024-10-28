@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us | Tick-Track</title>
+    <!-- <link rel="stylesheet" href="/public/css/webhome.css"> -->
+    <style>
+        /* General Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-image: url('https://wallpaperaccess.com/full/1536545.jpg');
+            background-size: cover;
+            background-repeat: no-repeat;
+            color: #f8f8f8;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            flex-grow: 1;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+        }
+
+        .logo h1 {
+            font-family: 'Georgia', serif;
+            font-size: 36px;
+            color: #fff;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 20px;
+        }
+
+        nav ul li a {
+            text-decoration: none;
+            color: #fff;
+            font-size: 16px;
+            transition: color 0.3s;
+        }
+
+        nav ul li a:hover {
+            color: #ffd700;
+        }
+
+        /* About Section */
+        .about-section {
+            max-width: 800px;
+            margin: 50px auto;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            color: #f8f8f8;
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        .about-section h2 {
+            font-family: 'Georgia', serif;
+            font-size: 36px;
+            margin-bottom: 20px;
+            color: #ffd700;
+        }
+
+        .about-section p {
+            font-size: 18px;
+            line-height: 1.7;
+            margin-bottom: 20px;
+            color: #ddd;
+        }
+
+        .about-section h3 {
+            font-size: 24px;
+            color: #ffd700;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        .about-section ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0 auto;
+            text-align: left;
+            max-width: 600px;
+        }
+
+        .about-section ul li {
+            font-size: 18px;
+            color: #bbb;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .about-section ul li:before {
+            content: '✓';
+            margin-right: 8px;
+            color: #ffd700;
+        }
+
+        .about-button {
+            margin-top: 30px;
+        }
+
+        .about-button .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #ffd700;
+            color: #000;
+            font-size: 16px;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            transition: transform 0.3s ease, background-color 0.3s ease;
+        }
+
+        .about-button .btn:hover {
+            background-color: #f8f8f8;
+            transform: scale(1.05);
+        }
+
+        /* Footer */
+        footer {
+            padding: 15px;
+            text-align: center;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            font-size: 0.9em;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            .about-section {
+                padding: 20px;
+            }
+
+            .about-section h2 {
+                font-size: 28px;
+            }
+
+            .about-section h3 {
+                font-size: 22px;
+            }
+
+            .about-section p,
+            .about-section ul li {
+                font-size: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo h1 {
+                font-size: 28px;
+            }
+
+            .about-section h2 {
+                font-size: 24px;
+            }
+
+            .about-button .btn {
+                padding: 10px 20px;
+                font-size: 0.9em;
+            }
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+        }
+
+        .logo h1 {
+            font-family: 'Georgia', serif;
+            font-size: 36px;
+            color: #fff;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 20px;
+        }
+
+        nav ul li a {
+            text-decoration: none;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        nav ul li a:hover {
+            color: #c0c0c0;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+
+    <header>
+        <div class="logo">
+            <h1>Tick-Track</h1>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/about">About</a></li>
+                <li><a href="/help">Help</a></li>
+            </ul>
+        </nav>
+    </header>
+       
+
+        <main>
+            <section class="about-section">
+                <h2>About Tick-Track</h2>
+                <p>Welcome to Tick-Track, where we bring the art of timekeeping to life. At Tick-Track, we believe that a watch is more than just a device to tell time; it’s an extension of one’s personal style, a symbol of luxury, and a timeless companion.</p>
+                
+                <h3>Our Collection</h3>
+                <p>Our collection is carefully curated to offer something for everyone. Whether you’re seeking a sophisticated look, a sporty design, or a timeless classic, we have something to match your taste and lifestyle. Explore our exclusive categories:</p>
+                <ul>
+                    <li><strong>Men's Collection:</strong> Rugged, refined, and classic styles crafted to suit any occasion.</li>
+                    <li><strong>Women's Collection:</strong> Elegant, bold, and versatile watches that add a touch of luxury to every outfit.</li>
+                    <li><strong>Unisex Collection:</strong> Sleek and versatile designs that transcend trends and make a statement for anyone.</li>
+                </ul>
+
+                <h3>Our Brands</h3>
+                <p>We proudly feature an array of renowned brands known for their quality and craftsmanship. Each brand in our collection is selected to meet our standards for precision, durability, and design. We ensure that every watch you purchase from Tick-Track is a true investment in quality.</p>
+                
+                <h3>Why Choose Us?</h3>
+                <p>Tick-Track is committed to providing a seamless and luxurious shopping experience. From the moment you browse our collection to the time your watch arrives at your doorstep, we focus on quality, convenience, and customer satisfaction.</p>
+
+                <div class="about-button">
+                    <a href="/login" class="btn">Explore Our Collection</a>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Tick-Track. All Rights Reserved.</p>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

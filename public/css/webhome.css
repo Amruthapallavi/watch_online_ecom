@@ -41,11 +41,12 @@ nav ul {
 nav ul li a {
     text-decoration: none;
     color: #fff;
+
     font-size: 16px;
 }
 
 nav ul li a:hover {
-    color: #c0c0c0;
+    color: #010101;
 }
 .hero {
     display: flex;
@@ -93,4 +94,49 @@ nav ul li a:hover {
 .hero-image img {
     max-width: 100%;
     border-radius: 15px;
+}
+footer {
+    padding: 15px;
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    font-size: 0.9em;
+}
+
+html, body {
+    height: 100%; /* Ensure full height for body */
+    margin: 0; /* Reset margin to prevent unwanted spacing */
+}
+
+.container {
+    min-height: calc(100vh - 80px); /* Adjust based on footer height */
+    display: flex;
+    flex-direction: column; /* Allow for footer to be positioned at the bottom */
+    justify-content: space-between; /* Ensure space is distributed evenly */
+}
+
+main {
+    flex: 1; /* Allow the main content to expand and take up space */
+}
+
+footer {
+    padding: 15px;
+    text-align: center;
+    background-color: rgba(13, 13, 13, 0.9); /* Slightly darker background */
+    color: #c0c0c0; /* Light grey for softer contrast */
+    font-size: 0.9em;
+    border-top: 1px solid #444; /* Subtle border for separation */
+    box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.5); /* Subtle shadow effect */
+    width: 100%;
+    margin-top: 150px; /* Add margin to push footer lower */
+}
+
+footer p {
+    margin: 5px 0;
+    letter-spacing: 0.5px;
+}
+
+footer p:hover {
+    color: #fff; /* White on hover */
+    transition: color 0.3s ease;
 }

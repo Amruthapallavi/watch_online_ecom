@@ -158,8 +158,10 @@ const getHomePage = async (req, res) => {
             },
             {
                 $match: {
-                    "productsDetails.productOrderStatus": { $nin: ['Cancelled', 'payment pending'] }
-                }
+                    
+                        "productsDetails.productOrderStatus": { $in: ['Confirmed', 'Delivered', 'Pending'] }
+                    
+                                    }
             },
             {
                 $project: {
@@ -281,7 +283,7 @@ const getHomePage = async (req, res) => {
                 $sort: { placedAt: -1 } 
             }
         ]).exec();
-        
+        console.log(overall[0],"checking data");
         
         res.render('admin/adminDashBoard', {
             title: 'admin_home',
@@ -2194,7 +2196,7 @@ const getTotalMetrics = async (reportType, startDate , endDate) => {
         {
             $match: {
                 "productsDetails.productOrderStatus": { $nin: ['Cancelled', 'payment pending', 'Confirmed','Return'] }, // Exclude products with 'Cancelled' or 'payment pending' status
-                placedAt: { $gte: startDate, $lt: endDate } // Filter orders based on date range
+                // placedAt: { $gte: startDate, $lt: endDate } // Filter orders based on date range
             }
         },
         {

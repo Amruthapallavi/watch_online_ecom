@@ -2205,7 +2205,8 @@ console.log(orderDetails,"checkingggg");
     });
   } catch (error) {
     console.error(error.message);
-    throw error; // Or handle error as needed
+    res.status(500).redirect('/500');
+
   }
 },
 
@@ -2291,7 +2292,6 @@ userCancelOrder: async (req, res) => {
       }
     }).filter(update => update !== undefined); // Filter out undefined updates
 
-    // Execute bulk updates if there are any updates to perform
     if (updates.length > 0) {
       const bulkWriteResult = await orderModel.bulkWrite(updates);
 
@@ -2310,13 +2310,10 @@ userCancelOrder: async (req, res) => {
 
       await productModel.bulkWrite(productQuantityUpdates);
 
-      // Handle refund to the wallet if the payment method is 'razorpay' or 'wallet'
       if (order.paymentDetails.method === 'razorpay' || order.paymentDetails.method === 'wallet') {
-        // Find the wallet by userId
         const existUser = await walletModel.findOne({ userId: order.userId });
 
         if (!existUser) {
-          // If no wallet exists for the user, create a new wallet
           await walletModel.create({
             userId: order.userId,
             balance: totalRefundAmount, // Initial balance is the total refund amount
@@ -2374,8 +2371,6 @@ userReturnReq: async (req, res) => {
       return res.status(404).json({ success: false, message: "Order not found." });
     }
 
-    // Update the order status and request cancellation
-    // Update the order status and request cancellation
 await orderModel.updateOne(
   { 
     _id: orderId, 
@@ -2390,38 +2385,7 @@ await orderModel.updateOne(
 );
 
 
-    // const amountToRefund = order.grandTotal; 
-    // const existUser = await walletModel.findOne({ userId: order.userId });
-
-    // if (!existUser) {
-    //   await walletModel.create({
-    //     userId: order.userId,
-    //     balance: amountToRefund, 
-    //     transactionDetails: [{
-    //       orderId: order.paymentDetails.orderId,
-    //       paymentType: 'Credit',
-    //       date: new Date(),
-    //       amount: amountToRefund
-    //     }],
-    //   });
-    // } else {
-    //   await walletModel.updateOne(
-    //     { userId: order.userId },
-    //     {
-    //       $inc: { balance: amountToRefund }, // Increment balance by refund amount
-    //       $push: {
-    //         transactionDetails: {
-    //           orderId: order.paymentDetails.orderId,
-    //           paymentType: 'Credit',
-    //           date: new Date(),
-    //           amount: amountToRefund
-    //         }
-    //       }
-    //     }
-    //   );
-    // }
     
-    // console.log("Wallet updated successfully");
     res.json({ success: true });
   } catch (error) {
     console.error("Error processing return request:", error.message);
@@ -2711,9 +2675,33 @@ get404 :(req,res)=>{
 },
 
 
+getAbout : async (req,res)=>{
+  try {
+    res.render("user/about");
+  } catch (error) {
+    console.log(error);
+    res.redirect('/404');
+  }
+},
+
+getHelp : async (req,res)=>{
+  try {
+    res.render("user/help");
+  } catch (error) {
+    console.log(error);
+    res.redirect('/404');
+  }
+},
 
 
+error500 : (req,res)=>{
+  try {
+    res.render("user/500");
 
+  } catch (error) {
+    console.log(error);
+  }
+},
 
 
   

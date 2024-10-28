@@ -88,13 +88,19 @@ router.post("/updatePassword",userController.updatePassword);
 //   res.status(404).render('user/404');
 // });
 
+
+router.get("/about",userController.getAbout);
+router.get("/help",userController.getHelp);
+
+
+
 router.use((err, req, res, next) => {
   console.error(err.stack); 
   res.status(500).render('user/500'); 
 });
 
 
-
+router.get('/500',userController.error500);
 
 
 
