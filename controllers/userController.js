@@ -2346,7 +2346,6 @@ userCancelOrder: async (req, res) => {
         }
       }
 
-      console.log(bulkWriteResult, "bulkWriteResult");
       res.json({ success: true, message: 'Order cancellation successful, refund processed, and product quantity updated.', result: bulkWriteResult });
     } else {
       res.json({ success: false, message: 'No products found for cancellation.' });
