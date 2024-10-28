@@ -306,41 +306,46 @@ const getHomePage = async (req, res) => {
 const categoryData = async () => {
     try {
         const categorySales = await orderModel.aggregate([
-            { $unwind: '$productsDetails' }, 
+            { $unwind: '$productsDetails' },
+            {
+                $match: {
+                    'productsDetails.productOrderStatus': 'Delivered'
+                }
+            },
             {
                 $lookup: {
-                    from: 'products', 
-                    localField: 'productsDetails.productId', 
-                    foreignField: '_id', 
+                    from: 'products',
+                    localField: 'productsDetails.productId',
+                    foreignField: '_id',
                     as: 'productInfo'
                 }
             },
-            { $unwind: '$productInfo' }, 
+            { $unwind: '$productInfo' },
             {
                 $lookup: {
-                    from: 'categories', 
-                    localField: 'productInfo.category', 
-                    foreignField: '_id', 
+                    from: 'categories',
+                    localField: 'productInfo.category',
+                    foreignField: '_id',
                     as: 'categoryInfo'
                 }
             },
-            { $unwind: '$categoryInfo' }, 
+            { $unwind: '$categoryInfo' },
             {
                 $group: {
-                    _id: '$categoryInfo.cname', 
-                    totalSales: { $sum: '$grandTotal' } 
+                    _id: '$categoryInfo.cname',
+                    totalSales: { $sum: '$grandTotal' }
                 }
             },
             {
                 $project: {
-                    cname: '$_id', 
+                    cname: '$_id',
                     totalSales: 1,
-                    _id: 0 
+                    _id: 0
                 }
             }
         ]);
         
-        return categorySales; 
+        return categorySales;
     } catch (error) {
         console.error('Error fetching category sales data:', error);
         throw error; 
@@ -350,6 +355,11 @@ const categoryData = async () => {
 const paymentData = async () => {
     try {
         const paymentMethods = await orderModel.aggregate([
+            {
+                $match: {
+                    'productsDetails.productOrderStatus': { $eq:"Delivered" }
+                }
+            },
             {
                 $group: {
                     _id: '$paymentDetails.method',
@@ -736,7 +746,6 @@ const updateEditProduct = async (req, res) => {
         const data = req.body;
         console.log(req.body,"reqqqq");
         const {deletedImage}=req.body;
-        console.log(deletedImage);
         // Array to hold new and existing images
         const newImages = req.files ? req.files.map(element => element.filename) : [];
         
@@ -786,6 +795,7 @@ const updateEditProduct = async (req, res) => {
             $set: {
                 pname: data.pname,
                 category: new ObjectId(data.category),
+                brand:data.brand,
                 quantity: parseInt(data.quantity, 10),
                 description: data.description,
                 price: parseFloat(data.price),
