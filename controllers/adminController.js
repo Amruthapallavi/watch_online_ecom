@@ -2301,6 +2301,7 @@ const getTotalMetrics = async (reportType, startDate , endDate) => {
 //         res.status(500).json({ message: 'Error generating Excel report' });
 //     }
 // };
+
 const downloadExcel = async (req, res) => {
     const { reportType, startDate, endDate } = req.query;
     const orders = JSON.parse(req.query.orders || '[]')
